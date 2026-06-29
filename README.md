@@ -6,10 +6,20 @@ in any domain and it predictably engineers content that ranks in classic search
 Claude).
 
 Jeldon is the extracted, domain-agnostic engine behind a proven content-ranking
-platform. The name riffs on Asimov's Hari Seldon — psychohistory, the science of
-engineering predictable outcomes at scale — with the **J for Jason**. That's the
-goal in a word: **predictable success** — ranking outcomes that are reproducible
+platform.
+
+## Why "Jeldon"?
+
+The name riffs on Asimov's *Foundation* — **Hari Seldon** and psychohistory, the
+science of engineering predictable outcomes at scale. That's this project's goal
+in a word: **predictable success** — ranking outcomes that are reproducible
 across verticals, not bespoke every time.
+
+It started life as **Seldon**, but that name is already taken by several
+companies and products (most notably Seldon, the MLOps/model-serving company), so
+it was renamed by swapping in the owner's first initial: **J**ason → **Jeldon**.
+Same psychohistory meaning, a name that's actually ours. The npm scope is
+`@jeldon/*` and the repo is [`dryoung1029/jeldon`](https://github.com/dryoung1029/jeldon).
 
 ## The one idea
 
