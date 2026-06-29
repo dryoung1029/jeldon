@@ -7,25 +7,31 @@ useful.
 
 ## Status snapshot
 
+All packages **build + typecheck + test green** (15/15 build, 19/19 test
+suites), independently re-verified by an integration pass against the renamed
+`jeldon-core` workspace (with a negative-control type error to prove the
+typecheck exercises real source). `TODO(port)` markers below are the honest,
+intentional gaps — not unfinished scaffolding.
+
 | Package | Status | Notes |
 |---|---|---|
 | `@jeldon/config` | ✅ built | Types, Zod schema, defaults, loader. The keystone. |
 | `@jeldon/core-scoring` | ✅ built | SEO + GEO + FKGL, config-driven, isomorphic, tested. |
-| `@jeldon/cli` | ✅ built (partial) | `validate` + `doctor`. `check-geo-floor`/`audit`/`init`/`migrate` pending. |
-| `@jeldon/content-model` | 🟡 scaffolded | Port frontmatter codec + lifecycle machine. |
-| `@jeldon/schema-graph` | 🟡 scaffolded | Port JSON-LD builders + `extractFaqs`. |
-| `@jeldon/store` | 🟡 scaffolded | `Store` interface + GitHub/FS adapters. |
-| `@jeldon/aeo-audit` | 🟡 scaffolded | Multi-engine citation-presence audit. |
-| `@jeldon/verify` | 🟡 scaffolded | `ClaimVerifier` + cite8/null/primary-source. |
-| `@jeldon/strategy` | 🟡 scaffolded | Deterministic recommendations engine. |
-| `@jeldon/drafting` | 🟡 scaffolded | LLM drafting + voice injection (high difficulty). |
-| `@jeldon/amplify` | 🟡 scaffolded | Channels + newsletter + carousel. |
-| `@jeldon/media` | 🟡 scaffolded | Narration + hero images + podcast feed. |
-| `@jeldon/competitive-intel` | 🟡 scaffolded | War Room scanner + gap report. |
-| `@jeldon/crawler-analytics` | 🟡 scaffolded | Crawler classifier + edge analytics. |
-| `@jeldon/entity-presence` | ⬜ planned | NEW — off-site mention signals (not in source system). |
-| `template/` | 🟡 partial | Golden example + starter config landed; Astro/Workers app + CI pending. |
-| `schemas/` | 🟡 partial | Generated from the Zod schema via `pnpm gen:schema`. |
+| `@jeldon/cli` | ✅ built (partial) | `validate` + `doctor`. `check-geo-floor`/`audit`/`init`/`migrate` still pending. |
+| `@jeldon/content-model` | ✅ built | Frontmatter codec + lifecycle machine + `buildArticleSchema` + `publishScheduled`. 14 tests. |
+| `@jeldon/schema-graph` | ✅ built | JSON-LD builders + `extractFaqs` + `emitLlmsTxt`. Added `ArticleSchemaPolicy` + `LlmsTxtConfig` (opt-in). 13 tests. |
+| `@jeldon/store` | ✅ built | `Store` + `GitHubStore` (SHA-merge) + `FsStore`. |
+| `@jeldon/aeo-audit` | ✅ built | Perplexity + Anthropic + Google-AIO engines. `TODO(port)`: OpenAI engine (never existed in BoH; v2 target). |
+| `@jeldon/verify` | ✅ built | `ClaimVerifier` + cite8/null/primary-source; `lintCitations`. |
+| `@jeldon/strategy` | ✅ built | Deterministic recommendations; thresholds/copy/links externalized to `StrategyConfig`. |
+| `@jeldon/drafting` | ✅ built | Score→verify→fix-pass loop; LLM provider fully injectable; voice from `pack.voice`. |
+| `@jeldon/amplify` | ✅ built | Channel kit + Brevo client + carousel sidecar; one voice block. |
+| `@jeldon/media` | ✅ built | Narration core + TTS/image behind interfaces + podcast feed. A few `TODO(port)` (hero-concept proposer wiring). |
+| `@jeldon/competitive-intel` | ✅ built | One bundled scanner core (kills TS/JS dup) + gap report + rank tracking. |
+| `@jeldon/crawler-analytics` | ✅ built | UA classifier + `AnalyticsProvider` (CF/null). `TODO(port)`: CF Web-Vitals introspection query. |
+| `@jeldon/entity-presence` | ✅ built (scaffold) | NEW module. `NullMentionProvider` default; live SerpApi mention provider is `TODO(port)`. |
+| `template/` | ✅ built | Astro 5 + Workers starter + 5 CI gates + Renovate. CI steps call packages directly until the CLI exposes `check-geo-floor`. |
+| `schemas/` | 🟡 partial | Generated from the Zod schema via `pnpm gen:schema` (run after `pnpm build`). |
 
 ## Landmarks
 
