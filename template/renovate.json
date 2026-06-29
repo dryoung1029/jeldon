@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard"],
+  "description": "Auto-update the @jeldon/* engine packages. A version bump opens a PR; it auto-merges once every CI gate (geo-floor, citation-lint, build-parity, frontmatter-guard, doctor) is green. This is the primary, hands-off channel for engine improvements — keep it on.",
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "description": "@jeldon/* — auto-merge on green CI. The engine is the invariant; you almost never need to review these by hand.",
+      "matchPackagePatterns": ["^@jeldon/"],
+      "groupName": "jeldon engine",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "labels": ["jeldon-engine", "automerge"]
+    },
+    {
+      "description": "Astro + the Cloudflare adapter move together; review by hand.",
+      "matchPackageNames": ["astro", "@astrojs/cloudflare", "@astrojs/sitemap", "wrangler"],
+      "groupName": "astro + cloudflare",
+      "automerge": false
+    }
+  ],
+  "minimumReleaseAge": "0 days",
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 5
+}

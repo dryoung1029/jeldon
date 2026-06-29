@@ -1,0 +1,32 @@
+{
+  "name": "@jeldon/cli",
+  "version": "0.1.0",
+  "description": "The `jeldon` CLI: init, validate, doctor. The agent's deterministic 'am I wired correctly?' gate.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "bin": {
+    "jeldon": "./dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*",
+    "@jeldon/core-scoring": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

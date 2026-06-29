@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { pack } from '../lib/pack';
+import { getPublishedArticles, formatPublishDate } from '../lib/articles';
+
+const recent = (await getPublishedArticles()).slice(0, 6);
+---
+
+<BaseLayout title={pack.brand.name} description={pack.brand.tagline}>
+  <h1>{pack.brand.name}</h1>
+  {pack.brand.tagline && <p>{pack.brand.tagline}</p>}
+
+  <section>
+    <h2>Recent articles</h2>
+    {recent.length === 0 ? (
+      <p>No articles published yet.</p>
+    ) : (
+      <ul>
+        {recent.map((a) => (
+          <li>
+            <a href={`/articles/${a.slug}/`}>{a.data.title}</a>
+            <span> — {formatPublishDate(a.data.publishDate)}</span>
+          </li>
+        ))}
+      </ul>
+    )}
+    <p><a href="/articles/">All articles →</a></p>
+  </section>
+</BaseLayout>

@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { breadcrumbList } from '@jeldon/schema-graph';
+import { pack, categoryLabel } from '../../lib/pack';
+import { getPublishedArticles, formatPublishDate, estimateReadTime } from '../../lib/articles';
+
+const articles = await getPublishedArticles();
+
+const crumbs = breadcrumbList(
+  [
+    { name: 'Home', url: '/' },
+    { name: 'Articles', url: '/articles/' },
+  ],
+  pack.brand.siteUrl,
+);
+---
+
+<BaseLayout title={`Articles — ${pack.brand.name}`} jsonLd={[crumbs]}>
+  <h1>Articles</h1>
+  {articles.length === 0 ? (
+    <p>No articles published yet.</p>
+  ) : (
+    <ul>
+      {articles.map((a) => (
+        <li>
+          <a href={`/articles/${a.slug}/`}>{a.data.title}</a>
+          <p>{a.data.excerpt}</p>
+          <small>
+            {categoryLabel(a.data.category)} · {formatPublishDate(a.data.publishDate)} ·{' '}
+            {a.data.readTime ?? estimateReadTime(a.body)}
+          </small>
+        </li>
+      ))}
+    </ul>
+  )}
+</BaseLayout>

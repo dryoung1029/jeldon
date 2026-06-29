@@ -1,0 +1,39 @@
+{
+  "name": "jeldon-site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A Jeldon-powered content site. The engine lives in published @jeldon/* packages; you specialize it by editing jeldon.config.ts.",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "wrangler dev",
+    "deploy": "astro build && wrangler deploy",
+    "astro": "astro",
+    "jeldon": "jeldon",
+    "validate": "jeldon validate",
+    "doctor": "jeldon doctor",
+    "check:geo": "node scripts/check-geo-floor.mjs",
+    "check:citations": "node scripts/lint-citations.mjs",
+    "check:frontmatter": "node scripts/check-frontmatter.mjs"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.0.0",
+    "@astrojs/sitemap": "^3.2.0",
+    "@jeldon/cli": "^0.1.0",
+    "@jeldon/config": "^0.1.0",
+    "@jeldon/content-model": "^0.1.0",
+    "@jeldon/core-scoring": "^0.1.0",
+    "@jeldon/schema-graph": "^0.1.0",
+    "@jeldon/verify": "^0.1.0",
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3",
+    "wrangler": "^3.90.0"
+  }
+}

@@ -1,0 +1,74 @@
+---
+/**
+ * The site-wide layout. Emits the JSON-LD graph from the Domain Pack via
+ * @jeldon/schema-graph — no inline schema literals. Every page gets the
+ * Organization + WebSite nodes; pages can pass extra nodes (Article, Person,
+ * BreadcrumbList, FAQPage) through the `jsonLd` prop.
+ *
+ * Generic by construction: org @type, article @type, NAP, author entities all
+ * come from `pack.schema` / `pack.brand` / `pack.authors`. A health vertical
+ * gets MedicalBusiness/MedicalWebPage purely by changing the config.
+ */
+import { organizationGraph, websiteGraph } from '@jeldon/schema-graph';
+import { pack } from '../lib/pack';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  ogType?: 'website' | 'article';
+  /** Extra JSON-LD nodes (Article, Person, BreadcrumbList, FAQPage). */
+  jsonLd?: Record<string, unknown>[];
+  /** Robots directive — pages set `noindex,nofollow` for stubs/previews. */
+  robots?: string;
+}
+
+const {
+  title = pack.brand.name,
+  description = pack.brand.tagline ?? '',
+  ogType = 'website',
+  jsonLd = [],
+  robots,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+
+// Site-wide entities, built from the pack. The whole DomainPack is accepted
+// directly — the builders read what they need (orgType, org, nap, siteUrl).
+const graph = [organizationGraph(pack), websiteGraph(pack), ...jsonLd];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="canonical" href={canonical} />
+    {robots && <meta name="robots" content={robots} />}
+
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    {pack.brand.logoUrl && <meta property="og:image" content={new URL(pack.brand.logoUrl, Astro.site).toString()} />}
+
+    {graph.map((node) => (
+      <script type="application/ld+json" set:html={JSON.stringify(node)} />
+    ))}
+  </head>
+  <body>
+    <header>
+      <a href="/">{pack.brand.name}</a>
+      <nav>
+        <a href="/articles/">Articles</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <p>&copy; {new Date().getFullYear()} {pack.brand.name}{pack.brand.tagline ? ` — ${pack.brand.tagline}` : ''}</p>
+    </footer>
+  </body>
+</html>

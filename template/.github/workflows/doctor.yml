@@ -1,0 +1,44 @@
+name: doctor
+
+# The "wired correctly?" gate, run via @jeldon/cli. Two layers:
+#   1. `jeldon validate` — hard gate on the Domain Pack shape (always runs with
+#      zero secrets; a malformed jeldon.config.ts fails the PR).
+#   2. `jeldon doctor` — the full health check (config + env + cross-field
+#      consistency). Env vars come from `services.requiredEnv`; wire them as
+#      repo secrets and they flow in below. Without secrets, doctor reports env
+#      gaps as ERRORS, so this job carries the secrets it needs.
+#
+# If your project lists different secrets in services.requiredEnv, add them to
+# the `env:` block below (and to the repo's Actions secrets).
+
+on:
+  pull_request:
+    paths:
+      - 'jeldon.config.ts'
+      - '.github/workflows/doctor.yml'
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Validate the Domain Pack shape
+        run: pnpm run validate
+
+      - name: Doctor — wired-correctly health check
+        run: pnpm run doctor
+        env:
+          # The set listed by `services.requiredEnv` in the starter config.
+          # Edit to match your project's requiredEnv; add the matching repo
+          # secrets under Settings → Secrets and variables → Actions.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

@@ -1,0 +1,29 @@
+{
+  "name": "@jeldon/strategy",
+  "version": "0.1.0",
+  "description": "Deterministic, evidence-backed strategic recommendations engine. Joins analytics, crawler activity, per-article health and keyword ranks into a prioritized action list — no AI call. Thresholds, copy templates, deep-links and category targets are config; audio/podcast/AEO rules are opt-in.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@jeldon/verify",
+  "version": "0.1.0",
+  "description": "Domain-agnostic citation verification + citation linting. Pluggable ClaimVerifier (NullVerifier default, Cite8Verifier health plugin, PrimarySourceVerifier generic) + lintCitations driven by the citation policy in the Domain Pack.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

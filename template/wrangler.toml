@@ -1,0 +1,49 @@
+# Cloudflare Workers config for a Jeldon-powered site.
+#
+# Astro's Cloudflare adapter (see astro.config.mjs) targets Workers. After
+# `astro build`, `wrangler deploy` ships `./dist`.
+#
+# The adapter knobs (binding NAMES) are stable across projects; the binding
+# VALUES (bucket names, namespace/database IDs) are per-account and are filled
+# once the resources exist. All optional bindings ship COMMENTED so a fresh
+# clone deploys without provisioning anything; uncomment + fill as you turn on
+# the matching capability in jeldon.config.ts.
+
+name = "jeldon-site"               # rename to your project
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
+
+# ---------------------------------------------------------------------------
+# R2 — ObjectStore adapter (hero images + narration audio).
+# Enable when capabilities.heroImages or capabilities.audio is on.
+# Create: `wrangler r2 bucket create <your-bucket>`
+# ---------------------------------------------------------------------------
+# [[r2_buckets]]
+# binding = "IMAGES_BUCKET"
+# bucket_name = "TODO-your-images-bucket"
+
+# ---------------------------------------------------------------------------
+# KV — AI-crawler hit log (crawler-analytics, AEO Layer 2).
+# Enable when capabilities.engagementAnalytics is on AND you log crawler hits
+# at the edge. Create: `wrangler kv namespace create AI_CRAWLER_LOG`
+# ---------------------------------------------------------------------------
+# [[kv_namespaces]]
+# binding = "AI_CRAWLER_LOG"
+# id = "TODO-your-kv-namespace-id"
+
+# ---------------------------------------------------------------------------
+# D1 — EventStore adapter (first-party engagement beacon: link clicks +
+# time-on-page). Enable when capabilities.engagementAnalytics is on.
+# Create: `wrangler d1 create <your-db>` then apply migrations.
+# ---------------------------------------------------------------------------
+# [[d1_databases]]
+# binding = "ANALYTICS_DB"
+# database_name = "TODO-your-analytics-db"
+# database_id = "TODO-your-d1-database-id"
+
+# ---------------------------------------------------------------------------
+# Secrets are NOT declared here. Set them with `wrangler secret put <NAME>`
+# (or in the Cloudflare dashboard). The required set is whatever you list in
+# jeldon.config.ts `services.requiredEnv`; `jeldon doctor` verifies they exist.
+# ---------------------------------------------------------------------------

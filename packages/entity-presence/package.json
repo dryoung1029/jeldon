@@ -1,0 +1,29 @@
+{
+  "name": "@jeldon/entity-presence",
+  "version": "0.1.0",
+  "description": "Off-site brand-mention + per-engine citation-pattern signals — the biggest AEO lever on-page-only optimization can't reach. Checks NAP/name consistency across third-party surfaces (Reddit / Wikipedia / forums / comparison pages), exposes documented per-engine source affinities (Reddit → Perplexity, Wikipedia → ChatGPT, structured depth → Claude), and assembles an off-site entity-presence report. NEW module — designed from docs/AEO-PLAYBOOK.md, not ported from the source system.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

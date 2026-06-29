@@ -1,0 +1,31 @@
+name: frontmatter-guard
+
+# Validates every article's frontmatter against the pack-derived Zod schema
+# (@jeldon/content-model). Catches out-of-enum categories, malformed dates, and
+# the stringly-quoted-numeric class of bug that aborts whole content builds.
+
+on:
+  pull_request:
+    paths:
+      - 'src/content/articles/**'
+      - 'jeldon.config.ts'
+  push:
+    branches: [main]
+
+jobs:
+  frontmatter-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Validate article frontmatter against the derived schema
+        run: pnpm run check:frontmatter

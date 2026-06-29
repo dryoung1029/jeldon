@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { articleGraph, breadcrumbList, extractFaqs, faqPage } from '@jeldon/schema-graph';
+import { pack, authorEntries, categoryLabel } from '../../lib/pack';
+import { getPublishedArticles, getStubArticles, formatPublishDate, estimateReadTime } from '../../lib/articles';
+
+export async function getStaticPaths() {
+  const published = await getPublishedArticles();
+  const stubs = await getStubArticles();
+  return [
+    ...published.map((a) => ({ params: { slug: a.slug }, props: { article: a, isStub: false } })),
+    ...stubs.map((a) => ({ params: { slug: a.slug }, props: { article: a, isStub: true } })),
+  ];
+}
+
+const { article, isStub } = Astro.props;
+const { data } = article;
+
+// A non-stub draft reaching the render path means INCLUDE_DRAFTS=true (preview
+// builds only). Both stubs and draft previews are noindexed so a stray indexer
+// can't surface unfinished work.
+const isDraftPreview = !isStub && data.draft === true;
+const robots = isStub || isDraftPreview ? 'noindex,nofollow' : undefined;
+
+const { Content } = isStub ? { Content: null } : await article.render();
+
+// The engine builds the Article node from pack policy + the matched author
+// entity (linked by @id when authorSlug matches a known author). FAQPage is
+// auto-extracted from the body's question-style H2s. No inline JSON-LD here.
+const jsonLd: Record<string, unknown>[] = [
+  breadcrumbList(
+    [
+      { name: 'Home', url: '/' },
+      { name: 'Articles', url: '/articles/' },
+      { name: data.title, url: `/articles/${article.slug}/` },
+    ],
+    pack.brand.siteUrl,
+  ),
+];
+
+if (!isStub) {
+  jsonLd.unshift(
+    articleGraph(
+      {
+        title: data.title,
+        slug: article.slug,
+        excerpt: data.excerpt,
+        publishDate: data.publishDate,
+        updatedDate: data.updatedDate,
+        category: data.category,
+        categoryLabel: categoryLabel(data.category),
+        author: data.author,
+        authorSlug: data.authorSlug,
+        tags: data.tags,
+        heroImage: data.heroImage,
+        heroImageAlt: data.heroImageAlt,
+        sourceEpisode: data.sourceEpisode,
+      },
+      authorEntries,
+      pack,
+    ),
+  );
+
+  const faqs = extractFaqs(article.body);
+  if (faqs.length >= 2) jsonLd.push(faqPage(faqs));
+}
+---
+
+<BaseLayout
+  title={`${data.title} — ${pack.brand.name}`}
+  description={data.excerpt}
+  ogType="article"
+  jsonLd={jsonLd}
+  robots={robots}
+>
+  {isStub ? (
+    <article>
+      <h1>{data.title}</h1>
+      <p>
+        {data.scheduled
+          ? `Coming on ${formatPublishDate(data.publishDate)}.`
+          : 'Coming soon.'}
+      </p>
+    </article>
+  ) : (
+    <article>
+      {isDraftPreview && <p data-preview-banner>DRAFT PREVIEW — not published</p>}
+      <h1>{data.title}</h1>
+      <p>{data.excerpt}</p>
+      <small>
+        By {data.author} · {categoryLabel(data.category)} ·{' '}
+        {formatPublishDate(data.publishDate)} · {data.readTime ?? estimateReadTime(article.body)}
+      </small>
+      <Content />
+    </article>
+  )}
+</BaseLayout>

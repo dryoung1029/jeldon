@@ -1,0 +1,34 @@
+name: build-parity
+
+# Proves production AND preview builds both succeed. The INCLUDE_DRAFTS=true
+# pass exercises the draft-inclusive render path (preview deploys) so a broken
+# draft can't ship silently; both builds must keep drafts + stubs out of the
+# sitemap.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Production build (drafts excluded)
+        run: pnpm run build
+
+      - name: Preview build (INCLUDE_DRAFTS=true)
+        run: pnpm run build
+        env:
+          INCLUDE_DRAFTS: 'true'

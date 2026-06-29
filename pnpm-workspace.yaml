@@ -1,0 +1,5 @@
+packages:
+  - 'packages/*'
+# The starter lives in template/ and is NOT a workspace package — it is the
+# degit/copier target consumers clone. It depends on the published @jeldon/*
+# packages, not the workspace copies.
