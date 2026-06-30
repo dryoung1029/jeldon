@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { resolveConfigPath, validateDomainPack, loadDomainPack } from '@jeldon/config';
 import { runDoctor, type DoctorCheck } from './doctor.js';
+import { runCheckGeoFloor } from './check-geo-floor.js';
 
 const ICON: Record<string, string> = { ok: '✔', warn: '⚠', error: '✖' };
 
@@ -49,6 +50,31 @@ async function main(): Promise<void> {
       return;
     }
 
+    case 'check-geo-floor': {
+      const files = rest.filter((a) => a.endsWith('.md'));
+      try {
+        const report = await runCheckGeoFloor({ files });
+        if (json) {
+          console.log(JSON.stringify(report, null, 2));
+        } else {
+          for (const r of report.results) {
+            const cat = r.category || 'uncategorized';
+            const msg = `${r.slug}: GEO ${r.score} ${r.ok ? '>=' : '<'} ${r.target} (${cat})`;
+            if (r.ok) console.log(`${ICON.ok} ${msg}`);
+            else console.error(`${ICON.error} ${msg}`);
+          }
+          const tail = report.skipped ? ` (${report.skipped} draft(s) skipped)` : '';
+          console.log(
+            `\n${report.ok ? ICON.ok : ICON.error} check-geo-floor: ${report.failed} of ${report.scored} scored article(s) below target${tail}`,
+          );
+        }
+        if (!report.ok) process.exitCode = 1;
+      } catch (err) {
+        fail(err instanceof Error ? err.message : String(err), json);
+      }
+      return;
+    }
+
     case 'init': {
       console.log(
         [
@@ -71,9 +97,10 @@ async function main(): Promise<void> {
         [
           'jeldon <command>',
           '',
-          '  validate           Validate jeldon.config.ts against the Domain Pack schema',
-          '  doctor [--pre]     Run the "wired correctly?" health check (--json for machines)',
-          '  init               Scaffold a new project (see docs/IMPLEMENTATION.md)',
+          '  validate                 Validate jeldon.config.ts against the Domain Pack schema',
+          '  doctor [--pre]           Run the "wired correctly?" health check (--json for machines)',
+          '  check-geo-floor [file…]  Score articles; fail if any are below their category target',
+          '  init                     Scaffold a new project (see docs/IMPLEMENTATION.md)',
           '',
           'Flags: --json  machine-readable output',
         ].join('\n'),

@@ -76,6 +76,9 @@ importers:
       '@jeldon/config':
         specifier: workspace:*
         version: link:../config
+      '@jeldon/content-model':
+        specifier: workspace:*
+        version: link:../content-model
       '@jeldon/core-scoring':
         specifier: workspace:*
         version: link:../core-scoring

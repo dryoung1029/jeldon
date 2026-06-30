@@ -1,7 +1,7 @@
 {
   "name": "@jeldon/cli",
   "version": "0.1.0",
-  "description": "The `jeldon` CLI: init, validate, doctor. The agent's deterministic 'am I wired correctly?' gate.",
+  "description": "The `jeldon` CLI: init, validate, doctor, check-geo-floor. The agent's deterministic 'am I wired correctly?' gate.",
   "type": "module",
   "license": "UNLICENSED",
   "bin": {
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@jeldon/config": "workspace:*",
+    "@jeldon/content-model": "workspace:*",
     "@jeldon/core-scoring": "workspace:*"
   },
   "devDependencies": {
