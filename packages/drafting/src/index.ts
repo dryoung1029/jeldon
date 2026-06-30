@@ -61,6 +61,8 @@ export {
   mergePreservingFrontmatter,
 } from './frontmatter.js';
 
+export { selectTags, reconcileTags } from './tags.js';
+
 export {
   TOOLS_SINGLE,
   TOOLS_SERIES_DRAFT,

@@ -16,6 +16,7 @@ import type { ClaimVerifier, VerificationReport } from '@jeldon/verify';
 import { forcePublishDate } from './frontmatter.js';
 import type { PromptPack } from './prompts.js';
 import { resolveModel } from './provider.js';
+import { reconcileTags } from './tags.js';
 import { collectIssues, formatReport, scoreAndVerify } from './score-verify.js';
 import { TOOLS_SERIES_DRAFT, TOOLS_SINGLE, toolsOutline } from './tools.js';
 import type {
@@ -172,6 +173,16 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
     if (series?.articles) {
       for (const a of series.articles) {
         if (a?.content) a.content = forcePublishDate(a.content, today);
+      }
+    }
+
+    // Reconcile tags against the controlled vocabulary + SEO band BEFORE scoring,
+    // so the reported score reflects the tags the article ships with. Surgical:
+    // only the `tags:` frontmatter line is touched.
+    if (draftOut?.content) draftOut.content = reconcileTags(draftOut.content, pack);
+    if (series?.articles) {
+      for (const a of series.articles) {
+        if (a?.content) a.content = reconcileTags(a.content, pack);
       }
     }
 
