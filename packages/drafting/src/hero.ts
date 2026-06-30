@@ -14,10 +14,14 @@
  */
 
 import {
+  generateHeroImage,
   proposeHeroConcept,
   type ConceptProposer,
   type HeroConceptInput,
   type HeroConceptProposal,
+  type HeroImageResult,
+  type ImageGen,
+  type ObjectStore,
   type proposeImageTool,
 } from '@jeldon/media';
 import type { HeroImageConfig } from '@jeldon/config';
@@ -127,4 +131,65 @@ export function proposeHero(
 export function setHeroAlt(content: string, altText: string): string {
   if (!altText.trim()) return content;
   return upsertScalar(content, 'heroImageAlt', altText.trim());
+}
+
+/** Write the hero image path into a draft's frontmatter (`heroImage:`). */
+export function setHeroImage(content: string, publicPath: string): string {
+  if (!publicPath.trim()) return content;
+  return upsertScalar(content, 'heroImage', publicPath.trim());
+}
+
+export interface GenerateHeroDeps {
+  proposer: ConceptProposer;
+  /** Image generator (gpt-image adapter, or a fake). */
+  imageGen?: ImageGen;
+  /** Where the bytes land (R2 adapter, or a fake). */
+  objectStore?: ObjectStore;
+  /** Asset slug — bytes live under `<slug>/` and the path threads into frontmatter. */
+  slug: string;
+  /** Hero style config. Default: media's `defaultMediaConfig.heroImage`. */
+  heroImage?: HeroImageConfig;
+  /** Capability gate — pass `pack.capabilities.heroImages`. Default `true`. */
+  enabled?: boolean;
+}
+
+export interface GenerateHeroResult {
+  /** The draft markdown, with `heroImage` + `heroImageAlt` written when generated. */
+  content: string;
+  /** Whether anything was generated + written (false on a gated/uncapable no-op). */
+  changed: boolean;
+  proposal?: HeroConceptProposal;
+  image?: HeroImageResult;
+}
+
+/**
+ * Full hero pipeline for a drafted article: propose a concept + alt-text,
+ * generate the image bytes, persist them, and write both `heroImage` (the public
+ * path) and `heroImageAlt` into the draft's frontmatter — the two fields the SEO
+ * scorer rewards.
+ *
+ * A deliberate no-op (returns the content untouched, `changed: false`) when the
+ * `heroImages` capability is off or no `ImageGen`/`ObjectStore` is wired, so a
+ * host can call it unconditionally and let config decide.
+ */
+export async function generateHeroForDraft(
+  content: string,
+  deps: GenerateHeroDeps,
+): Promise<GenerateHeroResult> {
+  if (deps.enabled === false || !deps.imageGen || !deps.objectStore) {
+    return { content, changed: false };
+  }
+
+  const input = heroInputFromMarkdown(content, deps.slug);
+  const proposal = await proposeHeroConcept(input, deps.proposer, deps.heroImage);
+  const image = await generateHeroImage(proposal.prompt, deps.imageGen, deps.objectStore, {
+    slug: deps.slug,
+    heroImage: deps.heroImage,
+  });
+
+  let out = content;
+  if (image.publicPath) out = setHeroImage(out, image.publicPath);
+  out = setHeroAlt(out, proposal.altText);
+
+  return { content: out, changed: out !== content, proposal, image };
 }

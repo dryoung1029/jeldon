@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { heroInputFromMarkdown, LlmConceptProposer, proposeHero, setHeroAlt } from '../src/hero.js';
+import type { ConceptProposer, ImageGen, ObjectStore } from '@jeldon/media';
+import {
+  generateHeroForDraft,
+  heroInputFromMarkdown,
+  LlmConceptProposer,
+  proposeHero,
+  setHeroAlt,
+} from '../src/hero.js';
 import type { LlmProvider, LlmRequest, LlmResponse, StreamTurn } from '../src/types.js';
 
 const FIELDS = {
@@ -99,5 +106,51 @@ describe('setHeroAlt', () => {
   it('is a no-op on empty alt-text', () => {
     const md = ['---', 'title: T', '---', 'body'].join('\n');
     expect(setHeroAlt(md, '  ')).toBe(md);
+  });
+});
+
+describe('generateHeroForDraft', () => {
+  const fakeProposer: ConceptProposer = { async propose() { return FIELDS; } };
+  const fakeImageGen: ImageGen = { async generate() { return new ArrayBuffer(8); } };
+  function memStore(): ObjectStore & { puts: string[] } {
+    const puts: string[] = [];
+    return { puts, async get() { return null; }, async put(key) { puts.push(key); } };
+  }
+  const md = ['---', 'title: Cutting tail latency', 'category: pattern', 'excerpt: e', 'draft: true', '---', 'Body about latency.'].join('\n');
+
+  it('proposes, generates, persists, and writes both heroImage + heroImageAlt', async () => {
+    const store = memStore();
+    const res = await generateHeroForDraft(md, {
+      proposer: fakeProposer,
+      imageGen: fakeImageGen,
+      objectStore: store,
+      slug: 'cutting-tail-latency',
+    });
+
+    expect(res.changed).toBe(true);
+    expect(res.content).toContain(`heroImageAlt: ${JSON.stringify(FIELDS.altText)}`);
+    expect(res.content).toMatch(
+      /heroImage: "\/img\/cutting-tail-latency\/cutting-tail-latency-hero-[0-9a-f]{6}\.png"/,
+    );
+    expect(store.puts).toHaveLength(1);
+    expect(res.image?.publicPath).toContain('/img/cutting-tail-latency/');
+  });
+
+  it('is a no-op when the heroImages capability is off', async () => {
+    const res = await generateHeroForDraft(md, {
+      proposer: fakeProposer,
+      imageGen: fakeImageGen,
+      objectStore: memStore(),
+      slug: 's',
+      enabled: false,
+    });
+    expect(res.changed).toBe(false);
+    expect(res.content).toBe(md);
+  });
+
+  it('is a no-op when no image generator/store is wired', async () => {
+    const res = await generateHeroForDraft(md, { proposer: fakeProposer, slug: 's' });
+    expect(res.changed).toBe(false);
+    expect(res.content).toBe(md);
   });
 });

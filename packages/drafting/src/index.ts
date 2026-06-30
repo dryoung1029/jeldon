@@ -68,8 +68,12 @@ export {
   proposeHero,
   heroInputFromMarkdown,
   setHeroAlt,
+  setHeroImage,
+  generateHeroForDraft,
   type LlmConceptProposerOptions,
   type ProposeHeroDeps,
+  type GenerateHeroDeps,
+  type GenerateHeroResult,
 } from './hero.js';
 
 export {
