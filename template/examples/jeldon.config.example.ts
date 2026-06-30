@@ -49,6 +49,19 @@ export default defineDomainPack({
   content: {
     categories: ['pattern', 'postmortem', 'tutorial', 'opinion'],
     categoryTargets: { tutorial: 85, pattern: 80, postmortem: 80, opinion: 72 },
+    // Curated tag vocabulary — the generator draws 3–6 per article from here.
+    tags: [
+      'observability',
+      'incident-response',
+      'distributed-tracing',
+      'reliability',
+      'kubernetes',
+      'latency',
+      'on-call',
+      'postmortems',
+      'opentelemetry',
+      'capacity-planning',
+    ],
     defaultAuthorSlug: 'rae-okafor',
     timezone: 'America/New_York',
   },

@@ -331,6 +331,7 @@ export const domainPackSchema = z
     content: z.object({
       categories: z.array(z.string()).min(1),
       categoryTargets: z.record(z.number().min(0).max(100)),
+      tags: z.array(z.string()).optional(),
       defaultAuthorSlug: z.string(),
       timezone: z.string(),
       lifecycle: z.object({ docReviewed: z.boolean().optional() }).optional(),

@@ -223,6 +223,12 @@
                 "maximum": 100
               }
             },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
             "defaultAuthorSlug": {
               "type": "string"
             },

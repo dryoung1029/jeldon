@@ -48,6 +48,10 @@ export default defineDomainPack({
   content: {
     categories: ['guide', 'evidence', 'opinion'],
     categoryTargets: { guide: 85, evidence: 85, opinion: 75 },
+    // TODO your curated tag vocabulary. The generator picks 3–6 of these per
+    // article (and backfills by relevance) so your taxonomy stays consistent.
+    // Leave empty to let the generator invent free-form tags instead.
+    tags: ['TODO-topic-one', 'TODO-topic-two', 'TODO-topic-three'],
     defaultAuthorSlug: 'primary-author',
     timezone: 'America/Los_Angeles',
   },

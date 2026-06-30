@@ -653,6 +653,12 @@ export interface DomainPack {
     categories: string[];
     /** GEO target per category (>= scoring.geo.floor). */
     categoryTargets: Record<string, number>;
+    /** Curated tag vocabulary. When set, the article generator
+     *  (@jeldon/drafting) draws an article's tags from this list and backfills
+     *  by relevance so every draft lands in the SEO `scoring.seo.tags` band —
+     *  keeping the site's taxonomy consistent for topic clustering. Omit (or
+     *  leave empty) to let the generator invent free-form tags instead. */
+    tags?: string[];
     defaultAuthorSlug: string;
     timezone: string;
     lifecycle?: { docReviewed?: boolean };
