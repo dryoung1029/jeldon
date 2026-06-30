@@ -17,7 +17,7 @@
  *   - AnthropicProvider       — the default LlmProvider adapter
  */
 
-export { draft, type DraftDeps } from './draft.js';
+export { draft, type DraftDeps, type DraftHeroDeps } from './draft.js';
 export { chatEdit, type ChatDeps } from './chat.js';
 
 export {
@@ -50,6 +50,7 @@ export {
 
 export {
   scoreAndVerify,
+  scoreContent,
   collectIssues,
   extractResearchClaims,
   formatReport,
