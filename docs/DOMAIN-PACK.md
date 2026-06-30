@@ -36,7 +36,11 @@ one copy (the source system hand-duplicated it across four files; do not).
 ### `content`
 `categories` (the valid category enum), `categoryTargets` (GEO target per
 category — each ≥ `scoring.geo.floor`), `defaultAuthorSlug`, `timezone`, optional
-`lifecycle.docReviewed` to enable the extra review state.
+`lifecycle.docReviewed` to enable the extra review state. Optional `tags` — a
+curated tag vocabulary: when set, the drafting generator picks an article's tags
+from it (and a deterministic reconcile pass backfills by relevance) so every
+draft lands in the `scoring.seo.tags` band and the taxonomy stays consistent;
+omit/empty for free-form tags.
 
 ### `scoring`
 - `geo.floor` — CI gate threshold (must be ≤ the lowest `categoryTarget`).
