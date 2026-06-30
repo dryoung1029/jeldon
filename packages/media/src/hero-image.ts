@@ -129,17 +129,11 @@ export interface HeroConceptInput {
  * config (`heroImage.proposalSystem`) + the locked template; only the topic +
  * concept are model-authored.
  *
- * This is a typed stub: the actual Anthropic tool-call orchestration (the
- * `fetch` to /v1/messages with the propose_image tool, tool_choice forcing,
- * tool-use extraction) is prompt-heavy LLM plumbing that belongs with the
- * drafting layer's Anthropic client, not in this media package. Wire a
- * `ConceptProposer` (one method) to a real client to activate it.
- *
- * TODO(port): implement against the shared Anthropic client used by
- * @jeldon/drafting. The faithful source is
- * src/pages/api/admin/image-prompt/[slug].ts:139-214 — SYSTEM + TOOL constants
- * are already lifted into `heroImage.proposalSystem` and the `proposeImageTool`
- * export below; this just needs the messages call + tool-use parse.
+ * The actual Anthropic tool-call orchestration (tool_choice forcing, tool-use
+ * extraction) is prompt-heavy LLM plumbing that belongs with the drafting
+ * layer's client, so it stays injected here as a `ConceptProposer`. The ready
+ * adapter is `@jeldon/drafting`'s `LlmConceptProposer` (over its `LlmProvider`);
+ * a non-Anthropic host can implement the one-method interface itself.
  */
 export async function proposeHeroConcept(
   input: HeroConceptInput,

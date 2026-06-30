@@ -14,6 +14,7 @@
  * pack.
  */
 
+import { fmScalar, splitFrontmatter } from './fm-lite.js';
 import type { DraftingPack } from './types.js';
 
 /** Lowercase alphanumeric word tokens, for relevance matching. */
@@ -77,24 +78,6 @@ export function selectTags(
 
   // 3. Clamp to the band maximum.
   return chosen.slice(0, band.max);
-}
-
-interface SplitDoc {
-  fm: string;
-  body: string;
-  matched: boolean;
-}
-
-function splitFrontmatter(content: string): SplitDoc {
-  const m = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!m) return { fm: '', body: content, matched: false };
-  return { fm: m[1] ?? '', body: m[2] ?? '', matched: true };
-}
-
-function fmScalar(fm: string, key: string): string {
-  const line = fm.match(new RegExp(`^${key}:\\s*(.*)$`, 'm'));
-  if (!line || line[1] === undefined) return '';
-  return line[1].trim().replace(/^["']|["']$/g, '');
 }
 
 /** Parse the model's tag array from a single-line `tags: [...]` frontmatter field. */

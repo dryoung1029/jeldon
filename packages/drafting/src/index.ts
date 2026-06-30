@@ -64,6 +64,15 @@ export {
 export { selectTags, reconcileTags } from './tags.js';
 
 export {
+  LlmConceptProposer,
+  proposeHero,
+  heroInputFromMarkdown,
+  setHeroAlt,
+  type LlmConceptProposerOptions,
+  type ProposeHeroDeps,
+} from './hero.js';
+
+export {
   TOOLS_SINGLE,
   TOOLS_SERIES_DRAFT,
   toolsOutline,
