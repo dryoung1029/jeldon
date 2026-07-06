@@ -12,11 +12,15 @@
  * unified with author.ts's trailing-JSON payload.
  */
 
+import type { HeroImageConfig } from '@jeldon/config';
+import type { ConceptProposer, ImageGen, ObjectStore } from '@jeldon/media';
 import type { ClaimVerifier, VerificationReport } from '@jeldon/verify';
 import { forcePublishDate } from './frontmatter.js';
+import { generateHeroForDraft } from './hero.js';
 import type { PromptPack } from './prompts.js';
 import { resolveModel } from './provider.js';
-import { collectIssues, formatReport, scoreAndVerify } from './score-verify.js';
+import { reconcileTags } from './tags.js';
+import { collectIssues, formatReport, scoreAndVerify, scoreContent } from './score-verify.js';
 import { TOOLS_SERIES_DRAFT, TOOLS_SINGLE, toolsOutline } from './tools.js';
 import type {
   DraftContext,
@@ -42,6 +46,25 @@ export interface DraftDeps {
   codec: DraftFrontmatterCodec;
   /** Today's ISO date (`YYYY-MM-DD`). Injected so the host owns the clock. */
   today: string;
+  /**
+   * Optional hero-image generation. When provided (and `capabilities.heroImages`
+   * is on), each finished draft gets a generated hero image + alt-text written
+   * into its frontmatter, and is re-scored so the reported SEO reflects it.
+   * Omit to keep hero deferred past draft time (the default). Requires an
+   * `ImageGen` + `ObjectStore`, so the host only wires it when configured.
+   */
+  hero?: DraftHeroDeps;
+}
+
+/** Hero-generation dependencies for the draft loop (see `DraftDeps.hero`). */
+export interface DraftHeroDeps {
+  proposer: ConceptProposer;
+  imageGen: ImageGen;
+  objectStore: ObjectStore;
+  /** Hero style config. Default: media's `defaultMediaConfig.heroImage`. */
+  heroImage?: HeroImageConfig;
+  /** Capability gate — pass `pack.capabilities.heroImages`. Default `true`. */
+  enabled?: boolean;
 }
 
 interface ModeConfig {
@@ -175,6 +198,16 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
       }
     }
 
+    // Reconcile tags against the controlled vocabulary + SEO band BEFORE scoring,
+    // so the reported score reflects the tags the article ships with. Surgical:
+    // only the `tags:` frontmatter line is touched.
+    if (draftOut?.content) draftOut.content = reconcileTags(draftOut.content, pack);
+    if (series?.articles) {
+      for (const a of series.articles) {
+        if (a?.content) a.content = reconcileTags(a.content, pack);
+      }
+    }
+
     // Validate tool inputs — a max_tokens-truncated tool call comes back with
     // articles as null/string/partial. Surface a clean error, not a crash.
     if (series) {
@@ -224,7 +257,9 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
         yield { type: 'progress', pct: 75, label: 'Applying a fix-pass…', detail: `${issues.length} issue(s)` };
         const fixed = await runFixPass(deps, modelId, draftOut.content, issues);
         if (fixed) {
-          draftOut.content = forcePublishDate(fixed, today);
+          // The fix-pass returns full markdown (frontmatter included), so
+          // re-reconcile tags before re-scoring.
+          draftOut.content = reconcileTags(forcePublishDate(fixed, today), pack);
           fixPassFired = true;
           const post = await scoreAndVerify({
             provider, pack, verifier, codec,
@@ -240,6 +275,21 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
       } else {
         scoreReport = initial.scores;
         cite8Report = initial.report;
+      }
+
+      // Optional hero image + alt-text. Runs AFTER the fix-pass (which rewrites
+      // frontmatter and would otherwise clobber the hero fields), then re-scores
+      // so the reported SEO reflects the hero image + alt-text.
+      if (deps.hero && draftOut.content) {
+        yield { type: 'progress', pct: 88, label: 'Generating hero image…' };
+        const heroRes = await generateHeroForDraft(draftOut.content, {
+          ...deps.hero,
+          slug: draftOut.slug,
+        });
+        if (heroRes.changed) {
+          draftOut.content = heroRes.content;
+          if (scoreReport) scoreReport = scoreContent(pack, codec, draftOut);
+        }
       }
     }
 
@@ -262,23 +312,34 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
           draft: a,
         });
         const issues = collectIssues(pack, initial.scores, initial.report);
+        let scores = initial.scores;
+        let report = initial.report;
         if (issues.length) {
           const fixed = await runFixPass(deps, modelId, a.content, issues);
           if (fixed) {
-            a.content = forcePublishDate(fixed, today);
+            a.content = reconcileTags(forcePublishDate(fixed, today), pack);
             fixPassesSeries.push(i);
             const post = await scoreAndVerify({
               provider, pack, verifier, codec,
               extractSystem: prompts.extractClaimsSystem,
               draft: a,
             });
-            scoreSeries.push({ ...post.scores, slug: a.slug });
-            cite8Series.push(post.report);
-            continue;
+            scores = post.scores;
+            report = post.report;
           }
         }
-        scoreSeries.push({ ...initial.scores, slug: a.slug });
-        cite8Series.push(initial.report);
+
+        // Optional hero per sibling (after the fix-pass), then re-score.
+        if (deps.hero && a.content) {
+          const heroRes = await generateHeroForDraft(a.content, { ...deps.hero, slug: a.slug });
+          if (heroRes.changed) {
+            a.content = heroRes.content;
+            scores = scoreContent(pack, codec, a);
+          }
+        }
+
+        scoreSeries.push({ ...scores, slug: a.slug });
+        cite8Series.push(report);
       }
     }
 

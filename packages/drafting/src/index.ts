@@ -17,7 +17,7 @@
  *   - AnthropicProvider       — the default LlmProvider adapter
  */
 
-export { draft, type DraftDeps } from './draft.js';
+export { draft, type DraftDeps, type DraftHeroDeps } from './draft.js';
 export { chatEdit, type ChatDeps } from './chat.js';
 
 export {
@@ -50,6 +50,7 @@ export {
 
 export {
   scoreAndVerify,
+  scoreContent,
   collectIssues,
   extractResearchClaims,
   formatReport,
@@ -60,6 +61,21 @@ export {
   forcePublishDate,
   mergePreservingFrontmatter,
 } from './frontmatter.js';
+
+export { selectTags, reconcileTags } from './tags.js';
+
+export {
+  LlmConceptProposer,
+  proposeHero,
+  heroInputFromMarkdown,
+  setHeroAlt,
+  setHeroImage,
+  generateHeroForDraft,
+  type LlmConceptProposerOptions,
+  type ProposeHeroDeps,
+  type GenerateHeroDeps,
+  type GenerateHeroResult,
+} from './hero.js';
 
 export {
   TOOLS_SINGLE,

@@ -1,4 +1,5 @@
 import { defaultDraftingConfig, defaultScoringConfig } from '@jeldon/config';
+import type { ConceptProposer, ImageGen, ObjectStore } from '@jeldon/media';
 import { NullVerifier } from '@jeldon/verify';
 import { describe, expect, it } from 'vitest';
 import { chatEdit } from '../src/chat.js';
@@ -225,6 +226,68 @@ describe('draft() loop', () => {
     // The system prompt the model saw carried the externalized voice + KB.
     expect(captured.system).toContain('Acme Co');
     expect(captured.system).toContain('KB');
+  });
+
+  it('writes hero image + alt-text into the draft when hero deps are provided', async () => {
+    const prompts = buildPromptPack(makePack());
+    const proposer: ConceptProposer = {
+      async propose() {
+        return {
+          topic: 'widget selection',
+          concept: 'A felt-marker sketch of three widgets on a workbench.',
+          altText: 'Hand-drawn sketch of three widgets on a workbench',
+          filename: 'widget-selection.webp',
+          rationale: 'Fits the guide.',
+        };
+      },
+    };
+    const imageGen: ImageGen = { async generate() { return new ArrayBuffer(8); } };
+    const puts: string[] = [];
+    const objectStore: ObjectStore = { async get() { return null; }, async put(key) { puts.push(key); } };
+
+    let result: Extract<import('../src/types.js').DraftEvent, { type: 'result' }> | undefined;
+    const labels: string[] = [];
+    for await (const evt of draft(
+      { mode: 'draft', messages: [{ role: 'user', content: 'write about widgets' }] },
+      {
+        provider: fakeProvider(),
+        pack: makePack(),
+        prompts,
+        knowledge: 'KB',
+        verifier: new NullVerifier(),
+        codec: defaultDraftFrontmatterCodec,
+        today: '2026-06-29',
+        hero: { proposer, imageGen, objectStore },
+      },
+    )) {
+      if (evt.type === 'progress') labels.push(evt.label);
+      if (evt.type === 'result') result = evt;
+    }
+
+    expect(labels).toContain('Generating hero image…');
+    expect(result?.draft?.content).toContain('heroImageAlt: "Hand-drawn sketch of three widgets on a workbench"');
+    expect(result?.draft?.content).toMatch(/heroImage: "\/img\/widgets\/widgets-hero-[0-9a-f]{6}\.png"/);
+    expect(puts).toHaveLength(1);
+  });
+
+  it('leaves hero deferred when no hero deps are provided (default)', async () => {
+    const prompts = buildPromptPack(makePack());
+    let result: Extract<import('../src/types.js').DraftEvent, { type: 'result' }> | undefined;
+    for await (const evt of draft(
+      { mode: 'draft', messages: [{ role: 'user', content: 'write about widgets' }] },
+      {
+        provider: fakeProvider(),
+        pack: makePack(),
+        prompts,
+        knowledge: 'KB',
+        verifier: new NullVerifier(),
+        codec: defaultDraftFrontmatterCodec,
+        today: '2026-06-29',
+      },
+    )) {
+      if (evt.type === 'result') result = evt;
+    }
+    expect(result?.draft?.content).not.toContain('heroImage:');
   });
 });
 

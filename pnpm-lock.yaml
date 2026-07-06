@@ -11,6 +11,9 @@ importers:
       '@changesets/cli':
         specifier: ^2.27.9
         version: 2.31.0(@types/node@22.20.0)
+      '@jeldon/config':
+        specifier: workspace:*
+        version: link:packages/config
       '@types/node':
         specifier: ^22.7.5
         version: 22.20.0
@@ -73,6 +76,9 @@ importers:
       '@jeldon/config':
         specifier: workspace:*
         version: link:../config
+      '@jeldon/content-model':
+        specifier: workspace:*
+        version: link:../content-model
       '@jeldon/core-scoring':
         specifier: workspace:*
         version: link:../core-scoring
@@ -196,6 +202,9 @@ importers:
       '@jeldon/core-scoring':
         specifier: workspace:*
         version: link:../core-scoring
+      '@jeldon/media':
+        specifier: workspace:*
+        version: link:../media
       '@jeldon/store':
         specifier: workspace:*
         version: link:../store

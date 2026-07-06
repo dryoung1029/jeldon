@@ -21,6 +21,7 @@
   "dependencies": {
     "@jeldon/config": "workspace:*",
     "@jeldon/core-scoring": "workspace:*",
+    "@jeldon/media": "workspace:*",
     "@jeldon/store": "workspace:*",
     "@jeldon/verify": "workspace:*"
   },

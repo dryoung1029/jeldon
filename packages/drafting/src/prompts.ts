@@ -163,6 +163,19 @@ draft: true
 ---`;
 }
 
+/** Tag instruction derived from the pack: a controlled vocabulary when
+ *  `content.tags` is set, otherwise free-form. The band comes from the SEO
+ *  scorer (`scoring.seo.tags`) so the prompt and the scorer never disagree. A
+ *  deterministic reconcile pass (`reconcileTags`) backstops this at draft time. */
+function tagGuidance(pack: DraftingPack): string {
+  const [min, max] = pack.scoring.seo.tags.good;
+  const vocab = pack.content.tags ?? [];
+  if (vocab.length) {
+    return `TAGS: set the \`tags:\` frontmatter field to ${min}–${max} tags drawn ONLY from this controlled vocabulary, using the exact spelling — pick the ones that genuinely fit; do NOT invent new tags: ${vocab.join(', ')}.`;
+  }
+  return `TAGS: set the \`tags:\` frontmatter field to ${min}–${max} lowercase, hyphenated topical tags.`;
+}
+
 function wordTargetLine(pack: DraftingPack): string {
   const [lo, hi] = pack.drafting?.wordCountTarget ?? [800, 1500];
   const ceil = pack.drafting?.bodyCharCeiling ?? 10000;
@@ -226,6 +239,7 @@ ${citation}
 
 Frontmatter must follow this exact shape:
 ${frontmatterShape(pack, false)}
+${tagGuidance(pack)}
 
 Use today's date for publishDate. Always set draft: true.`,
   );
@@ -239,6 +253,7 @@ You are in DRAFT-SERIES mode. The previous turn proposed a series outline. Now w
 - Full markdown body. ${wordTargetLine(pack)}
 - Frontmatter must follow this shape — note the required \`series:\` field linking siblings:
 ${frontmatterShape(pack, true)}
+- ${tagGuidance(pack)}
 - Cross-link to siblings naturally (/articles/<sibling-slug>)
 - Cross-link to existing site pages where relevant
 - No content overlap between siblings — each owns its territory
@@ -264,6 +279,7 @@ ${citation}
 
 Frontmatter must follow this exact shape — note the required \`series:\` field:
 ${frontmatterShape(pack, true)}
+${tagGuidance(pack)}
 
 Use today's date for publishDate. Always set draft: true. Use the slug + series name from the outline.
 

@@ -63,6 +63,33 @@ export async function extractResearchClaims(
   }
 }
 
+/**
+ * Score a draft (SEO + GEO via @jeldon/core-scoring) from its frontmatter +
+ * body. Pure — no verification, no LLM. Exposed so the draft loop can cheaply
+ * re-score after a post-processing step (e.g. hero enrichment) without re-running
+ * claim verification.
+ */
+export function scoreContent(
+  pack: DraftingPack,
+  codec: DraftFrontmatterCodec,
+  draft: Pick<DraftResult, 'slug' | 'content'>,
+): ScorePair {
+  const fm = codec.parse(draft.content);
+  const input = {
+    title: fm.title,
+    excerpt: fm.excerpt,
+    tags: fm.tags,
+    body: fm.body,
+    slug: draft.slug,
+    heroImage: fm.heroImage,
+    heroImageAlt: fm.heroImageAlt,
+  };
+  return {
+    seo: calculateSeo(input, pack.scoring.seo).score,
+    geo: calculateGeo(input, pack.scoring.geo).score,
+  };
+}
+
 /** Score a draft (SEO + GEO via @jeldon/core-scoring) and verify its research
  *  claims via the injected verifier. BoH `author.ts::scoreAndVerify`. */
 export async function scoreAndVerify(args: {
@@ -75,17 +102,7 @@ export async function scoreAndVerify(args: {
 }): Promise<{ scores: ScorePair; report: VerificationReport }> {
   const { provider, pack, verifier, codec, extractSystem, draft } = args;
   const fm = codec.parse(draft.content);
-  const input = {
-    title: fm.title,
-    excerpt: fm.excerpt,
-    tags: fm.tags,
-    body: fm.body,
-    slug: draft.slug,
-    heroImage: fm.heroImage,
-    heroImageAlt: fm.heroImageAlt,
-  };
-  const seo = calculateSeo(input, pack.scoring.seo).score;
-  const geo = calculateGeo(input, pack.scoring.geo).score;
+  const scores = scoreContent(pack, codec, draft);
 
   // Skip extraction entirely when the verifier is the null/disabled path.
   let report: VerificationReport;
@@ -95,7 +112,7 @@ export async function scoreAndVerify(args: {
     const claims = await extractResearchClaims(provider, pack, extractSystem, fm.body || draft.content);
     report = await verifier.verifyClaims(claims, { k: 4, includeQuotes: true });
   }
-  return { scores: { seo, geo }, report };
+  return { scores, report };
 }
 
 /**
