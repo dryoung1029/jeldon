@@ -1,0 +1,154 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ServiceList from '../components/ServiceList.astro';
+import FaqList from '../components/FaqList.astro';
+import Reviews from '../components/Reviews.astro';
+import { kit, labels, routes } from '../lib/kit';
+import { pack, articlePath } from '../lib/pack';
+import { getServices, getFaqsFor, getPublishedArticles, formatDate } from '../lib/content';
+import { faqJsonLd } from '../lib/seo';
+
+const services = await getServices();
+const faqs = await getFaqsFor('home');
+const recent = (await getPublishedArticles()).slice(0, 3);
+const jsonLd = [faqJsonLd(faqs.map((f) => f.data))].filter(Boolean) as Record<string, unknown>[];
+const a = kit.site.address;
+
+// SETUP: the wizard writes the real title/description with the owner.
+const title = `${kit.site.tagline ?? kit.site.name}`.slice(0, 60);
+const description = kit.site.shortPitch ?? pack.brand.tagline ?? kit.site.name;
+---
+
+<BaseLayout title={title} description={description} jsonLd={jsonLd}>
+  <section class="hero">
+    <div class="container hero__inner">
+      <div class="hero__copy">
+        {kit.site.heroKicker && <p class="hero__where">{kit.site.heroKicker}</p>}
+        <h1>{kit.site.heroTitle ?? kit.site.tagline ?? kit.site.name}</h1>
+        {kit.site.heroLede && <p class="lede">{kit.site.heroLede}</p>}
+        <div class="btn-row">
+          <a class="btn btn--primary btn--lg" href={kit.primaryCta.href}>{kit.primaryCta.label}</a>
+          <a class="btn btn--ghost" href={routes.services}>See the {labels.services.plural.toLowerCase()}</a>
+        </div>
+        {labels.primaryCta.note && <p class="hero__note muted">{labels.primaryCta.note}</p>}
+      </div>
+      <div class="hero__mark" aria-hidden="true">
+        <svg viewBox="0 0 200 320" width="100%" height="100%" role="presentation">
+          <path d="M40 20 C 150 110, 50 210, 160 300" stroke="var(--accent)" stroke-width="22" stroke-linecap="round" fill="none" />
+          <path d="M160 20 C 50 110, 150 210, 40 300" stroke="var(--primary)" stroke-width="22" stroke-linecap="round" fill="none" opacity="0.92" />
+          <g stroke="var(--highlight)" stroke-width="8" stroke-linecap="round" opacity="0.8">
+            <line x1="70" y1="70" x2="130" y2="70" />
+            <line x1="62" y1="250" x2="138" y2="250" />
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  {(kit.site.pillars?.length ?? 0) > 0 && (
+    <section class="section section--tight">
+      <div class="container pillars">
+        {kit.site.pillars!.map((p) => (
+          <div><h2>{p.title}</h2><p>{p.text}</p></div>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {services.length > 0 && (
+    <section class="section section--alt">
+      <div class="container">
+        <div class="section-head">
+          <h2>{labels.services.plural}</h2>
+          {labels.services.lede && <p>{labels.services.lede}</p>}
+        </div>
+        <ServiceList services={services} />
+      </div>
+    </section>
+  )}
+
+  {(kit.site.steps?.length ?? 0) > 0 && (
+    <section class="section">
+      <div class="container split">
+        <div>
+          <h2>Getting started is easy</h2>
+          <ol class="steps">
+            {kit.site.steps!.map((s) => (
+              <li><h3>{s.title}</h3><p>{s.text}</p></li>
+            ))}
+          </ol>
+          <a class="btn btn--primary" href={kit.primaryCta.href}>{kit.primaryCta.label}</a>
+        </div>
+        {kit.site.quote && (
+          <div class="quote-block"><blockquote><p>{kit.site.quote}</p></blockquote></div>
+        )}
+      </div>
+    </section>
+  )}
+
+  <Reviews />
+
+  <section class="section">
+    <div class="container split">
+      <div>
+        <h2>Questions? We have answers.</h2>
+        {faqs.length > 0 ? <FaqList faqs={faqs} /> : <p class="muted">Questions we hear most will appear here.</p>}
+        <p style="margin-top: var(--s1)"><a href={routes.faq}>More questions and answers</a></p>
+      </div>
+      {a?.street && (
+        <div>
+          <h2>Find us</h2>
+          <p>
+            <strong>{a.street}, {a.city}, {a.region} {a.postalCode}</strong>
+            {a.landmark && <><br />{a.landmark}.</>}
+          </p>
+          <p>
+            {a.mapsUrl && <><a href={a.mapsUrl} target="_blank" rel="noopener">Get directions</a>{kit.site.phone && ' · '}</>}
+            {kit.site.phone && <a href={`tel:${kit.site.phone}`}>{kit.site.phoneDisplay ?? kit.site.phone}</a>}
+          </p>
+          {a.mapsEmbedUrl && (
+            <iframe src={a.mapsEmbedUrl} width="100%" height="280" style="border:0; border-radius: var(--radius-lg)" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title={`Map to ${kit.site.name}`}></iframe>
+          )}
+        </div>
+      )}
+    </div>
+  </section>
+
+  {recent.length > 0 && (
+    <section class="section section--alt">
+      <div class="container">
+        <div class="section-head"><h2>From the {labels.team.plural.toLowerCase()}</h2></div>
+        <ul class="post-list">
+          {recent.map((art) => (
+            <li>
+              <h3><a href={articlePath(art.id)}>{art.data.title}</a></h3>
+              <p class="muted">{art.data.excerpt}</p>
+              <small class="muted">{formatDate(art.data.publishDate)}</small>
+            </li>
+          ))}
+        </ul>
+        <p style="margin-top: var(--s1)"><a href={routes.blog}>All {labels.blog.toLowerCase()} posts</a></p>
+      </div>
+    </section>
+  )}
+</BaseLayout>
+
+<style>
+  .hero { padding-block: var(--s3); overflow: hidden; }
+  .hero__inner { display: grid; gap: var(--s2); align-items: center; }
+  @media (min-width: 52rem) { .hero__inner { grid-template-columns: 1.4fr 1fr; } }
+  .hero__where { font-weight: 800; color: var(--primary); margin-bottom: var(--s-1); }
+  .hero h1 { max-width: 14ch; }
+  .hero__note { margin-top: var(--s0); font-size: var(--step--1); font-weight: 600; }
+  .hero__mark { max-width: 18rem; justify-self: center; aspect-ratio: 200 / 320; }
+  @media (max-width: 52rem) { .hero__mark { max-width: 9rem; order: -1; justify-self: start; } }
+  .pillars { display: grid; gap: var(--s1); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+  .pillars h2 { font-size: var(--step-1); }
+  .pillars p { color: var(--fg-muted); }
+  .steps { list-style: none; padding: 0; margin: 0 0 var(--s1); counter-reset: step; }
+  .steps li { counter-increment: step; display: grid; grid-template-columns: 2.5rem 1fr; gap: var(--s0); padding: var(--s0) 0; border-top: 1px solid var(--line); }
+  .steps li::before { content: counter(step); font-weight: 800; font-size: var(--step-2); color: var(--primary); line-height: 1; }
+  .steps h3 { font-size: var(--step-1); margin-bottom: 0.2em; }
+  .steps p { margin: 0; color: var(--fg-muted); }
+  .quote-block blockquote { margin: 0; padding: var(--s1); background: var(--primary-tint); border-radius: var(--radius-lg); font-size: var(--step-1); font-weight: 600; line-height: 1.5; }
+</style>

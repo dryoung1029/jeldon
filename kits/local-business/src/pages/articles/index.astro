@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getPublishedArticles, formatDate, estimateReadTime } from '../../lib/content';
+import { pack, categoryLabel, articlePath } from '../../lib/pack';
+import { kit, labels, routes } from '../../lib/kit';
+import { crumbs } from '../../lib/seo';
+
+const articles = await getPublishedArticles();
+const items = [{ name: labels.blog, url: routes.blog }];
+const owner = pack.authors.find((a) => a.isPrimary) ?? pack.authors[0];
+---
+
+<BaseLayout
+  title={`${labels.blog} — ${pack.brand.tagline ?? kit.site.name}`.slice(0, 60)}
+  description={`Plain-language answers from the ${kit.site.name} ${labels.team.plural.toLowerCase()}${owner ? `, written by ${owner.name}` : ''}, with sources.`}
+  jsonLd={[crumbs(items)]}
+>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <PageHeader title={`From the ${labels.team.plural.toLowerCase()}`} lede="The questions we hear most, answered properly — with sources." />
+    {articles.length === 0 ? (
+      <div class="notice">
+        <p><strong>First articles are on the way.</strong> In the meantime, <a href={routes.faq}>the FAQ</a> answers the most common questions.</p>
+      </div>
+    ) : (
+      <ul class="post-list">
+        {articles.map((a) => (
+          <li>
+            <span class="tag">{categoryLabel(a.data.category)}</span>
+            <h3><a href={articlePath(a.id)}>{a.data.title}</a></h3>
+            <p class="muted">{a.data.excerpt}</p>
+            <div class="article-meta">
+              <span>{a.data.author}</span>
+              <span>{formatDate(a.data.publishDate)}</span>
+              <span>{a.data.readTime ?? estimateReadTime(a.body)}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</BaseLayout>

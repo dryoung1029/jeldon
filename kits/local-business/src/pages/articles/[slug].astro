@@ -1,0 +1,70 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getPublishedArticles, getStubArticles, formatDate, estimateReadTime, type Article } from '../../lib/content';
+import { categoryLabel, articlePath } from '../../lib/pack';
+import { kit, labels, routes, compliance } from '../../lib/kit';
+import { articleJsonLd } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const published = await getPublishedArticles();
+  const stubs = await getStubArticles();
+  return [
+    ...published.map((article) => ({ params: { slug: article.id }, props: { article, isStub: false } })),
+    ...stubs.map((article) => ({ params: { slug: article.id }, props: { article, isStub: true } })),
+  ];
+}
+
+const { article, isStub } = Astro.props as { article: Article; isStub: boolean };
+const d = article.data;
+const isDraftPreview = !isStub && d.draft === true;
+const robots = isStub || isDraftPreview ? 'noindex,nofollow' : undefined;
+const { Content } = isStub ? { Content: null } : await render(article);
+const jsonLd = isStub ? [] : articleJsonLd(article, article.body ?? '');
+const items = [
+  { name: labels.blog, url: routes.blog },
+  { name: d.title, url: articlePath(article.id) },
+];
+---
+
+<BaseLayout title={d.title} description={d.excerpt} ogType="article" ogImage={d.heroImage} jsonLd={jsonLd} robots={robots}>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    {isStub ? (
+      <article style="padding-block: var(--s2)">
+        <h1>{d.title}</h1>
+        <p class="lede">{d.scheduled ? `Coming on ${formatDate(d.publishDate)}.` : 'Coming soon.'}</p>
+      </article>
+    ) : (
+      <article class="post">
+        {isDraftPreview && <div class="notice notice--warn"><strong>Draft preview.</strong> This article is not published.</div>}
+        <header class="post__head">
+          <span class="tag">{categoryLabel(d.category)}</span>
+          <h1>{d.title}</h1>
+          <p class="lede">{d.excerpt}</p>
+          <div class="article-meta">
+            <span>By {d.author}</span>
+            <span>{formatDate(d.publishDate)}</span>
+            {d.updatedDate && <span>Updated {formatDate(d.updatedDate)}</span>}
+            <span>{d.readTime ?? estimateReadTime(article.body)}</span>
+          </div>
+        </header>
+        {d.heroImage && <img src={d.heroImage} alt={d.heroImageAlt ?? ''} width="1200" height="675" class="post__hero" />}
+        <div class="prose">{Content && <Content />}</div>
+        <footer class="post__foot">
+          {compliance.articleDisclaimer && <p class="muted" style="font-size: var(--step--1)">{compliance.articleDisclaimer}</p>}
+          <p>{d.tags.map((t) => <span class="tag">{t}</span>)}</p>
+          <a class="btn btn--primary" href={kit.primaryCta.href}>{kit.primaryCta.label}</a>
+        </footer>
+      </article>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .post { max-width: var(--measure); padding-block: var(--s1) var(--s3); }
+  .post__head h1 { font-size: var(--step-3); margin-top: var(--s-1); }
+  .post__hero { border-radius: var(--radius-lg); margin: var(--s1) 0; }
+  .post__foot { margin-top: var(--s2); padding-top: var(--s1); border-top: 1px solid var(--line); }
+</style>

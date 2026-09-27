@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { kit, labels, routes, booking } from '../lib/kit';
+const title = labels.members ?? `Current ${labels.client.plural}`;
+const items = [{ name: title, url: routes.members }];
+---
+
+<BaseLayout title={title} description={`Links for current ${kit.site.name} ${labels.client.plural}: booking, the app, and account requests.`} robots="noindex,follow" hideFooterCta>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <PageHeader title={title} lede="Everything you need in one place." />
+    <div class="grid grid--2">
+      {(booking.calendarUrl || kit.booking.memberApp?.ios || kit.booking.memberApp?.android) && (
+        <div class="card">
+          <h2 style="font-size: var(--step-1)">Book</h2>
+          <div class="btn-row">
+            {booking.calendarUrl && <a class="btn btn--secondary" href={booking.calendarUrl} target="_blank" rel="noopener">Open calendar</a>}
+            {kit.booking.memberApp?.ios && <a class="btn btn--ghost" href={kit.booking.memberApp.ios}>iPhone app</a>}
+            {kit.booking.memberApp?.android && <a class="btn btn--ghost" href={kit.booking.memberApp.android}>Android app</a>}
+          </div>
+        </div>
+      )}
+      <div class="card">
+        <h2 style="font-size: var(--step-1)">Account changes</h2>
+        <p>Use the contact form{kit.site.email ? <>, or email <a href={`mailto:${kit.site.email}`}>{kit.site.email}</a></> : ''}. We'll take care of it, no hoops.</p>
+        <a class="btn btn--ghost" href={`${routes.contact}?subject=${encodeURIComponent(kit.contact.subjects[kit.contact.subjects.length - 1] ?? '')}`}>Contact us</a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

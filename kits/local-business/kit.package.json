@@ -1,0 +1,21 @@
+{
+  "_comment": "Merged INTO the template's package.json by jeldon init / smoke-template (deps + scripts the kit adds).",
+  "scripts": {
+    "check:site": "node node_modules/@jeldon/cli/dist/index.js doctor",
+    "competitors": "node scripts/scan-competitors.mjs",
+    "traffic": "node scripts/traffic-report.mjs",
+    "test:contact": "node scripts/test-contact.mjs",
+    "photos": "node scripts/optimize-photos.mjs",
+    "score": "node node_modules/@jeldon/cli/dist/index.js score",
+    "brief": "node node_modules/@jeldon/cli/dist/index.js brief",
+    "benchmark": "node node_modules/@jeldon/cli/dist/index.js benchmark"
+  },
+  "dependencies": {
+    "@jeldon/competitive-intel": "^0.1.0",
+    "@jeldon/crawler-analytics": "^0.1.0",
+    "@jeldon/kit-local-business": "^0.1.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.5"
+  }
+}

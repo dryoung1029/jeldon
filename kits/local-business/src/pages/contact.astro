@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { kit, labels, routes, compliance } from '../lib/kit';
+import { crumbs } from '../lib/seo';
+
+const items = [{ name: labels.contact ?? 'Contact', url: routes.contact }];
+const turnstile = kit.contact.turnstileSiteKey;
+const a = kit.site.address;
+const hint = compliance.contactHint;
+---
+
+<BaseLayout
+  title={labels.contact ?? 'Contact'}
+  description={`Contact ${kit.site.name}${a?.city ? ` in ${a.city}` : ''}. Ask a question, book, or just say hello.${kit.site.phoneDisplay ? ` Call ${kit.site.phoneDisplay}` : ''} or send a message.`}
+  jsonLd={[crumbs(items)]}
+>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <div class="split" style="padding-block: var(--s1) var(--s3)">
+      <div>
+        <h1>Talk to a real person.</h1>
+        <p class="lede">Questions about a {labels.services.singular.toLowerCase()}, pricing, or whether this is the right place for you — ask.</p>
+
+        <form class="form" method="post" action="/api/contact/" id="contact-form" data-thanks={routes.thanks} novalidate>
+          <div class="field">
+            <label for="name">Your name</label>
+            <input id="name" name="name" type="text" autocomplete="name" required maxlength="120" />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" autocomplete="email" required maxlength="200" />
+          </div>
+          <div class="field">
+            <label for="phone">Phone <span class="muted">(optional)</span></label>
+            <input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="40" />
+          </div>
+          <div class="field">
+            <label for="subject">What's this about?</label>
+            <select id="subject" name="subject">
+              {kit.contact.subjects.map((s) => <option value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div class="field">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" required maxlength="3000"></textarea>
+            {hint && <span class="hint">{hint}</span>}
+          </div>
+          <div class="hp" aria-hidden="true">
+            <label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+          </div>
+          <input type="hidden" name="page" value={routes.contact} />
+          {turnstile && <div class="cf-turnstile" data-sitekey={turnstile} data-theme="auto"></div>}
+          <div><button class="btn btn--primary btn--lg" type="submit">Send message</button></div>
+          <p class="form-note" id="form-status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <div>
+        {a?.street && (
+          <>
+            <h2 style="font-size: var(--step-1)">Or just come by</h2>
+            <p>
+              <strong>{a.street}</strong><br />
+              {a.city}, {a.region} {a.postalCode}<br />
+              {a.landmark && <>{a.landmark}.<br /></>}
+              {a.mapsUrl && <a href={a.mapsUrl} target="_blank" rel="noopener">Get directions</a>}
+            </p>
+          </>
+        )}
+        <p>
+          {kit.site.phone && <><a href={`tel:${kit.site.phone}`}>{kit.site.phoneDisplay ?? kit.site.phone}</a><br /></>}
+          {kit.site.email && <a href={`mailto:${kit.site.email}`}>{kit.site.email}</a>}
+        </p>
+        <p><a class="btn btn--ghost" href={kit.primaryCta.href}>Skip the email — {kit.primaryCta.label.toLowerCase()}</a></p>
+        {a?.mapsEmbedUrl && (
+          <iframe src={a.mapsEmbedUrl} width="100%" height="260" style="border:0; border-radius: var(--radius-lg)" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title={`Map to ${kit.site.name}`}></iframe>
+        )}
+      </div>
+    </div>
+  </div>
+
+  {turnstile && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+</BaseLayout>
+
+<script>
+  // Progressive enhancement: submit in place and show a status line. Without
+  // JS the form still posts normally and the server redirects to the thanks page.
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const status = document.getElementById('form-status');
+  const params = new URLSearchParams(location.search);
+  const preset = params.get('subject');
+  const serverError = params.get('error');
+  if (serverError && status) status.textContent = serverError;
+  if (preset && form) {
+    const sel = form.querySelector<HTMLSelectElement>('select[name=subject]');
+    if (sel && [...sel.options].some((o) => o.value === preset)) sel.value = preset;
+  }
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!form.reportValidity()) return;
+    const btn = form.querySelector<HTMLButtonElement>('button[type=submit]');
+    if (btn) btn.disabled = true;
+    if (status) status.textContent = 'Sending…';
+    try {
+      const res = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        location.href = form.dataset.thanks || '/thanks/';
+        return;
+      }
+      if (status) status.textContent = data.error || 'Something went wrong. Call or email instead — the details are on this page.';
+    } catch {
+      if (status) status.textContent = 'Could not send right now. Call or email us instead.';
+    }
+    if (btn) btn.disabled = false;
+  });
+</script>

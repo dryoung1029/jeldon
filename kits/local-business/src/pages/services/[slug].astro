@@ -1,0 +1,87 @@
+---
+import { render } from 'astro:content';
+import { serviceNode, areaServedOf } from '@jeldon/kit-local-business';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import FaqList from '../../components/FaqList.astro';
+import { getServices, type Service } from '../../lib/content';
+import { crumbs, faqJsonLd } from '../../lib/seo';
+import { kit, labels, routes, planUrl, orgId } from '../../lib/kit';
+import { pack } from '../../lib/pack';
+
+export async function getStaticPaths() {
+  const services = await getServices();
+  return services.map((service) => ({ params: { slug: service.id }, props: { service } }));
+}
+
+const { service } = Astro.props as { service: Service };
+const d = service.data;
+const { Content } = await render(service);
+const signupHref = d.signupUrl ?? planUrl(d.signupPlanKey);
+const city = kit.site.address?.city ? ` in ${kit.site.address.city}${kit.site.address?.region ? `, ${kit.site.address.region}` : ''}` : '';
+
+const items = [
+  { name: labels.services.plural, url: routes.services },
+  { name: d.name, url: `${routes.services}${service.id}/` },
+];
+const faqs = d.faqs.map((f) => ({ question: f.q, answer: f.a }));
+const node = serviceNode({
+  siteUrl: pack.brand.siteUrl,
+  orgId,
+  route: routes.services,
+  slug: service.id,
+  name: d.name,
+  description: d.seoDescription ?? d.tagline,
+  serviceType: d.serviceType ?? labels.services.singular,
+  areaServed: areaServedOf(kit),
+  price: d.price,
+});
+const jsonLd = [crumbs(items), node, faqJsonLd(faqs)].filter(Boolean) as Record<string, unknown>[];
+const a = kit.site.address;
+---
+
+<BaseLayout title={d.seoTitle ?? `${d.name}${city}`} description={d.seoDescription ?? d.tagline} jsonLd={jsonLd}>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <header class="service-head">
+      <h1>{d.name}</h1>
+      <p class="lede">{d.tagline}</p>
+      <dl class="facts">
+        <div><dt>Who it's for</dt><dd>{d.audience}</dd></div>
+        {d.format && <div><dt>Format</dt><dd>{d.format}</dd></div>}
+        {d.duration && <div><dt>Length</dt><dd>{d.duration}</dd></div>}
+        {d.price && <div><dt>Price</dt><dd>{d.price}</dd></div>}
+      </dl>
+      <div class="btn-row">
+        <a class="btn btn--primary btn--lg" href={signupHref}>{d.signupLabel ?? labels.primaryCta.label}</a>
+        <a class="btn btn--ghost" href={routes.contact}>Ask a question</a>
+      </div>
+    </header>
+
+    <div class="split">
+      <article class="prose"><Content /></article>
+      <aside>
+        {faqs.length > 0 && (
+          <>
+            <h2 style="font-size: var(--step-1)">Common questions</h2>
+            <FaqList faqs={faqs} />
+          </>
+        )}
+        {a?.street && (
+          <div class="notice" style="margin-top: var(--s1)">
+            <strong>Where:</strong> {a.street}, {a.city}.{a.landmark ? ` ${a.landmark}.` : ''}<br />
+            <a href={routes.schedule}>See the {labels.schedule?.toLowerCase() ?? 'schedule'}</a>
+          </div>
+        )}
+      </aside>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .service-head { padding-block: var(--s1) var(--s2); border-bottom: 1px solid var(--line); margin-bottom: var(--s2); }
+  .service-head h1 { font-size: var(--step-3); }
+  .facts { display: flex; flex-wrap: wrap; gap: var(--s0) var(--s2); margin: var(--s0) 0 var(--s1); }
+  .facts dt { font-size: var(--step--1); font-weight: 700; color: var(--fg-muted); }
+  .facts dd { margin: 0; font-weight: 700; }
+</style>

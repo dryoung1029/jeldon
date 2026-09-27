@@ -32,6 +32,7 @@ export {
   auditPageSpeed,
   auditGbp,
   samplePages,
+  listSitemapUrls,
   computePageStats,
   detectTemplateVendor,
   compareAudits,

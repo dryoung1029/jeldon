@@ -244,6 +244,34 @@ importers:
         specifier: ^2.1.4
         version: 2.1.9(@types/node@22.20.0)
 
+  packages/kit-local-business:
+    dependencies:
+      '@jeldon/config':
+        specifier: workspace:*
+        version: link:../config
+      '@jeldon/crawler-analytics':
+        specifier: workspace:*
+        version: link:../crawler-analytics
+      jiti:
+        specifier: ^2.4.0
+        version: 2.7.0
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^22.7.5
+        version: 22.20.0
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.16)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.4
+        version: 2.1.9(@types/node@22.20.0)
+
   packages/media:
     dependencies:
       '@jeldon/config':

@@ -1,0 +1,47 @@
+{
+  "name": "@jeldon/kit-local-business",
+  "version": "0.0.0",
+  "description": "The Local Business Kit: everything a small local business site needs around the Jeldon article engine — design tokens from the Domain Pack, a neutral page set with a vertical label map, contact route (LeadSink + Notifier adapters), booking adapters, redirect generator, hours → schema, and the kit's registered doctor checks. Extracted from the Helix Training build; hardcodes no vertical.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/kit-local-business"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md", "CHANGELOG.md"],
+  "sideEffects": false,
+  "engines": { "node": ">=18.18" },
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*",
+    "@jeldon/crawler-analytics": "workspace:*",
+    "jiti": "^2.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

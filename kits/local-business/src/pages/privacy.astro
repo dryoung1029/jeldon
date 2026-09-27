@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { kit, compliance } from '../lib/kit';
+const updated = new Date().toISOString().slice(0, 10);
+const thirdParties = [
+  kit.site.address?.mapsEmbedUrl ? 'Google Maps (the map)' : '',
+  'Google Fonts (the typeface)',
+  kit.booking.kind !== 'none' ? 'the booking/scheduling system (calendar and sign-up pages)' : '',
+  kit.booking.widgets?.reviewWidgetUrl ? 'a review widget' : '',
+].filter(Boolean);
+---
+
+<BaseLayout title="Privacy Policy" description={`How ${kit.site.name} handles information you share through this website.`} robots="noindex,follow" hideFooterCta>
+  <div class="container prose" style="padding-block: var(--s2)">
+    <h1>Privacy policy</h1>
+    <!-- SETUP: the owner reviews this. It describes what the site actually does; if tools are added (GA4, a pixel), the wizard updates it. -->
+    <p><em>Last updated: {updated}</em></p>
+    <h2>What we collect</h2>
+    <p>When you send a message through the contact form, we receive the name, email, phone number, and message you type. We use it to reply to you{kit.contact.leadSink !== 'none' ? ' and to keep track of the conversation in our customer system' : ''}.</p>
+    <h2>Analytics</h2>
+    {kit.analytics?.ga4MeasurementId ? (
+      <p>This site uses Google Analytics to understand which pages people visit. It sets cookies. You can opt out with a browser extension or by declining cookies.</p>
+    ) : (
+      <p>This site uses Cloudflare Web Analytics, which does not use cookies and does not track you across sites. It tells us which pages people visit so we can improve the site.</p>
+    )}
+    {thirdParties.length > 0 && (
+      <>
+        <h2>Third-party content</h2>
+        <p>Some pages load content from other companies: {thirdParties.join(', ')}. Those services may set their own cookies or record that your browser loaded them, under their own privacy policies.</p>
+      </>
+    )}
+    {compliance.privacyHealthSection && (
+      <>
+        <h2>{compliance.privacyHealthSection.heading}</h2>
+        <p>{compliance.privacyHealthSection.text}</p>
+      </>
+    )}
+    <h2>Your choices</h2>
+    <p>Want us to delete your information?{kit.site.email ? <> Email <a href={`mailto:${kit.site.email}`}>{kit.site.email}</a> and we will.</> : ' Contact us and we will.'}</p>
+  </div>
+</BaseLayout>

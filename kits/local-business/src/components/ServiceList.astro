@@ -1,0 +1,27 @@
+---
+import type { Service } from '../lib/content';
+import { labels, routes, planUrl } from '../lib/kit';
+interface Props { services: Service[] }
+const { services } = Astro.props;
+
+function signupHref(p: Service): string {
+  if (p.data.signupUrl) return p.data.signupUrl;
+  return planUrl(p.data.signupPlanKey);
+}
+---
+
+<ul class="service-list">
+  {services.map((p) => (
+    <li class="service-row">
+      <div>
+        <h3><a href={`${routes.services}${p.id}/`}>{p.data.name}</a></h3>
+        <span class="who">{p.data.audience}</span>
+      </div>
+      <p>{p.data.tagline}</p>
+      <div class="btn-row">
+        <a class="btn btn--ghost" href={`${routes.services}${p.id}/`}>Details</a>
+        <a class="btn btn--secondary" href={signupHref(p)}>{p.data.signupLabel ?? labels.primaryCta.label}</a>
+      </div>
+    </li>
+  ))}
+</ul>

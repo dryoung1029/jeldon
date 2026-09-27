@@ -1,0 +1,91 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { fetchUpcomingClasses } from '@jeldon/kit-local-business';
+import { kit, labels, routes, booking } from '../lib/kit';
+import { crumbs } from '../lib/seo';
+
+// Build-time fetch (PushPress only). If PUSHPRESS_API_KEY / PUSHPRESS_COMPANY_ID
+// are in the build environment, the next 7 days render as plain HTML (fast,
+// crawlable). Otherwise the embed / link below is the schedule.
+const env = { PUSHPRESS_API_KEY: process.env.PUSHPRESS_API_KEY, PUSHPRESS_COMPANY_ID: process.env.PUSHPRESS_COMPANY_ID };
+const classes = booking.supportsBuildTimeClasses ? await fetchUpcomingClasses(env, 7) : [];
+const live = classes.length > 0;
+
+const tz = kit.booking.timezone ?? 'UTC';
+const dayKey = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: tz });
+const time = (d: Date) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: tz });
+const byDay = new Map<string, typeof classes>();
+for (const c of classes) byDay.set(dayKey(c.start), [...(byDay.get(dayKey(c.start)) ?? []), c]);
+const items = [{ name: labels.schedule ?? 'Schedule', url: routes.schedule }];
+const builtAt = new Date().toLocaleString('en-US', { timeZone: tz, dateStyle: 'medium', timeStyle: 'short' });
+const days = Object.entries(kit.site.hours ?? {}) as [string, string][];
+---
+
+<BaseLayout
+  title={labels.schedule ?? 'Schedule'}
+  description={`${labels.schedule ?? 'Schedule'} for ${kit.site.name}${kit.site.address?.city ? ` in ${kit.site.address.city}` : ''}. ${labels.primaryCta.pitch ?? ''}`.trim()}
+  jsonLd={[crumbs(items)]}
+>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <PageHeader title={labels.schedule ?? 'Schedule'} lede={labels.primaryCta.pitch}>
+      <div class="btn-row">
+        <a class="btn btn--primary" href={kit.primaryCta.href}>{kit.primaryCta.label}</a>
+        {booking.calendarUrl && <a class="btn btn--ghost" href={booking.calendarUrl} target="_blank" rel="noopener">Open the booking calendar</a>}
+      </div>
+    </PageHeader>
+
+    {live && (
+      <section class="section--tight">
+        <h2>This week</h2>
+        <p class="muted" style="font-size: var(--step--1)">Updated {builtAt}. Spots shown are as of the last update — the booking calendar is always current.</p>
+        {[...byDay.entries()].map(([day, rows]) => (
+          <div class="day">
+            <h3>{day}</h3>
+            <ul class="classes">
+              {rows.map((c) => (
+                <li>
+                  <span class="t">{time(c.start)} – {time(c.end)}</span>
+                  <span class="n">{c.title}</span>
+                  {c.spotsLeft !== null && <span class="s muted">{c.spotsLeft === 0 ? 'Full' : `${c.spotsLeft} spots`}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        {booking.calendarUrl && <p><a class="btn btn--secondary" href={booking.calendarUrl} target="_blank" rel="noopener">Reserve a spot</a></p>}
+      </section>
+    )}
+
+    {booking.embedUrl ? (
+      <section class="section--tight">
+        <h2>{live ? 'Full calendar and booking' : 'Calendar'}</h2>
+        <iframe src={booking.embedUrl} style="width:100%; height: 1200px; border:0;" loading={live ? 'lazy' : 'eager'} title={`${kit.site.name} calendar`}></iframe>
+        <noscript><p><a href={booking.calendarUrl ?? booking.embedUrl}>Open the calendar</a></p></noscript>
+      </section>
+    ) : kit.site.hoursConfirmed ? (
+      <section class="section--tight">
+        <h2>Hours</h2>
+        <ul class="hours-list">
+          {days.map(([day, h]) => <li><span>{day}</span><span>{h || 'Closed'}</span></li>)}
+        </ul>
+      </section>
+    ) : (
+      <section class="section--tight">
+        <p class="muted">Hours and booking will appear here once confirmed. Meanwhile, <a href={routes.contact}>contact us</a>.</p>
+      </section>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .day { margin-top: var(--s1); }
+  .day h3 { font-size: var(--step-1); border-bottom: 2px solid var(--primary); display: inline-block; padding-bottom: 0.1em; }
+  .classes, .hours-list { list-style: none; padding: 0; margin: var(--s-1) 0 0; max-width: 34rem; }
+  .classes li { display: grid; grid-template-columns: 11rem 1fr auto; gap: var(--s0); padding: 0.5em 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .hours-list li { display: flex; justify-content: space-between; padding: 0.4em 0; border-bottom: 1px solid var(--line); }
+  .classes .t { font-weight: 700; }
+  @media (max-width: 40rem) { .classes li { grid-template-columns: 1fr; gap: 0.15em; } }
+</style>

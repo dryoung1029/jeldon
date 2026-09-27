@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import FaqList from '../components/FaqList.astro';
+import { kit, labels, routes, planUrl } from '../lib/kit';
+import { getFaqsFor } from '../lib/content';
+import { crumbs, faqJsonLd } from '../lib/seo';
+
+const faqs = await getFaqsFor('pricing');
+const items = [{ name: labels.pricing ?? 'Pricing', url: routes.pricing }];
+const jsonLd = [crumbs(items), faqJsonLd(faqs.map((f) => f.data))].filter(Boolean) as Record<string, unknown>[];
+const rows = kit.pricing ?? [];
+---
+
+<BaseLayout
+  title={labels.pricing ?? 'Pricing'}
+  description={`${kit.site.name} pricing: ${rows.map((r) => `${r.name} ${r.price}`).join(', ') || 'plans and options'}. ${labels.primaryCta.pitch ?? ''}`.trim().slice(0, 160)}
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <PageHeader title={labels.pricing ?? 'Pricing'} lede={kit.pricingNote} />
+
+    {rows.length ? (
+      <div class="grid grid--3">
+        {rows.map((p) => (
+          <div class={`card ${p.featured ? 'card--featured' : ''}`}>
+            {p.note && <p class="tag">{p.note}</p>}
+            <h2 style="font-size: var(--step-1)">{p.name}</h2>
+            <p class="price">{p.price} <small>{p.period}</small></p>
+            {p.planKey && kit.booking.plans?.[p.planKey] ? (
+              <a class={`btn ${p.featured ? 'btn--primary' : 'btn--secondary'}`} href={planUrl(p.planKey)}>Sign up</a>
+            ) : (
+              <a class="btn btn--secondary" href={routes.contact}>Ask about this</a>
+            )}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p class="muted">SETUP: add pricing rows in kit.config.ts.</p>
+    )}
+
+    <section class="section--tight" style="margin-top: var(--s2)">
+      <p><strong>Not sure yet?</strong> {labels.primaryCta.pitch}</p>
+      <a class="btn btn--primary" href={kit.primaryCta.href}>{kit.primaryCta.label}</a>
+    </section>
+
+    {faqs.length > 0 && (
+      <section class="section--tight">
+        <h2>Questions about {(labels.pricing ?? 'pricing').toLowerCase()}</h2>
+        <FaqList faqs={faqs} />
+        {labels.members && <p style="margin-top: var(--s1)" class="muted">{labels.members}: see the <a href={routes.members}>{labels.members.toLowerCase()} page</a>.</p>}
+      </section>
+    )}
+  </div>
+</BaseLayout>

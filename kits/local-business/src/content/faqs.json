@@ -1,0 +1,16 @@
+[
+  {
+    "id": "how-do-i-get-started",
+    "pages": ["home", "faq", "primary-cta"],
+    "order": 10,
+    "question": "How do I get started?",
+    "answer": "Send a message or come by. Everyone is welcome. (SETUP: the wizard confirms every answer with the owner.)"
+  },
+  {
+    "id": "is-there-a-long-term-commitment",
+    "pages": ["faq", "pricing"],
+    "order": 20,
+    "question": "Is there a long-term commitment?",
+    "answer": "SETUP: the owner answers this."
+  }
+]

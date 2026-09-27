@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { kit, compliance } from '../lib/kit';
+const updated = new Date().toISOString().slice(0, 10);
+---
+
+<BaseLayout title="Terms of Use" description={`Terms for using the ${kit.site.name} website.`} robots="noindex,follow" hideFooterCta>
+  <div class="container prose" style="padding-block: var(--s2)">
+    <h1>Terms of use</h1>
+    <!-- SETUP: the owner reviews. Keep it human. -->
+    <p><em>Last updated: {updated}</em></p>
+    <p>This website is general information about {kit.site.name}. {compliance.articleDisclaimer ?? ''}</p>
+    {kit.booking.kind !== 'none' && <p>Purchases, bookings and any waivers are agreed to in our booking system and are separate from these website terms.</p>}
+    <p>Content on this site belongs to {kit.site.name}. You're welcome to share links; please ask before republishing articles.</p>
+  </div>
+</BaseLayout>

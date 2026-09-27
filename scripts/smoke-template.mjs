@@ -46,7 +46,22 @@ cpSync(resolve(root, 'template'), dir, { recursive: true });
 if (kit) {
   const kitDir = resolve(root, 'kits', kit);
   if (!existsSync(kitDir)) throw new Error(`No kit at ${kitDir}`);
-  cpSync(kitDir, dir, { recursive: true, force: true });
+  // Overlay the kit. `agent/` holds templates jeldon init renders (not copied
+  // raw); kit.package.json is merged into package.json; DESIGN.md → docs/.
+  cpSync(kitDir, dir, {
+    recursive: true,
+    force: true,
+    filter: (src) => !/[\/\\](agent|kit\.package\.json|DESIGN\.md)$/.test(src) && !/[\/\\]agent[\/\\]/.test(src),
+  });
+  mkdirSync(join(dir, 'docs'), { recursive: true });
+  cpSync(join(kitDir, 'DESIGN.md'), join(dir, 'docs', 'DESIGN.md'));
+  const kitPkg = JSON.parse(readFileSync(join(kitDir, 'kit.package.json'), 'utf8'));
+  const base = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
+  base.scripts = { ...base.scripts, ...kitPkg.scripts };
+  base.dependencies = { ...base.dependencies, ...kitPkg.dependencies };
+  base.devDependencies = { ...base.devDependencies, ...(kitPkg.devDependencies ?? {}) };
+  writeFileSync(join(dir, 'package.json'), JSON.stringify(base, null, 2) + '\n');
+  // The template's article pages are superseded by the kit's; nothing else collides.
 }
 
 // Vendor the built engine as file: deps.

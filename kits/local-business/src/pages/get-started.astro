@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import FaqList from '../components/FaqList.astro';
+import { kit, labels, routes, booking } from '../lib/kit';
+import { getFaqsFor } from '../lib/content';
+import { crumbs, faqJsonLd } from '../lib/seo';
+
+const faqs = await getFaqsFor('primary-cta');
+const items = [{ name: labels.primaryCta.short, url: routes.primaryCta }];
+const jsonLd = [crumbs(items), faqJsonLd(faqs.map((f) => f.data))].filter(Boolean) as Record<string, unknown>[];
+const bookHref = kit.booking.plans?.primary ?? booking.calendarUrl ?? routes.contact;
+const a = kit.site.address;
+const steps = kit.site.steps ?? [];
+---
+
+<BaseLayout
+  title={labels.primaryCta.label}
+  description={`${labels.primaryCta.pitch ?? labels.primaryCta.label} ${kit.site.name}${a?.city ? ` in ${a.city}` : ''}. ${labels.primaryCta.note ?? ''}`.trim()}
+  jsonLd={jsonLd}
+  hideFooterCta
+>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <div class="split" style="padding-block: var(--s2)">
+      <div>
+        <h1>{labels.primaryCta.pitch ?? labels.primaryCta.label}</h1>
+        {kit.site.heroLede && <p class="lede">{kit.site.heroLede}</p>}
+        {steps.length > 0 && (
+          <ol class="how">
+            {steps.map((s) => <li><strong>{s.title}.</strong> {s.text}</li>)}
+          </ol>
+        )}
+        <div class="btn-row">
+          <a class="btn btn--primary btn--lg" href={bookHref}>{kit.primaryCta.label}</a>
+          <a class="btn btn--ghost" href={routes.contact}>I have a question first</a>
+        </div>
+        {kit.site.phone && <p class="muted" style="margin-top: var(--s0); font-size: var(--step--1)">Prefer to talk? Call <a href={`tel:${kit.site.phone}`}>{kit.site.phoneDisplay ?? kit.site.phone}</a>.</p>}
+      </div>
+      <div>
+        {faqs.length > 0 && (
+          <>
+            <h2 style="font-size: var(--step-1)">Before you come</h2>
+            <FaqList faqs={faqs} />
+          </>
+        )}
+        {a?.street && (
+          <div class="notice" style="margin-top: var(--s1)">
+            <strong>{a.street}, {a.city}</strong><br />
+            {a.landmark && <>{a.landmark}. </>}{a.mapsUrl && <a href={a.mapsUrl} target="_blank" rel="noopener">Get directions</a>}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .how { padding-left: 1.3em; margin: var(--s0) 0 var(--s1); max-width: var(--measure); }
+  .how li + li { margin-top: 0.4em; }
+</style>

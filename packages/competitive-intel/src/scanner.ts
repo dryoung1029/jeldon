@@ -382,7 +382,8 @@ export async function auditGbp(placeId: string, apiKey?: string): Promise<GbpAud
 
 // ---------- Sitemap page sampling ----------
 
-async function listSitemapUrls(sitemapUrl: string): Promise<string[]> {
+/** Every URL a sitemap (and up to 10 child sitemaps) lists — capped at 500. */
+export async function listSitemapUrls(sitemapUrl: string, fetchImpl: typeof fetch = fetch): Promise<string[]> {
   const all = new Set<string>();
   const queue = [sitemapUrl];
   const visited = new Set<string>();
@@ -391,7 +392,7 @@ async function listSitemapUrls(sitemapUrl: string): Promise<string[]> {
     if (visited.has(next)) continue;
     visited.add(next);
     try {
-      const res = await fetch(next, { headers: { 'User-Agent': RANK_UA } });
+      const res = await fetchImpl(next, { headers: { 'User-Agent': RANK_UA } });
       if (!res.ok) continue;
       const xml = await res.text();
       const childSitemaps = Array.from(xml.matchAll(/<sitemap>[\s\S]*?<loc>([^<]+)<\/loc>/gi)).map(

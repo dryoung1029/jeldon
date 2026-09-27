@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { kit, labels, routes } from '../lib/kit';
+import { pack } from '../lib/pack';
+import { crumbs } from '../lib/seo';
+const items = [{ name: labels.about ?? 'About', url: routes.about }];
+const owner = pack.authors.find((a) => a.isPrimary) ?? pack.authors[0];
+---
+
+<BaseLayout
+  title={`About ${kit.site.name}`}
+  description={kit.site.shortPitch ?? `${kit.site.name}: who we are and what we're built on.`}
+  jsonLd={[crumbs(items)]}
+>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <PageHeader title={kit.site.tagline ?? `About ${kit.site.name}`} />
+    <div class="prose">
+      <!-- SETUP: the owner tells the origin story in the wizard (why they started, when, what they saw that led here). -->
+      {kit.site.shortPitch && <p>{kit.site.shortPitch}</p>}
+      {(kit.site.pillars?.length ?? 0) > 0 && (
+        <>
+          <h2>What we're built on</h2>
+          <ul>
+            {kit.site.pillars!.map((p) => <li><strong>{p.title}.</strong> {p.text}</li>)}
+          </ul>
+        </>
+      )}
+      {owner && (
+        <>
+          <h2>Who runs it</h2>
+          <p>{kit.site.name} is owned and led by <a href={`${routes.team}#${owner.slug}`}>{owner.name}</a>{owner.title ? `, ${owner.title.toLowerCase()}` : ''}.</p>
+        </>
+      )}
+      <p><a class="btn btn--primary" href={kit.primaryCta.href}>{kit.primaryCta.label}</a></p>
+    </div>
+  </div>
+</BaseLayout>

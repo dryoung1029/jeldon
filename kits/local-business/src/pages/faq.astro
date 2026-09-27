@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import FaqList from '../components/FaqList.astro';
+import { kit, labels, routes } from '../lib/kit';
+import { getFaqsFor } from '../lib/content';
+import { crumbs, faqJsonLd } from '../lib/seo';
+
+const faqs = await getFaqsFor('faq');
+const items = [{ name: labels.faq ?? 'FAQ', url: routes.faq }];
+const jsonLd = [crumbs(items), faqJsonLd(faqs.map((f) => f.data))].filter(Boolean) as Record<string, unknown>[];
+---
+
+<BaseLayout
+  title="Frequently Asked Questions"
+  description={`Answers to the questions people ask before choosing ${kit.site.name}: ${faqs.slice(0, 3).map((f) => f.data.question.toLowerCase().replace(/\?$/, '')).join(', ')}, and more.`}
+  jsonLd={jsonLd}
+>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <PageHeader title="Questions? We have answers." lede={`Still curious after this? ${kit.site.phone ? 'Call, ' : ''}email, or just come by and ask in person.`} />
+    <div style="max-width: var(--measure)">
+      {faqs.length ? <FaqList faqs={faqs} /> : <p class="muted">SETUP: add questions to {kit.collections.faqs}.</p>}
+    </div>
+    <p style="margin-top: var(--s2)"><a class="btn btn--primary" href={kit.primaryCta.href}>{kit.primaryCta.label}</a></p>
+  </div>
+</BaseLayout>

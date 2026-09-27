@@ -1,0 +1,94 @@
+---
+import { kit, labels, routes } from '../lib/kit';
+interface Props { hideCta?: boolean }
+const { hideCta = false } = Astro.props;
+const year = new Date().getFullYear();
+const socials = Object.entries(kit.site.social ?? {}).filter(([, url]) => url) as [string, string][];
+const days = Object.entries(kit.site.hours ?? {}) as [string, string][];
+const a = kit.site.address;
+---
+
+{!hideCta && (
+  <section class="section section--dark">
+    <div class="container center">
+      <h2>{kit.copy?.footerCtaTitle ?? labels.primaryCta.pitch}</h2>
+      {kit.copy?.footerCtaText && <p class="lede" style="color: var(--fg-on-dark)">{kit.copy.footerCtaText}</p>}
+      <div class="btn-row" style="justify-content:center">
+        <a class="btn btn--primary btn--lg" href={kit.primaryCta.href}>{kit.primaryCta.label}</a>
+        <a class="btn btn--ghost" href={routes.contact}>Ask a question first</a>
+      </div>
+    </div>
+  </section>
+)}
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      {kit.site.logo ? <img src={kit.site.logo} alt={kit.site.name} width="180" height="73" class="footer-logo" /> : <strong>{kit.site.name}</strong>}
+      {kit.site.shortPitch && <p class="muted">{kit.site.shortPitch}</p>}
+      {socials.length > 0 && (
+        <ul class="social">
+          {socials.map(([name, url]) => (
+            <li><a href={url} rel="me noopener" target="_blank">{name.charAt(0).toUpperCase() + name.slice(1)}</a></li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+    {a?.street && (
+      <div>
+        <h3>Visit</h3>
+        <address>
+          {a.street}<br />
+          {a.city}, {a.region} {a.postalCode}<br />
+          {a.landmark && <><span class="muted">{a.landmark}</span><br /></>}
+          {a.mapsUrl && <><a href={a.mapsUrl} target="_blank" rel="noopener">Get directions</a><br /></>}
+          {kit.site.phone && <><a href={`tel:${kit.site.phone}`}>{kit.site.phoneDisplay ?? kit.site.phone}</a><br /></>}
+          {kit.site.email && <a href={`mailto:${kit.site.email}`}>{kit.site.email}</a>}
+        </address>
+      </div>
+    )}
+
+    <div>
+      <h3>Hours</h3>
+      {kit.site.hoursConfirmed ? (
+        <ul class="hours">
+          {days.map(([day, h]) => (
+            <li><span>{day}</span><span>{h || 'Closed'}</span></li>
+          ))}
+        </ul>
+      ) : (
+        <p class="muted"><a href={routes.schedule}>See the {labels.schedule?.toLowerCase() ?? 'schedule'}</a> for current times.</p>
+      )}
+    </div>
+
+    <div>
+      <h3>Explore</h3>
+      <ul class="footer-links">
+        {kit.nav.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        <li><a href={routes.primaryCta}>{labels.primaryCta.short}</a></li>
+        <li><a href={routes.faq}>{labels.faq ?? 'FAQ'}</a></li>
+        <li><a href={routes.about}>{labels.about ?? 'About'}</a></li>
+        {labels.members && <li><a href={routes.members}>{labels.members}</a></li>}
+      </ul>
+    </div>
+  </div>
+
+  <div class="container footer-bottom">
+    <small class="muted">© {year} {kit.site.name}. All rights reserved.</small>
+    <small><a href={routes.privacy}>Privacy</a> · <a href={routes.terms}>Terms</a></small>
+  </div>
+</footer>
+
+<style>
+  .site-footer { border-top: 1px solid var(--line); padding-block: var(--s3) var(--s1); background: var(--bg-alt); }
+  .footer-grid { display: grid; gap: var(--s2); grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+  .footer-logo { width: 180px; background: #fff; border-radius: 6px; padding: 2px 6px; margin-bottom: var(--s0); }
+  .site-footer h3 { font-size: var(--step-0); margin-bottom: var(--s-1); }
+  address { font-style: normal; line-height: 1.7; }
+  .hours, .footer-links, .social { list-style: none; margin: 0; padding: 0; }
+  .hours li { display: flex; justify-content: space-between; gap: var(--s0); border-bottom: 1px dotted var(--line-strong); padding: 0.15em 0; }
+  .footer-links li, .social li { padding: 0.15em 0; }
+  .social { display: flex; gap: var(--s0); flex-wrap: wrap; }
+  .footer-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--s0); margin-top: var(--s2); padding-top: var(--s0); border-top: 1px solid var(--line); }
+</style>

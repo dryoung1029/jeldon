@@ -1,0 +1,15 @@
+---
+interface Props { title: string; lede?: string }
+const { title, lede } = Astro.props;
+---
+
+<header class="page-header">
+  <h1>{title}</h1>
+  {lede && <p class="lede">{lede}</p>}
+  <slot />
+</header>
+
+<style>
+  .page-header { padding-block: var(--s2) var(--s1); }
+  .page-header h1 { font-size: var(--step-3); }
+</style>

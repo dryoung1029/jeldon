@@ -1,0 +1,54 @@
+/**
+ * Small helpers around @jeldon/schema-graph for the kit's pages. The article
+ * URL prefix comes from the Domain Pack (`content.articlePathPrefix`), so no
+ * string rebasing is needed anywhere (Helix finding #3, fixed in the engine).
+ */
+import { articleGraph, breadcrumbList, extractFaqs, faqPage } from '@jeldon/schema-graph';
+import { pack, authorEntries, categoryLabel, articlePath } from './pack';
+import { labels, routes } from './kit';
+import type { Article } from './content';
+
+export function articleJsonLd(article: Article, body: string): Record<string, unknown>[] {
+  const d = article.data;
+  const nodes: Record<string, unknown>[] = [
+    articleGraph(
+      {
+        title: d.title,
+        slug: article.id,
+        excerpt: d.excerpt,
+        publishDate: d.publishDate,
+        updatedDate: d.updatedDate,
+        category: d.category,
+        categoryLabel: categoryLabel(d.category),
+        author: d.author,
+        authorSlug: d.authorSlug,
+        tags: d.tags,
+        heroImage: d.heroImage,
+        heroImageAlt: d.heroImageAlt,
+        sourceEpisode: d.sourceEpisode,
+      },
+      authorEntries,
+      pack,
+    ) as Record<string, unknown>,
+    breadcrumbList(
+      [
+        { name: 'Home', url: '/' },
+        { name: labels.blog, url: routes.blog },
+        { name: d.title, url: articlePath(article.id) },
+      ],
+      pack.brand.siteUrl,
+    ) as Record<string, unknown>,
+  ];
+  const faqs = extractFaqs(body);
+  if (faqs.length >= 2) nodes.push(faqPage(faqs) as Record<string, unknown>);
+  return nodes;
+}
+
+export function crumbs(items: { name: string; url: string }[]): Record<string, unknown> {
+  return breadcrumbList([{ name: 'Home', url: '/' }, ...items], pack.brand.siteUrl) as Record<string, unknown>;
+}
+
+export function faqJsonLd(faqs: { question: string; answer: string }[]): Record<string, unknown> | null {
+  if (faqs.length < 2) return null;
+  return faqPage(faqs.map((f) => ({ q: f.question, a: f.answer }))) as Record<string, unknown>;
+}

@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { kit, labels } from '../lib/kit';
+---
+
+<BaseLayout title="Thanks — we got your message" description={`Your message reached ${kit.site.name}.`} robots="noindex,nofollow">
+  <div class="container" style="padding-block: var(--s3); max-width: var(--measure)">
+    <h1>Got it. We'll be in touch soon.</h1>
+    <p class="lede">A real person will get back to you.</p>
+    {labels.primaryCta.pitch && <p>Want to skip the wait? {labels.primaryCta.pitch}</p>}
+    <a class="btn btn--primary" href={kit.primaryCta.href}>{kit.primaryCta.label}</a>
+  </div>
+</BaseLayout>

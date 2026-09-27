@@ -1,0 +1,22 @@
+---
+/**
+ * Reviews. Until the owner supplies real reviews, this shows the review widget
+ * they already use (kit.config booking.widgets.reviewWidgetUrl), lazily, in an
+ * iframe so it never slows the page. Renders nothing when there is no widget.
+ */
+import { kit, labels } from '../lib/kit';
+const widget = kit.booking.widgets?.reviewWidgetUrl;
+const mapsSearch = `https://www.google.com/maps/search/${encodeURIComponent(`${kit.site.name} ${kit.site.address?.city ?? ''}`.trim())}`;
+---
+
+{widget && (
+  <section class="section section--alt">
+    <div class="container">
+      <div class="section-head"><h2>What {labels.client.plural} say</h2></div>
+      <iframe src={widget} title={`Reviews for ${kit.site.name}`} loading="lazy" style="width:100%; min-height: 420px; border:0;"></iframe>
+      <p class="muted" style="margin-top: var(--s0); font-size: var(--step--1)">
+        Reviews don't load? <a href={mapsSearch} target="_blank" rel="noopener">Read them on Google.</a>
+      </p>
+    </div>
+  </section>
+)}

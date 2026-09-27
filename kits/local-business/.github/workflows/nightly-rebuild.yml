@@ -1,0 +1,17 @@
+# Rebuilds the site every night so a build-time schedule ("This week") stays
+# current. Does nothing unless the CF_DEPLOY_HOOK secret is set (see /setup).
+name: Nightly rebuild
+on:
+  schedule:
+    - cron: '17 10 * * *' # 03:17 Pacific (10:17 UTC)
+  workflow_dispatch:
+jobs:
+  poke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare deploy hook
+        env:
+          HOOK: ${{ secrets.CF_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "CF_DEPLOY_HOOK not set; skipping"; exit 0; fi
+          curl -fsS -X POST "$HOOK" && echo "rebuild requested"

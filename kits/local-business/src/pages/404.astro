@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { kit, labels, routes } from '../lib/kit';
+---
+
+<BaseLayout title="Page not found" description="That page doesn't exist. Here's where to go instead." robots="noindex,nofollow">
+  <div class="container" style="padding-block: var(--s3)">
+    <h1>{kit.copy?.notFoundTitle ?? 'That page moved or never existed.'}</h1>
+    <p class="lede">{kit.copy?.notFoundText ?? 'Here is where to go instead.'}</p>
+    <ul>
+      <li><a href={routes.services}>{labels.services.plural}</a></li>
+      <li><a href={routes.schedule}>{labels.schedule ?? 'Schedule'}</a></li>
+      <li><a href={routes.pricing}>{labels.pricing ?? 'Pricing'}</a></li>
+      <li><a href={kit.primaryCta.href}>{kit.primaryCta.label}</a></li>
+      <li><a href={routes.contact}>{labels.contact ?? 'Contact'}</a></li>
+    </ul>
+  </div>
+</BaseLayout>
