@@ -64,32 +64,14 @@ if (kit) {
   // The template's article pages are superseded by the kit's; nothing else collides.
 }
 
-// Vendor the built engine as file: deps.
+// Vendor the built engine as file: deps (shared with `jeldon init --vendor-from`).
 const pkgPath = join(dir, 'package.json');
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 if (!useNpm) {
-  const vendor = join(dir, 'vendor', '@jeldon');
-  mkdirSync(vendor, { recursive: true });
-  const names = readdirSync(resolve(root, 'packages'));
-  for (const name of names) {
-    const src = resolve(root, 'packages', name);
-    const dist = join(src, 'dist');
-    if (!existsSync(dist)) throw new Error(`packages/${name}/dist missing — run pnpm build first`);
-    const dest = join(vendor, name);
-    mkdirSync(dest, { recursive: true });
-    cpSync(dist, join(dest, 'dist'), { recursive: true });
-    const p = JSON.parse(readFileSync(join(src, 'package.json'), 'utf8'));
-    for (const field of ['dependencies', 'peerDependencies']) {
-      for (const [dep, range] of Object.entries(p[field] ?? {})) {
-        if (String(range).startsWith('workspace:')) p[field][dep] = `file:../${dep.replace('@jeldon/', '')}`;
-      }
-    }
-    delete p.devDependencies;
-    delete p.scripts;
-    writeFileSync(join(dest, 'package.json'), JSON.stringify(p, null, 2));
-  }
-  for (const [dep, range] of Object.entries(pkg.dependencies ?? {})) {
-    if (dep.startsWith('@jeldon/')) pkg.dependencies[dep] = `file:vendor/@jeldon/${dep.replace('@jeldon/', '')}`;
+  const { vendorEngine } = await import('./vendor-engine.mjs');
+  const rel = vendorEngine(dir, root);
+  for (const dep of Object.keys(pkg.dependencies ?? {})) {
+    if (dep.startsWith('@jeldon/')) pkg.dependencies[dep] = `file:${rel}/${dep.replace('@jeldon/', '')}`;
   }
   writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 }

@@ -26,6 +26,7 @@
     "turbo": "^2.2.3",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4",
-    "zod-to-json-schema": "^3.23.5"
+    "zod-to-json-schema": "^3.23.5",
+    "@jeldon/cli": "workspace:*"
   }
 }

@@ -17,10 +17,15 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./answers": {
+      "types": "./dist/answers.d.ts",
+      "import": "./dist/answers.js"
     }
   },
   "files": [
     "dist",
+    "skeleton",
     "README.md",
     "CHANGELOG.md"
   ],
@@ -32,7 +37,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "node scripts/sync-skeleton.mjs && tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
@@ -40,7 +45,11 @@
     "@jeldon/config": "workspace:*",
     "@jeldon/content-model": "workspace:*",
     "@jeldon/core-scoring": "workspace:*",
-    "@jeldon/drafting": "workspace:*"
+    "@jeldon/drafting": "workspace:*",
+    "@jeldon/competitive-intel": "workspace:*",
+    "@jeldon/kit-local-business": "workspace:*",
+    "@jeldon/benchmark": "workspace:*",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",

@@ -1,0 +1,1021 @@
+{
+  "$ref": "#/definitions/InitAnswers",
+  "definitions": {
+    "InitAnswers": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "kit": {
+          "type": "string",
+          "const": "local-business",
+          "default": "local-business"
+        },
+        "vertical": {
+          "type": "string",
+          "enum": [
+            "gym",
+            "clinic",
+            "studio",
+            "shop",
+            "generic"
+          ],
+          "default": "generic"
+        },
+        "business": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "oldUrl": {
+              "type": "string",
+              "format": "uri"
+            },
+            "tagline": {
+              "type": "string"
+            },
+            "shortPitch": {
+              "type": "string"
+            },
+            "descriptor": {
+              "type": "string"
+            },
+            "phone": {
+              "type": "string"
+            },
+            "phoneDisplay": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "address": {
+              "type": "object",
+              "properties": {
+                "street": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                },
+                "postalCode": {
+                  "type": "string"
+                },
+                "landmark": {
+                  "type": "string"
+                },
+                "mapsUrl": {
+                  "type": "string"
+                },
+                "mapsEmbedUrl": {
+                  "type": "string"
+                },
+                "placeId": {
+                  "type": "string"
+                },
+                "geo": {
+                  "type": "object",
+                  "properties": {
+                    "latitude": {
+                      "type": "number"
+                    },
+                    "longitude": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "latitude",
+                    "longitude"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "hours": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "hoursConfirmed": {
+              "type": "boolean",
+              "default": false
+            },
+            "social": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "geoFraming": {
+              "type": "string"
+            },
+            "priceRange": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "url"
+          ],
+          "additionalProperties": false
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "firstName": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "credential": {
+              "type": "string"
+            },
+            "slug": {
+              "type": "string"
+            },
+            "jobTitle": {
+              "type": "string"
+            },
+            "knowsAbout": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "alumniOf": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "memberOf": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sameAs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "bio": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        "helper": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "fullName": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false,
+          "default": {
+            "name": "your helper"
+          }
+        },
+        "repo": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "templateUrl": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "brand": {
+          "type": "object",
+          "properties": {
+            "colors": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "theme": {
+              "type": "object",
+              "properties": {
+                "primary": {
+                  "type": "string"
+                },
+                "accent": {
+                  "type": "string"
+                },
+                "neutral": {
+                  "type": "string"
+                },
+                "highlight": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "fonts": {
+              "type": "object",
+              "properties": {
+                "display": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "googleFontsHref": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "logoUrl": {
+              "type": "string"
+            },
+            "ogImage": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "routes": {
+          "type": "object",
+          "properties": {
+            "services": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "team": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "pricing": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "schedule": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "contact": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "primaryCta": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "blog": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "faq": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "about": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "members": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "privacy": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "terms": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            },
+            "thanks": {
+              "type": "string",
+              "pattern": "^\\/(?:[a-z0-9-]+\\/)*$"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "collections": {
+          "type": "object",
+          "properties": {
+            "services": {
+              "type": "string"
+            },
+            "team": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "nav": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "href": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label",
+              "href"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "primaryCta": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string"
+            },
+            "href": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "home": {
+          "type": "object",
+          "properties": {
+            "heroKicker": {
+              "type": "string"
+            },
+            "heroTitle": {
+              "type": "string"
+            },
+            "heroLede": {
+              "type": "string"
+            },
+            "pillars": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title",
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title",
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "quote": {
+              "type": "string"
+            },
+            "seoTitle": {
+              "type": "string"
+            },
+            "seoDescription": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "slug": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "tagline": {
+                "type": "string"
+              },
+              "audience": {
+                "type": "string"
+              },
+              "order": {
+                "type": "number"
+              },
+              "signupPlanKey": {
+                "type": "string"
+              },
+              "signupUrl": {
+                "type": "string"
+              },
+              "signupLabel": {
+                "type": "string"
+              },
+              "price": {
+                "type": "string"
+              },
+              "duration": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "serviceType": {
+                "type": "string"
+              },
+              "seoTitle": {
+                "type": "string"
+              },
+              "seoDescription": {
+                "type": "string"
+              },
+              "faqs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "q": {
+                      "type": "string"
+                    },
+                    "a": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "q",
+                    "a"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "body": {
+                "type": "string"
+              },
+              "confirmed": {
+                "type": "boolean"
+              },
+              "oldSlugs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "slug",
+              "name",
+              "tagline",
+              "audience"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "team": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "slug": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "credentials": {
+                "type": "string"
+              },
+              "order": {
+                "type": "number"
+              },
+              "specialties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "photo": {
+                "type": "string"
+              },
+              "bio": {
+                "type": "string"
+              },
+              "confirmed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "slug",
+              "name",
+              "role"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "faqs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "pages": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "order": {
+                "type": "number"
+              },
+              "question": {
+                "type": "string"
+              },
+              "answer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "pages",
+              "question",
+              "answer"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "pricing": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "price": {
+                "type": "string"
+              },
+              "period": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              },
+              "planKey": {
+                "type": "string"
+              },
+              "featured": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "price",
+              "period"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
+        "pricingNote": {
+          "type": "string"
+        },
+        "booking": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "pushpress",
+                "iframe",
+                "link",
+                "none"
+              ],
+              "default": "none"
+            },
+            "calendarUrl": {
+              "type": "string"
+            },
+            "embedUrl": {
+              "type": "string"
+            },
+            "pushpressSubdomain": {
+              "type": "string"
+            },
+            "plans": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "widgets": {
+              "type": "object",
+              "properties": {
+                "reviewWidgetUrl": {
+                  "type": "string"
+                },
+                "pricingFormUrl": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "memberApp": {
+              "type": "object",
+              "properties": {
+                "ios": {
+                  "type": "string"
+                },
+                "android": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "timezone": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "contact": {
+          "type": "object",
+          "properties": {
+            "crm": {
+              "type": "string",
+              "enum": [
+                "pushpress",
+                "gohighlevel",
+                "brevo-contact",
+                "none"
+              ],
+              "default": "none"
+            },
+            "notify": {
+              "type": "string",
+              "enum": [
+                "brevo",
+                "resend",
+                "none"
+              ],
+              "default": "none"
+            },
+            "subjects": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "hint": {
+              "type": "string"
+            },
+            "turnstileSiteKey": {
+              "type": "string"
+            },
+            "goHighLevelWebhookUrl": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "cloudflareToken": {
+              "type": "string"
+            },
+            "googleSiteVerification": {
+              "type": "string"
+            },
+            "ga4MeasurementId": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "content": {
+          "type": "object",
+          "properties": {
+            "categories": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "timezone": {
+              "type": "string"
+            },
+            "geoFloor": {
+              "type": "number"
+            },
+            "migratePosts": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "voice": {
+          "type": "object",
+          "properties": {
+            "persona": {
+              "type": "string"
+            },
+            "bannedTopics": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "bannedPhrasings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rules": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "readingGradeBand": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "aeo": {
+          "type": "object",
+          "properties": {
+            "brandMentions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "localSearchLocation": {
+              "type": "string"
+            },
+            "querySet": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "query": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "query",
+                  "tags"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "highPriorityTags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "competitors": {
+          "type": "object",
+          "properties": {
+            "roster": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "url"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "targetKeywords": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "localPackLocation": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "schema": {
+          "type": "object",
+          "properties": {
+            "orgType": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "llmsTxt": {
+              "type": "object",
+              "properties": {
+                "summary": {
+                  "type": "string"
+                },
+                "intro": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "sameAs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "compliance": {
+          "type": "object",
+          "properties": {
+            "pack": {
+              "type": "string",
+              "default": "none"
+            },
+            "requireHumanReviewTags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "default": {
+            "pack": "none"
+          }
+        },
+        "redirects": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "copy": {
+          "type": "object",
+          "properties": {
+            "articleDisclaimer": {
+              "type": "string"
+            },
+            "footerCtaTitle": {
+              "type": "string"
+            },
+            "footerCtaText": {
+              "type": "string"
+            },
+            "notFoundTitle": {
+              "type": "string"
+            },
+            "notFoundText": {
+              "type": "string"
+            },
+            "expertDescriptor": {
+              "type": "string"
+            },
+            "sourcesHint": {
+              "type": "string"
+            },
+            "competitorNoun": {
+              "type": "string"
+            },
+            "topicNoun": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        }
+      },
+      "required": [
+        "business",
+        "owner"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -1,0 +1,873 @@
+{
+  "$schema": "../schemas/init-answers.schema.json",
+  "kit": "local-business",
+  "vertical": "gym",
+  "business": {
+    "name": "Helix Training",
+    "url": "https://helixtrain.com",
+    "oldUrl": "https://www.helixtrain.com",
+    "tagline": "Training with a plan. Expert coaching. Way more fun than it should be.",
+    "shortPitch": "Small-group strength training and personal coaching in Corvallis, Oregon — run by a Doctor of Physical Therapy.",
+    "descriptor": "a small-group strength gym",
+    "phone": "+1-541-286-7850",
+    "phoneDisplay": "(541) 286-7850",
+    "email": "kathy@helixtrain.com",
+    "address": {
+      "street": "2323 NW 9th St",
+      "city": "Corvallis",
+      "region": "OR",
+      "postalCode": "97330",
+      "landmark": "Same building as ToGo's Sandwich Shop",
+      "mapsUrl": "https://maps.app.goo.gl/R4w2bNmB9JrxtCnt9",
+      "mapsEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2841.268310037433!2d-123.25507732377324!3d44.59153737107317!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54c03f7da42cefdd%3A0x6d13b9098c4ed448!2sHelix%20Training!5e0!3m2!1sen!2sus",
+      "placeId": "",
+      "geo": {
+        "latitude": 44.591537,
+        "longitude": -123.255077
+      }
+    },
+    "hours": {
+      "Mon": "",
+      "Tue": "",
+      "Wed": "",
+      "Thu": "",
+      "Fri": "",
+      "Sat": "",
+      "Sun": ""
+    },
+    "hoursConfirmed": false,
+    "social": {
+      "facebook": "https://www.facebook.com/HelixTrain",
+      "instagram": "https://instagram.com/helixtrain",
+      "tiktok": "",
+      "youtube": ""
+    },
+    "geoFraming": "Corvallis, Oregon and the mid-Willamette Valley",
+    "priceRange": "$$"
+  },
+  "owner": {
+    "name": "Dr. Kathy Lynch, PT, DPT",
+    "firstName": "Kathy",
+    "title": "Owner, Doctor of Physical Therapy",
+    "credential": "PT, DPT",
+    "slug": "kathy-lynch",
+    "jobTitle": "Doctor of Physical Therapy, Owner of Helix Training",
+    "knowsAbout": [
+      "strength training",
+      "strength and conditioning",
+      "physical therapy",
+      "training after 50",
+      "injury prevention",
+      "movement assessment",
+      "small group training"
+    ],
+    "alumniOf": [],
+    "memberOf": [],
+    "sameAs": [
+      "https://www.facebook.com/HelixTrain",
+      "https://instagram.com/helixtrain"
+    ]
+  },
+  "helper": {
+    "name": "Jason",
+    "fullName": "Dr. Jason Young"
+  },
+  "repo": {
+    "name": "helix-training-site",
+    "templateUrl": "https://github.com/dryoung1029/helix-site-template"
+  },
+  "brand": {
+    "colors": {
+      "blue": "#008abd",
+      "red": "#ec222d",
+      "charcoal": "#333537",
+      "salmon": "#f08a7a"
+    },
+    "theme": {
+      "primary": "blue",
+      "accent": "red",
+      "neutral": "charcoal",
+      "highlight": "salmon"
+    },
+    "fonts": {
+      "display": "Nunito",
+      "body": "Nunito",
+      "googleFontsHref": "https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+    },
+    "logoUrl": "/brand/logo-horizontal.webp",
+    "ogImage": "/brand/og-default.jpg"
+  },
+  "labels": {
+    "services": {
+      "singular": "Program",
+      "plural": "Programs",
+      "lede": "Five ways to train, one coaching philosophy: learn to move well, lift well, and feel strong for the long haul."
+    },
+    "team": {
+      "singular": "Coach",
+      "plural": "Coaches",
+      "pageTitle": "Meet the coaches"
+    },
+    "primaryCta": {
+      "label": "Try a free class",
+      "short": "Free class",
+      "pitch": "Your first class is free.",
+      "note": "No experience needed. No long-term commitment required."
+    },
+    "client": {
+      "singular": "member",
+      "plural": "members"
+    },
+    "blog": "Blog",
+    "members": "Current members",
+    "schedule": "Schedule",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "routes": {
+    "services": "/programs/",
+    "team": "/coaches/",
+    "primaryCta": "/free-class/",
+    "blog": "/blog/"
+  },
+  "collections": {
+    "services": "src/content/programs",
+    "team": "src/content/coaches"
+  },
+  "nav": [
+    {
+      "label": "Programs",
+      "href": "/programs/"
+    },
+    {
+      "label": "Schedule",
+      "href": "/schedule/"
+    },
+    {
+      "label": "Pricing",
+      "href": "/pricing/"
+    },
+    {
+      "label": "Coaches",
+      "href": "/coaches/"
+    },
+    {
+      "label": "Blog",
+      "href": "/blog/"
+    },
+    {
+      "label": "Contact",
+      "href": "/contact/"
+    }
+  ],
+  "primaryCta": {
+    "label": "Try a Free Class",
+    "href": "/free-class/"
+  },
+  "home": {
+    "heroKicker": "Corvallis, Oregon",
+    "heroTitle": "Get strong with people who actually cheer for you.",
+    "heroLede": "Small classes. A written plan. Coaches who know your name, and programs designed with a Doctor of Physical Therapy. Way more fun than it should be.",
+    "pillars": [
+      {
+        "title": "Supportive community",
+        "text": "Everyone knows your name and notices when you're not there. Fitness is a lot easier with people in your corner."
+      },
+      {
+        "title": "Evidence-based programs",
+        "text": "Every class follows a progressive plan designed by experts, including a Doctor of Physical Therapy. You get stronger over months, not just tired for an hour."
+      },
+      {
+        "title": "Welcoming to every body",
+        "text": "First-timers, busy professionals, people over 50, people coming back from injury. Our doors are open to anyone who wants to be their strongest self."
+      }
+    ],
+    "steps": [
+      {
+        "title": "Book a free class",
+        "text": "Pick a time that works. Your first class is on us — a real workout, scaled to you."
+      },
+      {
+        "title": "Meet your coach",
+        "text": "Come a few minutes early for a quick movement check and a conversation about your history and goals."
+      },
+      {
+        "title": "Take the class",
+        "text": "About an hour of coached strength work. You'll leave knowing exactly what we do and whether it's for you."
+      }
+    ],
+    "quote": "We're more than a gym. We're a vibrant, fun-loving community that makes strength training an absolute blast — evidence-based programming, a hearty dose of encouragement, and a lot of laughter. With a Doctor of Physical Therapy at the helm, you get a perspective on fitness you won't find anywhere else.",
+    "seoTitle": "Strength Training Gym in Corvallis, OR",
+    "seoDescription": "Helix Training is a small-group strength and personal training gym in Corvallis, Oregon, owned by a Doctor of Physical Therapy. Coached classes for every level. Your first class is free."
+  },
+  "services": [
+    {
+      "slug": "personal-training",
+      "name": "Personal Training",
+      "tagline": "One-on-one coaching built around your body, your goals, and your season of life.",
+      "audience": "Anyone who wants a plan made for them",
+      "order": 10,
+      "signupLabel": "Ask about personal training",
+      "duration": "60 minutes",
+      "format": "One-on-one",
+      "serviceType": "Fitness training",
+      "seoTitle": "Personal Training in Corvallis, OR",
+      "seoDescription": "Personal training at Helix Training in Corvallis — strength-based coaching from a team led by a Doctor of Physical Therapy. Movement assessment first, then a plan built for you.",
+      "faqs": [
+        {
+          "q": "Do I need to be in shape before I start personal training?",
+          "a": "No. Personal training is where a lot of people start. We meet you where you are and build from there."
+        },
+        {
+          "q": "How often do people train one-on-one?",
+          "a": "That depends on your goals and schedule. Your coach will suggest a rhythm after your first session, and many people pair personal training with group classes."
+        },
+        {
+          "q": "Can personal training help with an old injury?",
+          "a": "We start every client with a movement assessment and a conversation about your history. We coach around what you can do well and refer you to a physical therapist or doctor when something needs medical care."
+        }
+      ],
+      "body": "Personal training at Helix is intentional, strength-based coaching built for real life and long-term, pain-free performance. Whether you're new to training, rebuilding strength, navigating a life transition, or just want smart, sustainable progress, sessions are designed around your body, your goals, and your season of life.\n\n## What a session looks like\n\n- **A plan with a purpose.** Programming that blends functional strength, mobility, conditioning, and skill work — nothing random.\n- **Coaching, not counting reps.** Your coach watches how you move, adjusts on the spot, and explains why.\n- **A movement assessment first.** Before we load anything, we look at how you move and talk through your history.\n- **Practical nutrition guidance** that supports strength, resilience, and long-term health.\n\n## Who it's for\n\nPeople who want individual attention, people coming back from time off or an injury, people training for something specific, and people who simply learn better one-on-one.\n\n## What it costs\n\nSend us a note and we'll walk you through personal training options and pricing.",
+      "confirmed": false
+    },
+    {
+      "slug": "group-strength-classes",
+      "name": "Group Strength Classes",
+      "tagline": "Structured strength workouts, small classes, a coach who knows your name.",
+      "audience": "Beginners through experienced lifters",
+      "order": 20,
+      "signupPlanKey": "freeClass",
+      "signupLabel": "Try a free class",
+      "price": "From $110/month",
+      "duration": "60 minutes",
+      "format": "Small group",
+      "serviceType": "Fitness training",
+      "seoTitle": "Group Strength Classes in Corvallis, OR",
+      "seoDescription": "Community strength classes at Helix Training in Corvallis. 60-minute, coach-led strength and conditioning for every level — your first class is free.",
+      "faqs": [
+        {
+          "q": "How big are the classes?",
+          "a": "Small enough that the coach can watch everyone. You get personal attention without paying personal-training prices."
+        },
+        {
+          "q": "I've never lifted weights. Will I be lost?",
+          "a": "No. Your coach scales the workout to where you are today, and Strong Foundations is there if you want a slower start."
+        },
+        {
+          "q": "How long is a class?",
+          "a": "About an hour, including warm-up and cool-down."
+        }
+      ],
+      "body": "Group strength classes are the heart of Helix. They're structured strength workouts designed to build confidence and lasting results — 60 minutes that blend strength training and conditioning into a full-body session led by an experienced coach.\n\n## What to expect\n\n- **A written plan, every day.** Classes follow a progressive program so you get stronger over months, not just tired for an hour.\n- **Coaching at every station.** Small class sizes mean personal attention on your form.\n- **Scaled to you.** Brand new or seasoned, the workout meets you where you are.\n- **People who cheer for you.** You're never doing it alone. This is a community that pushes, supports, and celebrates each other.\n\n## Who it's for\n\nAdults of every fitness level who want to get stronger in a supportive room — whether you're brand new or experienced.\n\n## How to start\n\nYour first class is free. Book it, show up a few minutes early, meet your coach, and jump in.",
+      "confirmed": false,
+      "oldSlugs": [
+        "community-strength-classes"
+      ]
+    },
+    {
+      "slug": "strength-plus",
+      "name": "Strength+",
+      "tagline": "Strength, balance, and mobility for people over 50 who want to stay capable.",
+      "audience": "Adults 50 and up",
+      "order": 30,
+      "signupPlanKey": "freeClass",
+      "signupLabel": "Try a free Strength+ class",
+      "duration": "60 minutes",
+      "format": "Small group, over 50",
+      "serviceType": "Fitness training",
+      "seoTitle": "Strength Training for Over 50 in Corvallis, OR — Strength+",
+      "seoDescription": "Strength+ at Helix Training is a coached strength, balance, and mobility program for adults over 50 in Corvallis, led by a team that includes Doctors of Physical Therapy.",
+      "faqs": [
+        {
+          "q": "Is strength training safe after 50?",
+          "a": "For most healthy adults, yes — and it's one of the best things you can do for bone density, balance, and independence. We start slow, coach every rep, and adjust for what your body needs. Talk with your doctor first if you have a medical condition."
+        },
+        {
+          "q": "I have achy knees and a stiff back. Can I still do this?",
+          "a": "Often, yes. Coaches modify movements and build gradually. If something needs medical care, we'll say so and point you to the right person."
+        },
+        {
+          "q": "Do I need to be a member to try it?",
+          "a": "No. Your first class is free."
+        }
+      ],
+      "body": "Strength+ is a focused training program for people over 50 who want to stay strong, capable, and confident in everyday life. Sessions center on safe, progressive strength work, mobility, balance, and functional movement — whether you're brand new, coming back after a break, or already an experienced lifter.\n\n## What to expect\n\n- **Progressive strength work** that builds the kind of strength you use every day: getting up from the floor, carrying groceries, climbing stairs without a second thought.\n- **Balance and mobility** built into every session.\n- **Modifications on the spot.** Coaches adjust every movement to fit you.\n- **A room full of people like you.** Encouragement, laughter, and no one watching the clock.\n\n## What members tell us\n\nBetter strength and mobility. Better balance and confidence moving. More energy. And the thing that matters most over a lifetime: consistency, because they actually enjoy coming.",
+      "confirmed": false
+    },
+    {
+      "slug": "strong-foundations",
+      "name": "Strong Foundations",
+      "tagline": "A 6-week beginner's course in lifting well, in a small group with a coach.",
+      "audience": "Brand-new lifters and anyone rebuilding form",
+      "order": 40,
+      "signupPlanKey": "strongFoundations",
+      "signupLabel": "Sign up for the next session",
+      "price": "$150 for the 6-week course",
+      "duration": "6 weeks, one class per week",
+      "format": "Small group course",
+      "serviceType": "Fitness training",
+      "seoTitle": "Strong Foundations — Beginner Strength Training Course in Corvallis",
+      "seoDescription": "New to strength training? Strong Foundations is a 6-week beginner course at Helix Training in Corvallis that teaches safe lifting technique, warm-up, and recovery in a small coached group.",
+      "faqs": [
+        {
+          "q": "When is the next Strong Foundations session?",
+          "a": "Check this page or send us a note and we'll tell you the next start date."
+        },
+        {
+          "q": "What happens after the six weeks?",
+          "a": "Most graduates move into group strength classes, where they already know the movements and the coaches."
+        },
+        {
+          "q": "I'm a member already. Is this for me?",
+          "a": "Yes, plenty of members take it to sharpen their form or learn new lift variations."
+        }
+      ],
+      "body": "New to strength training? Start here. Strong Foundations is a 6-week introductory course that covers the fundamentals: safe lifting technique, how to feel the right muscles working, how to warm up, and how to recover. It runs in a small group with certified coaches who refine your form every week.\n\n## Who it's for\n\n- People new to exercise or strength training\n- Anyone who wants to refresh their lifting form\n- Current Helix members who want to sharpen technique or explore lift variations\n\nHelix regulars, new lifters, and curious humans are all welcome.\n\n## Next session\n\nThe next session is being scheduled. Email [kathy@helixtrain.com](mailto:kathy@helixtrain.com) or use the contact form and we'll let you know the moment dates are set.",
+      "confirmed": false,
+      "oldSlugs": [
+        "intro-to-strength-training-class"
+      ]
+    },
+    {
+      "slug": "drop-in",
+      "name": "Drop-In",
+      "tagline": "In town for work or play? Come train with us.",
+      "audience": "Visitors and occasional trainers",
+      "order": 50,
+      "signupPlanKey": "dropIn",
+      "signupLabel": "Buy a drop-in pass",
+      "price": "$20 per class",
+      "duration": "60 minutes",
+      "format": "Any group class",
+      "serviceType": "Fitness training",
+      "seoTitle": "Drop-In Fitness Classes in Corvallis, OR",
+      "seoDescription": "Visiting Corvallis? Drop in to a coached strength class at Helix Training for $20. Buy a pass online, pick a class, and show up a few minutes early.",
+      "faqs": [
+        {
+          "q": "Do I need to book ahead?",
+          "a": "Yes. Buy the pass online and you'll be prompted to pick a class time so we know you're coming."
+        },
+        {
+          "q": "Can locals drop in too?",
+          "a": "Absolutely. If you'd rather not commit to a membership, drop in whenever it suits you."
+        }
+      ],
+      "body": "Whether you're in town or nearby, for work or for play, come work out with us. Make Helix your gym home away from home.\n\n## How it works\n\n1. Buy your drop-in pass online.\n2. Pick the class you want to attend.\n3. Arrive a few minutes early and meet the coach.\n4. Introduce yourself and jump in.",
+      "confirmed": false
+    }
+  ],
+  "team": [
+    {
+      "slug": "kathy-lynch",
+      "name": "Dr. Kathy Lynch",
+      "role": "Owner",
+      "credentials": "PT, DPT",
+      "order": 1,
+      "specialties": [
+        "Strength training",
+        "Training after 50",
+        "Injury-informed coaching"
+      ],
+      "bio": "Kathy is a Doctor of Physical Therapy and the owner of Helix Training. She built the gym around one idea: strength training should be accessible to every body, coached with purpose, and more fun than it has any right to be.",
+      "confirmed": false
+    },
+    {
+      "slug": "mel-mcnulty",
+      "name": "Dr. Mel McNulty",
+      "role": "Coach",
+      "credentials": "PT, DPT",
+      "order": 2,
+      "specialties": [
+        "Strength training",
+        "Movement assessment"
+      ],
+      "bio": "Mel is a Doctor of Physical Therapy and a coach at Helix.",
+      "confirmed": false
+    },
+    {
+      "slug": "amy-clem",
+      "name": "Amy Clem",
+      "role": "Coach",
+      "order": 3,
+      "specialties": [],
+      "bio": "Amy Clem coaches group strength classes at Helix.",
+      "confirmed": false
+    },
+    {
+      "slug": "sara-kellogg-maddox",
+      "name": "Sara Kellogg Maddox",
+      "role": "Coach",
+      "order": 4,
+      "specialties": [],
+      "bio": "Sara Kellogg Maddox coaches group strength classes at Helix.",
+      "confirmed": false
+    },
+    {
+      "slug": "tony-alexander",
+      "name": "Tony Alexander",
+      "role": "Coach",
+      "order": 5,
+      "specialties": [],
+      "bio": "Tony Alexander coaches group strength classes at Helix.",
+      "confirmed": false
+    },
+    {
+      "slug": "nico-doran",
+      "name": "Nico Doran",
+      "role": "Coach",
+      "order": 6,
+      "specialties": [],
+      "bio": "Nico Doran coaches group strength classes at Helix.",
+      "confirmed": false
+    },
+    {
+      "slug": "rebecka-weinsteiger",
+      "name": "Rebecka Weinsteiger",
+      "role": "Coach",
+      "order": 7,
+      "specialties": [],
+      "bio": "Rebecka Weinsteiger coaches group strength classes at Helix.",
+      "confirmed": false
+    }
+  ],
+  "faqs": [
+    {
+      "id": "what-do-i-need-to-do-to-join-a-class",
+      "pages": [
+        "home",
+        "faq",
+        "primary-cta"
+      ],
+      "order": 10,
+      "question": "What do I need to do to join a class?",
+      "answer": "Book a free class on this site or call us. That's it. Everyone is welcome."
+    },
+    {
+      "id": "will-beginners-be-welcomed-here",
+      "pages": [
+        "home",
+        "faq",
+        "primary-cta"
+      ],
+      "order": 20,
+      "question": "Will beginners be welcomed here?",
+      "answer": "Yes. Helix is built around supporting each other, and beginners most of all."
+    },
+    {
+      "id": "how-long-are-classes",
+      "pages": [
+        "faq"
+      ],
+      "order": 30,
+      "question": "How long are classes?",
+      "answer": "About an hour, including a coached warm-up and cool-down."
+    },
+    {
+      "id": "do-you-have-programs-for-people-over-50",
+      "pages": [
+        "home",
+        "faq"
+      ],
+      "order": 40,
+      "question": "Do you have programs for people over 50?",
+      "answer": "Yes. Strength+ is designed for adults over 50 to build strength, balance, and mobility for everyday life."
+    },
+    {
+      "id": "is-there-a-long-term-commitment",
+      "pages": [
+        "faq",
+        "pricing"
+      ],
+      "order": 50,
+      "question": "Is there a long-term commitment?",
+      "answer": "No long-term commitment is required. Punch cards let you train on your own terms."
+    },
+    {
+      "id": "do-i-need-to-be-fit-before-i-join",
+      "pages": [
+        "home",
+        "faq",
+        "primary-cta"
+      ],
+      "order": 60,
+      "question": "Do I need to be fit before I join?",
+      "answer": "Not at all. We welcome every fitness level and scale each session to where you are today."
+    },
+    {
+      "id": "can-i-drop-in-for-a-single-workout",
+      "pages": [
+        "faq",
+        "pricing"
+      ],
+      "order": 70,
+      "question": "Can I drop in for a single workout?",
+      "answer": "Yes. Drop-ins are $20 per class. Buy a pass online and pick your class."
+    },
+    {
+      "id": "can-i-book-a-one-on-one-session",
+      "pages": [
+        "faq"
+      ],
+      "order": 80,
+      "question": "Can I book a one-on-one session?",
+      "answer": "Yes. Personal training is one-on-one coaching built around your goals."
+    },
+    {
+      "id": "how-is-helix-different-from-other-gyms",
+      "pages": [
+        "home",
+        "faq"
+      ],
+      "order": 90,
+      "question": "How is Helix different from other gyms?",
+      "answer": "Small classes, a coach who knows your name, programs designed with a Doctor of Physical Therapy, and a room where people actually cheer for each other."
+    },
+    {
+      "id": "what-should-i-bring-to-my-first-class",
+      "pages": [
+        "faq",
+        "primary-cta"
+      ],
+      "order": 100,
+      "question": "What should I bring to my first class?",
+      "answer": "Comfortable clothes you can move in, closed-toe shoes, and a water bottle."
+    },
+    {
+      "id": "what-happens-at-my-free-class",
+      "pages": [
+        "faq",
+        "primary-cta"
+      ],
+      "order": 110,
+      "question": "What happens at my free class?",
+      "answer": "You'll get a quick tour, meet your coach for a movement assessment and a chat about your history, then take the class. Afterward we go over your questions and membership options."
+    },
+    {
+      "id": "where-are-you-located",
+      "pages": [
+        "faq"
+      ],
+      "order": 120,
+      "question": "Where are you located?",
+      "answer": "2323 NW 9th St in Corvallis, in the same building as ToGo's Sandwich Shop."
+    },
+    {
+      "id": "can-i-pause-or-cancel-my-membership",
+      "pages": [
+        "faq",
+        "pricing"
+      ],
+      "order": 130,
+      "question": "Can I pause or cancel my membership?",
+      "answer": "Yes. Send us a message from the members page or the contact form and we'll take care of it."
+    }
+  ],
+  "pricing": [
+    {
+      "name": "12 Classes / Month",
+      "price": "$130",
+      "period": "per month",
+      "note": "Most popular",
+      "planKey": "membership12",
+      "featured": true
+    },
+    {
+      "name": "8 Classes / Month",
+      "price": "$110",
+      "period": "per month",
+      "planKey": "membership8"
+    },
+    {
+      "name": "10-Class Punch Card",
+      "price": "$170",
+      "period": "one time",
+      "planKey": "punch10"
+    },
+    {
+      "name": "5-Class Punch Card",
+      "price": "$90",
+      "period": "one time",
+      "planKey": "punch5"
+    },
+    {
+      "name": "Drop-In",
+      "price": "$20",
+      "period": "per class",
+      "note": "Visiting Corvallis? Come train.",
+      "planKey": "dropIn"
+    }
+  ],
+  "pricingNote": "No long-term commitment required. A membership gives you accountability and a consistent routine, which is the thing that actually produces results.",
+  "booking": {
+    "kind": "pushpress",
+    "pushpressSubdomain": "helixtraining",
+    "calendarUrl": "https://helixtraining.pushpress.com/landing/calendar",
+    "plans": {
+      "primary": "https://helixtraining.pushpress.com/landing/plans/plan_d7ccd73b1f383d/login",
+      "freeClass": "https://helixtraining.pushpress.com/landing/plans/plan_d7ccd73b1f383d/login",
+      "dropIn": "https://helixtraining.pushpress.com/landing/plans/plan_bc2a61d8f9f416/login",
+      "strongFoundations": "https://helixtraining.pushpress.com/landing/plans/plan_b62b58963b934d/login",
+      "membership8": "https://helixtraining.pushpress.com/landing/plans/plan_6818a1e44aa4d9/login",
+      "membership12": "https://helixtraining.pushpress.com/landing/plans/plan_271e4c8f922601/login",
+      "punch10": "https://helixtraining.pushpress.com/landing/plans/plan_0b7bf9f0d39cf4/login",
+      "punch5": "https://helixtraining.pushpress.com/landing/plans/plan_fbbf9779e98911/login"
+    },
+    "widgets": {
+      "pricingFormUrl": "https://api.grow.pushpress.com/widget/form/PMWi0VNx9tRtBrdJnh2g",
+      "reviewWidgetUrl": "https://services.leadconnectorhq.com/reputation/widgets/review_widget/jcnFmvd88Eo5g4I7lrAq"
+    },
+    "memberApp": {
+      "ios": "",
+      "android": ""
+    },
+    "timezone": "America/Los_Angeles"
+  },
+  "contact": {
+    "crm": "pushpress",
+    "notify": "brevo",
+    "subjects": [
+      "Free class",
+      "Personal training",
+      "Strength+ (over 50)",
+      "Strong Foundations",
+      "Membership question",
+      "Something else"
+    ],
+    "hint": "Please don't include medical details here — we'll talk about your history in person."
+  },
+  "analytics": {
+    "cloudflareToken": "",
+    "googleSiteVerification": "m2wdbUiRutZnfy3ReZSnrslbF9bPEQH5p7sH0Jw1eSo",
+    "ga4MeasurementId": ""
+  },
+  "content": {
+    "categories": {
+      "guide": 80,
+      "evidence": 85,
+      "training": 80,
+      "nutrition": 80,
+      "community": 70
+    },
+    "tags": [
+      "beginners",
+      "strength-training",
+      "over-50",
+      "personal-training",
+      "group-classes",
+      "mobility",
+      "balance",
+      "bone-density",
+      "back-pain",
+      "knee-pain",
+      "shoulder-health",
+      "recovery",
+      "nutrition",
+      "protein",
+      "consistency",
+      "motivation",
+      "corvallis",
+      "women-strength",
+      "menopause",
+      "aging-well",
+      "injury-prevention",
+      "physical-therapy",
+      "kettlebells",
+      "deadlift",
+      "squat"
+    ],
+    "timezone": "America/Los_Angeles",
+    "geoFloor": 70,
+    "migratePosts": true
+  },
+  "voice": {
+    "persona": "Dr. Kathy Lynch, a Doctor of Physical Therapy who owns a small strength gym in Corvallis. Warm, direct, and a little funny. Speaks from the gym floor in the first person (\"when I coach\", \"in our gym\", \"our members\"). Explains the why behind training in plain words a smart 9th grader would follow. Evidence-informed without sounding like a journal. Never preachy, never a hype machine.",
+    "bannedTopics": [
+      "diagnosing a reader's injury or condition",
+      "promising specific weight-loss numbers or timelines",
+      "supplement selling",
+      "body shaming or \"beach body\" framing",
+      "criticizing a named competitor gym by name"
+    ],
+    "bannedPhrasings": [
+      "studies have shown",
+      "unlock your potential",
+      "crush your goals",
+      "no pain no gain",
+      "it's that simple",
+      "game-changer",
+      "in today's fast-paced world"
+    ],
+    "rules": [
+      "Lead with the reader's question and answer it in the first two sentences.",
+      "Use \"I\" and \"we\" — this is a coach talking, not a brochure.",
+      "When a claim rests on research, link the actual source in a References section. Never invent a citation.",
+      "If a section would only hit a score check by flattening the voice, cut the claim instead.",
+      "General education only: no individualized medical advice. Point people to their doctor or PT for pain, injury, or medical conditions.",
+      "Mention Corvallis naturally when it fits; never stuff it.",
+      "Every article ends with one plain next step (try a free class, book a chat, read a related post)."
+    ],
+    "readingGradeBand": [
+      6,
+      9
+    ]
+  },
+  "aeo": {
+    "brandMentions": [
+      "helix training",
+      "helixtrain",
+      "helix gym"
+    ],
+    "localSearchLocation": "Corvallis, Oregon",
+    "querySet": [
+      {
+        "id": "q1",
+        "query": "best gym in Corvallis Oregon for beginners",
+        "tags": [
+          "discovery",
+          "local"
+        ]
+      },
+      {
+        "id": "q2",
+        "query": "strength training for people over 50 in Corvallis",
+        "tags": [
+          "discovery",
+          "over-50"
+        ]
+      },
+      {
+        "id": "q3",
+        "query": "small group strength training Corvallis OR",
+        "tags": [
+          "discovery",
+          "local"
+        ]
+      },
+      {
+        "id": "q4",
+        "query": "personal trainer Corvallis Oregon",
+        "tags": [
+          "discovery",
+          "local"
+        ]
+      },
+      {
+        "id": "q5",
+        "query": "is strength training safe after 50",
+        "tags": [
+          "education",
+          "over-50"
+        ]
+      },
+      {
+        "id": "q6",
+        "query": "CrossFit vs small group strength training which is better for beginners",
+        "tags": [
+          "comparison"
+        ]
+      },
+      {
+        "id": "q7",
+        "query": "how many days a week should a beginner lift weights",
+        "tags": [
+          "education"
+        ]
+      },
+      {
+        "id": "q8",
+        "query": "strength training for bone density women",
+        "tags": [
+          "education",
+          "women-strength"
+        ]
+      }
+    ],
+    "highPriorityTags": [
+      "discovery",
+      "local"
+    ]
+  },
+  "competitors": {
+    "roster": [
+      {
+        "id": "crossfit-train-97333",
+        "name": "CrossFit Train 97333",
+        "url": "https://crossfittrain97333.com/"
+      },
+      {
+        "id": "corvallis-athletics",
+        "name": "Corvallis Athletics CrossFit",
+        "url": "https://corvallisathletics.com/"
+      },
+      {
+        "id": "burn-boot-camp-corvallis",
+        "name": "Burn Boot Camp Corvallis",
+        "url": "https://locations.burnbootcamp.com/locations/corvallis-or/"
+      }
+    ],
+    "targetKeywords": [
+      "gym corvallis",
+      "gym corvallis oregon",
+      "personal trainer corvallis",
+      "strength training corvallis",
+      "group fitness classes corvallis",
+      "crossfit corvallis",
+      "boot camp corvallis",
+      "fitness classes for seniors corvallis",
+      "beginner gym corvallis"
+    ],
+    "localPackLocation": "Corvallis, OR"
+  },
+  "schema": {
+    "orgType": [
+      "Organization",
+      "LocalBusiness",
+      "HealthClub"
+    ],
+    "llmsTxt": {
+      "summary": "Helix Training is a small-group strength and personal training gym in Corvallis, Oregon, owned by a Doctor of Physical Therapy.",
+      "intro": "Programs: personal training, community strength classes, Strength+ (over 50), Strong Foundations (6-week beginner course), and drop-ins. Articles are written by the owner and coaches and cite primary sources."
+    },
+    "sameAs": [
+      "https://www.facebook.com/HelixTrain",
+      "https://instagram.com/helixtrain"
+    ]
+  },
+  "compliance": {
+    "pack": "none",
+    "requireHumanReviewTags": [
+      "back-pain",
+      "knee-pain",
+      "shoulder-health",
+      "menopause",
+      "bone-density"
+    ]
+  },
+  "redirects": {
+    "/programs/get-started": "/free-class/",
+    "/appointments": "/programs/personal-training/",
+    "/membership-cancellation-request": "/members/",
+    "/membership-pause-request": "/members/",
+    "/coach-bio-request": "/coaches/",
+    "/careers": "/coaches/",
+    "/locations/corvallis": "/contact/",
+    "/challenges-and-events": "/blog/",
+    "/hsn-nutrition-page": "/blog/",
+    "/recipes": "/blog/",
+    "/partners": "/about/",
+    "/hsa-fsa": "/pricing/"
+  },
+  "copy": {
+    "articleDisclaimer": "This article is general education from a coach, not medical advice. If you have pain, an injury, or a medical condition, talk with your doctor or physical therapist before starting a new program.",
+    "footerCtaTitle": "Your first class is free.",
+    "footerCtaText": "Meet a coach, see the gym, do a workout you can walk out of feeling good about. No sales pitch.",
+    "notFoundTitle": "That page moved or never existed.",
+    "notFoundText": "The gym is still here, though.",
+    "expertDescriptor": "a coach",
+    "sourcesHint": "PubMed, Cochrane, ACSM, NSCA, CDC, APTA, university pages",
+    "competitorNoun": "Corvallis gyms",
+    "topicNoun": "strength training"
+  }
+}

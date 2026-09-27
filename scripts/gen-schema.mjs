@@ -31,3 +31,18 @@ async function main() {
 }
 
 main();
+
+// Also emit the `jeldon init --answers` schema.
+(async () => {
+  try {
+    const { initAnswersSchema } = await import('@jeldon/cli/answers');
+    const { zodToJsonSchema } = await import('zod-to-json-schema');
+    const out2 = resolve(root, 'schemas/init-answers.schema.json');
+    writeFileSync(out2, JSON.stringify(zodToJsonSchema(initAnswersSchema, { name: 'InitAnswers', $refStrategy: 'none' }), null, 2) + '\n');
+    console.log(`Wrote ${out2}`);
+  } catch (err) {
+    console.error('Could not import @jeldon/cli/answers. Run `pnpm build` first.');
+    console.error(err);
+    process.exit(1);
+  }
+})();

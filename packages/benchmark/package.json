@@ -1,0 +1,28 @@
+{
+  "name": "@jeldon/benchmark",
+  "version": "0.0.0",
+  "description": "The standing directive, enforced: measure the OLD site and the NEW site with the same method on ten dimensions (speed, search hygiene, duplicate-intent URLs, structured data, citability, content depth, conversion path, accessibility, honesty, local) and produce old/new/verdict (win · tie · behind) scorecards. Reuses @jeldon/competitive-intel for fetching + scoring. `jeldon benchmark --ci` gates launch on any 'behind'.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "repository": { "type": "git", "url": "git+https://github.com/dryoung1029/jeldon.git", "directory": "packages/benchmark" },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
+  "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md", "CHANGELOG.md"],
+  "sideEffects": false,
+  "engines": { "node": ">=18.18" },
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*",
+    "@jeldon/competitive-intel": "workspace:*",
+    "@jeldon/core-scoring": "workspace:*",
+    "@jeldon/kit-local-business": "workspace:*"
+  },
+  "devDependencies": { "@types/node": "^22.7.5", "tsup": "^8.3.0", "typescript": "^5.6.3", "vitest": "^2.1.4" }
+}
