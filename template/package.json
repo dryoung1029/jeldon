@@ -5,22 +5,25 @@
   "type": "module",
   "description": "A Jeldon-powered content site. The engine lives in published @jeldon/* packages; you specialize it by editing jeldon.config.ts.",
   "engines": {
-    "node": ">=18.18"
+    "node": ">=20"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "wrangler dev",
-    "deploy": "astro build && wrangler deploy",
-    "astro": "astro",
-    "jeldon": "jeldon",
-    "validate": "jeldon validate",
-    "doctor": "jeldon doctor",
-    "check:geo": "node scripts/check-geo-floor.mjs",
+    "dev": "node node_modules/astro/astro.js dev",
+    "build": "node node_modules/astro/astro.js build",
+    "check": "node node_modules/astro/astro.js check",
+    "preview": "node node_modules/wrangler/bin/wrangler.js dev",
+    "deploy": "npm run build && npm run deploy:cf",
+    "deploy:cf": "node node_modules/wrangler/bin/wrangler.js deploy",
+    "jeldon": "node node_modules/@jeldon/cli/dist/index.js",
+    "validate": "node node_modules/@jeldon/cli/dist/index.js validate",
+    "doctor": "node node_modules/@jeldon/cli/dist/index.js doctor",
+    "check:geo": "node node_modules/@jeldon/cli/dist/index.js check-geo-floor",
     "check:citations": "node scripts/lint-citations.mjs",
-    "check:frontmatter": "node scripts/check-frontmatter.mjs"
+    "check:frontmatter": "node scripts/check-frontmatter.mjs",
+    "check:engine": "node -e \"import('@jeldon/config').then(() => console.log('engine resolves'))\""
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.4",
     "@astrojs/cloudflare": "^12.0.0",
     "@astrojs/sitemap": "^3.2.0",
     "@jeldon/cli": "^0.1.0",
@@ -29,11 +32,12 @@
     "@jeldon/core-scoring": "^0.1.0",
     "@jeldon/schema-graph": "^0.1.0",
     "@jeldon/verify": "^0.1.0",
-    "astro": "^5.0.0"
+    "astro": "^5.0.0",
+    "typescript": "^5.6.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
-    "typescript": "^5.6.3",
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.0.0"
   }
 }

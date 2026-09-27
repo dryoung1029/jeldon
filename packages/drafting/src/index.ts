@@ -64,6 +64,8 @@ export {
 
 export { selectTags, reconcileTags } from './tags.js';
 
+export { buildAgentBrief, type AgentBriefOptions } from './agent-brief.js';
+
 export {
   LlmConceptProposer,
   proposeHero,

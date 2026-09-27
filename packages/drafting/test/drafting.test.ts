@@ -308,3 +308,51 @@ describe('chatEdit() loop', () => {
     expect(result?.summary).toBe('edited');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Agent drafting mode — one source of prompt truth for coding agents too.
+// ---------------------------------------------------------------------------
+import { buildAgentBrief } from '../src/agent-brief.js';
+import { buildVoice as _bv, buildGeoPlaybook as _bg } from '../src/prompts.js';
+
+describe('buildAgentBrief (capabilities.drafting: "agent")', () => {
+  const pack = {
+    brand: { name: 'Helix Training', siteUrl: 'https://helixtrain.com', tagline: 'Training with a plan.' },
+    authors: [{ slug: 'kathy-lynch', name: 'Dr. Kathy Lynch, PT, DPT', schemaId: 'x', profile: { name: 'Kathy Lynch' } }],
+    voice: { persona: 'A coach on the gym floor.', bannedTopics: ['diagnosing'], bannedPhrasings: ['crush your goals'], rules: ['Use "I" and "we".'], voiceAnchorUrls: [], readingGradeBand: [6, 9] as [number, number] },
+    content: { categories: ['guide', 'evidence'], categoryTargets: { guide: 80, evidence: 85 }, tags: ['over-50', 'beginners'], articlePathPrefix: '/blog/', defaultAuthorSlug: 'kathy-lynch', timezone: 'UTC' },
+    scoring: {
+      geo: { floor: 70, checks: [] },
+      seo: {
+        title: { good: [40, 60] as [number, number], mehMax: 70 }, excerpt: { good: [120, 160] as [number, number], meh: [80, 200] as [number, number] }, slugMaxLen: 60,
+        wordCount: { good: [800, 1800] as [number, number], mehMin: 500 }, bodyChars: { good: 10000, meh: 12000 }, h2: { good: [3, 6] as [number, number], meh: [2, 8] as [number, number] },
+        internalLinks: { good: 2, meh: 1 }, tags: { good: [3, 6] as [number, number], mehMin: 1 }, heroAltWords: { good: [4, 18] as [number, number] },
+        reading: { good: [6, 9] as [number, number], mehMax: 11 }, internalLinkPrefixes: ['blog', 'programs'], referenceSectionNames: ['references'],
+        evidenceTriggers: ['study', 'research'], badFilenameRe: 'x',
+      },
+    },
+    citation: { policy: 'direct-source-urls' as const, forbiddenPatterns: [], referenceFormat: 'Author, year. Note. [link](URL)', verifier: { kind: 'none' as const } },
+    schema: { orgType: ['Organization'], org: { name: 'Helix Training', url: 'https://helixtrain.com' }, articleTypes: ['Article'] },
+  };
+
+  it('embeds the SAME voice + GEO playbook the API pipeline builds', () => {
+    const brief = buildAgentBrief(pack, { topic: 'Is strength training safe after 50?', today: '2026-09-27' });
+    expect(brief).toContain(_bv(pack));
+    expect(brief).toContain(_bg(pack).trim());
+  });
+
+  it('reads every domain value from the pack — no Helix literal in the engine', () => {
+    const brief = buildAgentBrief(pack, { today: '2026-09-27' });
+    expect(brief).toContain('/blog/<slug>/');
+    expect(brief).toContain('`over-50`');
+    expect(brief).toContain('authorSlug: kathy-lynch');
+    expect(brief).toContain('guide 80+');
+    expect(brief).toContain('YOU are the verifier');
+    expect(brief).toContain('publishDate: 2026-09-27');
+    // Another pack, another brief — with no engine change.
+    const other = buildAgentBrief({ ...pack, brand: { ...pack.brand, name: 'Northwatch' }, content: { ...pack.content, articlePathPrefix: undefined, tags: [] } });
+    expect(other).toContain('Northwatch');
+    expect(other).toContain('/articles/<slug>/');
+    expect(other).toContain('Tags are free-form');
+  });
+});

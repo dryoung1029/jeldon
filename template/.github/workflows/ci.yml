@@ -1,0 +1,39 @@
+name: CI
+
+# The consumer gates, one workflow, named steps (each backed by a @jeldon/*
+# package — no mirrored logic):
+#   engine resolves · validate + doctor · frontmatter · citations · geo-floor ·
+#   types · production build · preview build · wrangler deploy --dry-run
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Engine resolves (guards the swallowed-dist class of bug)
+        run: npm run check:engine
+      - name: Domain Pack valid + doctor
+        run: npm run validate && npm run doctor
+      - name: Frontmatter guard
+        run: npm run check:frontmatter
+      - name: Citation lint
+        run: npm run check:citations
+      - name: GEO floor (published articles)
+        run: npm run check:geo
+      - name: Types
+        run: npm run check
+      - name: Production build
+        run: npm run build
+      - name: Preview build (drafts rendered, noindex)
+        run: INCLUDE_DRAFTS=true npm run build
+      - name: Worker deploy dry run
+        run: npm run deploy:cf -- --dry-run

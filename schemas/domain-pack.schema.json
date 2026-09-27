@@ -53,6 +53,22 @@
               "additionalProperties": {
                 "type": "string"
               }
+            },
+            "fonts": {
+              "type": "object",
+              "properties": {
+                "display": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "googleFontsHref": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "additionalProperties": false
             }
           },
           "required": [
@@ -138,6 +154,11 @@
               },
               "isPrimary": {
                 "type": "boolean"
+              },
+              "urlPrefix": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^\\/?[a-z0-9][a-z0-9-]*(?:\\/[a-z0-9][a-z0-9-]*)*\\/?$"
               }
             },
             "required": [
@@ -228,6 +249,11 @@
               "items": {
                 "type": "string"
               }
+            },
+            "articlePathPrefix": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^\\/?[a-z0-9][a-z0-9-]*(?:\\/[a-z0-9][a-z0-9-]*)*\\/?$"
             },
             "defaultAuthorSlug": {
               "type": "string"
@@ -1831,7 +1857,18 @@
           "type": "object",
           "properties": {
             "drafting": {
-              "type": "boolean"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "api",
+                    "agent"
+                  ]
+                }
+              ]
             },
             "amplify": {
               "type": "boolean"

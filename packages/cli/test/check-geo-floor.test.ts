@@ -88,3 +88,16 @@ describe('evaluateGeoFloor', () => {
     expect(lenient.ok).toBe(true);
   });
 });
+
+describe('drafts named explicitly are scored (Helix fix mirrored from the template script)', () => {
+  it('skips drafts by default, scores them with includeDrafts', () => {
+    const files = [{ path: 'articles/wip.md', raw: draftDoc }];
+    const skipped = evaluateGeoFloor(files, defaultGeoConfig, {}, 0);
+    expect(skipped.scored).toBe(0);
+    expect(skipped.skipped).toBe(1);
+    const scored = evaluateGeoFloor(files, defaultGeoConfig, {}, 0, { includeDrafts: true });
+    expect(scored.scored).toBe(1);
+    expect(scored.skipped).toBe(0);
+    expect(scored.results[0]?.slug).toBe('wip');
+  });
+});

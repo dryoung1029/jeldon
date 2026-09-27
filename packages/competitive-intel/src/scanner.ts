@@ -6,6 +6,8 @@ import { defaultFetcher } from './fetcher.js';
 import {
   extractSchema,
   htmlToScorableMarkdown,
+  linkHref,
+  metaContent,
   originOf,
   pick,
   stripTags,
@@ -61,6 +63,24 @@ export async function auditHomepage(
   rawUrl: string,
   opts: { fetcher: Fetcher; geo?: GeoConfig },
 ): Promise<HomepageAudit | { error: string }> {
+  const r = await auditHomepageWithHtml(rawUrl, opts);
+  if ('error' in r) return r;
+  const { html: _html, ...audit } = r;
+  return audit;
+}
+
+/**
+ * Same as `auditHomepage` but also hands back the fetched HTML so `runAudit`
+ * can run schema extraction + vendor detection on the SAME document instead
+ * of re-fetching. The re-fetch was Helix finding #9(b): when the second
+ * request failed (rate limit, proxy circuit-breaker) `html` was '' and the
+ * PushPress/Webflow fingerprints had nothing to match, so `templateVendor`
+ * came back null even though the fingerprints were in the page.
+ */
+export async function auditHomepageWithHtml(
+  rawUrl: string,
+  opts: { fetcher: Fetcher; geo?: GeoConfig },
+): Promise<(HomepageAudit & { html: string }) | { error: string }> {
   let url = rawUrl.trim();
   if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
 
@@ -74,10 +94,9 @@ export async function auditHomepage(
   const finalUrl = fetched.finalUrl || url;
   const html = fetched.html;
 
-  const ogTag = (prop: string) =>
-    new RegExp(`<meta[^>]+property=["']${prop}["'][^>]*content=["']([^"']+)["']`, 'i').test(html);
-  const twTag = (name: string) =>
-    new RegExp(`<meta[^>]+name=["']twitter:${name}["'][^>]*content=["']([^"']+)["']`, 'i').test(html);
+  // Attribute-order-agnostic (Helix finding #9a).
+  const ogTag = (prop: string) => Boolean(metaContent(html, prop));
+  const twTag = (name: string) => Boolean(metaContent(html, `twitter:${name}`));
 
   const h1s = Array.from(html.matchAll(/<h1[^>]*>([\s\S]*?)<\/h1>/gi))
     .map((m) => stripTags(m[1] ?? ''))
@@ -116,10 +135,10 @@ export async function auditHomepage(
     proxyError: fetched.proxyError,
     htmlBytes: html.length,
     title: pick(/<title[^>]*>([\s\S]*?)<\/title>/i, html),
-    metaDescription: pick(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']+)["']/i, html),
-    canonicalUrl: pick(/<link[^>]+rel=["']canonical["'][^>]*href=["']([^"']+)["']/i, html),
+    metaDescription: metaContent(html, 'description'),
+    canonicalUrl: linkHref(html, 'canonical'),
     lang: pick(/<html[^>]+lang=["']([^"']+)["']/i, html),
-    viewport: /<meta[^>]+name=["']viewport["']/i.test(html),
+    viewport: Boolean(metaContent(html, 'viewport')),
     h1: h1s.slice(0, 5),
     h2Count,
     wordCount,
@@ -135,7 +154,7 @@ export async function auditHomepage(
       type: ogTag('og:type'),
     },
     twitterTags: { card: twTag('card'), title: twTag('title'), image: twTag('image') },
-    favicon: /<link[^>]+rel=["'](?:shortcut )?icon["']/i.test(html),
+    favicon: Boolean(linkHref(html, 'icon')),
     hasBlogHint:
       /\/(blog|articles|news|posts)(\/|["'])/i.test(html) || /\bblog\b/i.test(text.slice(0, 4000)),
     hasFaqHint:
@@ -146,6 +165,7 @@ export async function auditHomepage(
     geoScore: geo.score,
     geoBadCount: geo.badCount,
     geoMehCount: geo.mehCount,
+    html,
   };
 }
 
@@ -566,21 +586,17 @@ export async function runAudit(opts: RunAuditOptions): Promise<CompetitorAudit> 
   const cfg = opts.scannerConfig ?? defaultScannerConfig;
   const errors: string[] = [];
 
-  const homepageRes = await auditHomepage(opts.url, { fetcher, geo: opts.geo });
+  const homepageRes = await auditHomepageWithHtml(opts.url, { fetcher, geo: opts.geo });
   let homepage: HomepageAudit | null = null;
   let html = '';
   if ('error' in homepageRes) {
     errors.push(`homepage: ${homepageRes.error}`);
   } else {
-    homepage = homepageRes;
-    // Re-fetch the homepage HTML for schema/positioning. The fetcher owns the
-    // proxy circuit-breaker, so a second call after a proxy failure is cheap.
-    try {
-      const r = await fetcher.fetchHtml(homepage.finalUrl);
-      if (r.html) html = r.html;
-    } catch {
-      /* ignore second fetch failure for schema */
-    }
+    // One fetch. Schema extraction, positioning text and vendor detection all
+    // read the document the homepage audit scored (Helix finding #9b).
+    const { html: fetchedHtml, ...audit } = homepageRes;
+    homepage = audit;
+    html = fetchedHtml;
   }
 
   const targetUrl = homepage?.finalUrl ?? opts.url;

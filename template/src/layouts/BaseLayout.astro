@@ -10,7 +10,7 @@
  * gets MedicalBusiness/MedicalWebPage purely by changing the config.
  */
 import { organizationGraph, websiteGraph } from '@jeldon/schema-graph';
-import { pack } from '../lib/pack';
+import { pack, ARTICLE_PREFIX } from '../lib/pack';
 
 export interface Props {
   title?: string;
@@ -61,7 +61,7 @@ const graph = [organizationGraph(pack), websiteGraph(pack), ...jsonLd];
     <header>
       <a href="/">{pack.brand.name}</a>
       <nav>
-        <a href="/articles/">Articles</a>
+        <a href={ARTICLE_PREFIX}>Articles</a>
       </nav>
     </header>
     <main>

@@ -1,4 +1,6 @@
+import { articlePathSegment, draftingMode } from '@jeldon/config';
 import { loadDomainPack } from '@jeldon/config/load';
+import { loadRegisteredChecks, runRegisteredChecks } from './check-registry.js';
 
 export type CheckStatus = 'ok' | 'warn' | 'error';
 export interface DoctorCheck {
@@ -59,9 +61,29 @@ export async function runDoctor(opts: { cwd?: string; pre?: boolean } = {}): Pro
   if (pack.voice.voiceAnchorUrls.length) add('ok', `${pack.voice.voiceAnchorUrls.length} voice anchor URL(s) set`);
   else add('warn', 'no voiceAnchorUrls set — drafting voice fidelity degraded');
 
-  // Capability ↔ env sanity.
-  if (pack.capabilities.drafting && !pack.services.requiredEnv.some((v) => /ANTHROPIC|OPENAI|API_KEY/.test(v))) {
-    add('warn', 'capabilities.drafting is on but no LLM API key is listed in services.requiredEnv');
+  // Capability ↔ env sanity. Agent mode drafts through a coding agent with
+  // `jeldon brief`, so it must NOT demand an API key.
+  const mode = draftingMode(pack);
+  if (mode === 'api' && !pack.services.requiredEnv.some((v) => /ANTHROPIC|OPENAI|API_KEY/.test(v))) {
+    add('warn', 'capabilities.drafting is "api" but no LLM API key is listed in services.requiredEnv');
+  } else if (mode === 'agent') {
+    add('ok', 'drafting mode: agent (coding agent drafts with `jeldon brief`; no API key needed)');
+  }
+
+  // URL layout: the SEO scorer only counts internal links whose prefix it knows.
+  const seg = articlePathSegment(pack);
+  if (pack.scoring.seo.internalLinkPrefixes.includes(seg)) add('ok', `internal-link prefixes include the article prefix "${seg}"`);
+  else add('warn', `scoring.seo.internalLinkPrefixes does not include the article prefix "${seg}" — links between articles won't count as internal`);
+
+  // Registered checks (jeldon.checks.mjs) — the kit's / project's own gate.
+  try {
+    const registered = await loadRegisteredChecks(cwd);
+    if (registered.length) {
+      add('ok', `${registered.length} registered check(s) from jeldon.checks.mjs`);
+      checks.push(...(await runRegisteredChecks(registered, { cwd, pack, pre: Boolean(opts.pre) })));
+    }
+  } catch (err) {
+    add('error', err instanceof Error ? err.message : String(err));
   }
 
   return finalize(checks);

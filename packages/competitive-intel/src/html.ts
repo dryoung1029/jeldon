@@ -74,6 +74,56 @@ export function htmlToScorableMarkdown(html: string): string {
     .trim();
 }
 
+/**
+ * Read one attribute (`content`, `href`, …) from the first tag whose
+ * `matchAttr="matchValue"`, REGARDLESS of attribute order. The original
+ * `<meta[^>]+name="description"[^>]*content="…"` regex silently missed pages
+ * that write `<meta content="…" name="description">` (Webflow/PushPress emit
+ * exactly that) and reported the description MISSING — Helix finding #9(a).
+ */
+export function tagAttr(
+  html: string,
+  tag: string,
+  matchAttr: string,
+  matchValue: string,
+  wantAttr: string,
+): string | null {
+  const tagRe = new RegExp(`<${tag}\\b[^>]*>`, 'gi');
+  const matchRe = new RegExp(`\\s${matchAttr}\\s*=\\s*["']\\s*${escapeRe(matchValue)}\\s*["']`, 'i');
+  const wantRe = new RegExp(`\\s${wantAttr}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i');
+  for (const m of html.matchAll(tagRe)) {
+    const t = m[0];
+    if (!matchRe.test(t)) continue;
+    const w = t.match(wantRe);
+    if (!w) return null;
+    const v = w[1] ?? w[2] ?? w[3] ?? '';
+    return decode(v.trim());
+  }
+  return null;
+}
+
+/** `<meta name|property="key" content="…">` in either attribute order. */
+export function metaContent(html: string, key: string): string | null {
+  return tagAttr(html, 'meta', 'name', key, 'content') ?? tagAttr(html, 'meta', 'property', key, 'content');
+}
+
+/** `<link rel="key" href="…">` in either attribute order (rel may be a list). */
+export function linkHref(html: string, rel: string): string | null {
+  const tagRe = /<link\b[^>]*>/gi;
+  const relRe = new RegExp(`\\srel\\s*=\\s*["'][^"']*\\b${escapeRe(rel)}\\b[^"']*["']`, 'i');
+  const hrefRe = /\shref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i;
+  for (const m of html.matchAll(tagRe)) {
+    if (!relRe.test(m[0])) continue;
+    const h = m[0].match(hrefRe);
+    return h ? decode((h[1] ?? h[2] ?? h[3] ?? '').trim()) : null;
+  }
+  return null;
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export type SchemaAuditResult = {
   types: string[];
   raw: unknown[];

@@ -2,6 +2,7 @@
 import { resolveConfigPath, validateDomainPack, loadDomainPack } from '@jeldon/config/load';
 import { runDoctor, type DoctorCheck } from './doctor.js';
 import { runCheckGeoFloor } from './check-geo-floor.js';
+import { formatScorecard, runScore } from './score.js';
 
 const ICON: Record<string, string> = { ok: '✔', warn: '⚠', error: '✖' };
 
@@ -75,20 +76,56 @@ async function main(): Promise<void> {
       return;
     }
 
+    case 'score': {
+      const file = rest.find((a) => a.endsWith('.md'));
+      if (!file) {
+        fail('Usage: jeldon score <file.md> [--json]', json);
+        return;
+      }
+      try {
+        const report = await runScore({ file });
+        if (json) console.log(JSON.stringify(report, null, 2));
+        else console.log(formatScorecard(report));
+      } catch (err) {
+        fail(err instanceof Error ? err.message : String(err), json);
+      }
+      return;
+    }
+
+    case 'brief': {
+      const topic = rest.filter((a) => !a.startsWith('--')).join(' ').trim();
+      try {
+        const pack = await loadDomainPack();
+        // Lazy: @jeldon/drafting is only paid for when the command runs.
+        const { buildAgentBrief } = await import('@jeldon/drafting');
+        const brief = buildAgentBrief(pack, { topic: topic || undefined });
+        if (json) console.log(JSON.stringify({ topic: topic || null, brief }, null, 2));
+        else console.log(brief);
+      } catch (err) {
+        fail(err instanceof Error ? err.message : String(err), json);
+      }
+      return;
+    }
+
     case 'init': {
-      console.log(
-        [
-          'jeldon init is not yet wired to the Copier template generator.',
-          'For now, scaffold a project with:',
-          '',
-          '  npx degit dryoung1029/jeldon/template my-site',
-          '  cd my-site && pnpm install',
-          '  # fill jeldon.config.ts (diff against examples/jeldon.config.example.ts)',
-          '  npx jeldon doctor --pre',
-          '',
-          'See docs/IMPLEMENTATION.md for the full runbook.',
-        ].join('\n'),
-      );
+      const { runInit } = await import('./init/index.js');
+      try {
+        const code = await runInit(rest);
+        if (code) process.exitCode = code;
+      } catch (err) {
+        fail(err instanceof Error ? err.message : String(err), json);
+      }
+      return;
+    }
+
+    case 'benchmark': {
+      const { runBenchmarkCli } = await import('./benchmark-cli.js');
+      try {
+        const code = await runBenchmarkCli(rest);
+        if (code) process.exitCode = code;
+      } catch (err) {
+        fail(err instanceof Error ? err.message : String(err), json);
+      }
       return;
     }
 
@@ -99,8 +136,11 @@ async function main(): Promise<void> {
           '',
           '  validate                 Validate jeldon.config.ts against the Domain Pack schema',
           '  doctor [--pre]           Run the "wired correctly?" health check (--json for machines)',
-          '  check-geo-floor [file…]  Score articles; fail if any are below their category target',
-          '  init                     Scaffold a new project (see docs/IMPLEMENTATION.md)',
+          '  check-geo-floor [file…]  Score articles; fail if any are below their category target (drafts scored only when named)',
+          '  score <file>             GEO + SEO + reading level for one file, as a plain-words scorecard (--json for machines)',
+          '  brief [topic…]           Print the drafting brief for a coding agent (capabilities.drafting: "agent")',
+          '  init [dir] [flags]       Spawn a site from a kit: scrape the old site, read --answers, generate, verify',
+          '  benchmark [flags]        Score the new site against the old one on ten dimensions; --ci gates on "behind"',
           '',
           'Flags: --json  machine-readable output',
         ].join('\n'),

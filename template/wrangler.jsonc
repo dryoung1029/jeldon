@@ -1,0 +1,37 @@
+// Cloudflare Workers config for a Jeldon-powered site (Helix finding #6:
+// `pages_build_output_dir` is a Pages key; Workers wants `main` + `assets`).
+//
+// After `npm run build`, `npm run deploy:cf` (wrangler deploy) ships ./dist:
+// static assets from the assets binding, the tiny Worker for any server route.
+// Cloudflare's git integration runs those two commands on every push to main.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jeldon-site", // rename to your project
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./dist/_worker.js/index.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page"
+  },
+  "observability": { "enabled": true }
+
+  // Optional bindings ship COMMENTED so a fresh clone deploys without
+  // provisioning anything. Uncomment + fill as you turn on a capability in
+  // jeldon.config.ts:
+  //
+  // R2 — ObjectStore adapter (hero images + narration audio).
+  // "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "TODO" }],
+  //
+  // KV — AI-crawler hit log (crawler-analytics).
+  // "kv_namespaces": [{ "binding": "AI_CRAWLER_LOG", "id": "TODO" }],
+  //
+  // D1 — EventStore adapter (first-party engagement beacon).
+  // "d1_databases": [{ "binding": "ANALYTICS_DB", "database_name": "TODO", "database_id": "TODO" }]
+  //
+  // Secrets are NOT declared here. Set them in the Cloudflare dashboard
+  // (Workers & Pages → your project → Settings → Variables and Secrets) or
+  // with `wrangler secret put <NAME>`. `jeldon doctor` verifies the set listed
+  // in jeldon.config.ts `services.requiredEnv`.
+}

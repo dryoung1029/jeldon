@@ -1,7 +1,7 @@
 {
   "name": "@jeldon/cli",
   "version": "0.0.0",
-  "description": "The `jeldon` CLI: init, validate, doctor, check-geo-floor. The agent's deterministic 'am I wired correctly?' gate.",
+  "description": "The `jeldon` CLI: init (the spawn), validate, doctor (+ registered checks), check-geo-floor, score, brief, benchmark. The agent's deterministic \"am I wired correctly?\" gate.",
   "type": "module",
   "license": "UNLICENSED",
   "repository": {
@@ -39,7 +39,8 @@
   "dependencies": {
     "@jeldon/config": "workspace:*",
     "@jeldon/content-model": "workspace:*",
-    "@jeldon/core-scoring": "workspace:*"
+    "@jeldon/core-scoring": "workspace:*",
+    "@jeldon/drafting": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",

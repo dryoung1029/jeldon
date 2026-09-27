@@ -1,19 +1,23 @@
 ---
+import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { articleGraph, breadcrumbList, extractFaqs, faqPage } from '@jeldon/schema-graph';
-import { pack, authorEntries, categoryLabel } from '../../lib/pack';
-import { getPublishedArticles, getStubArticles, formatPublishDate, estimateReadTime } from '../../lib/articles';
+import { pack, authorEntries, categoryLabel, articlePath, ARTICLE_PREFIX } from '../../lib/pack';
+import { getPublishedArticles, getStubArticles, formatPublishDate, estimateReadTime, type ArticleEntry } from '../../lib/articles';
 
+// NOTE: this file lives at src/pages/articles/[slug].astro. If your pack sets a
+// different `content.articlePathPrefix` (e.g. /blog/), move this folder to match
+// — Astro routes by file path; the engine builds every URL from the pack.
 export async function getStaticPaths() {
   const published = await getPublishedArticles();
   const stubs = await getStubArticles();
   return [
-    ...published.map((a) => ({ params: { slug: a.slug }, props: { article: a, isStub: false } })),
-    ...stubs.map((a) => ({ params: { slug: a.slug }, props: { article: a, isStub: true } })),
+    ...published.map((a) => ({ params: { slug: a.id }, props: { article: a, isStub: false } })),
+    ...stubs.map((a) => ({ params: { slug: a.id }, props: { article: a, isStub: true } })),
   ];
 }
 
-const { article, isStub } = Astro.props;
+const { article, isStub } = Astro.props as { article: ArticleEntry; isStub: boolean };
 const { data } = article;
 
 // A non-stub draft reaching the render path means INCLUDE_DRAFTS=true (preview
@@ -22,17 +26,18 @@ const { data } = article;
 const isDraftPreview = !isStub && data.draft === true;
 const robots = isStub || isDraftPreview ? 'noindex,nofollow' : undefined;
 
-const { Content } = isStub ? { Content: null } : await article.render();
+const { Content } = isStub ? { Content: null } : await render(article);
 
 // The engine builds the Article node from pack policy + the matched author
-// entity (linked by @id when authorSlug matches a known author). FAQPage is
-// auto-extracted from the body's question-style H2s. No inline JSON-LD here.
+// entity (linked by @id when authorSlug matches a known author) and the pack's
+// article URL prefix. FAQPage is auto-extracted from the body's question-style
+// H2s. No inline JSON-LD here.
 const jsonLd: Record<string, unknown>[] = [
   breadcrumbList(
     [
       { name: 'Home', url: '/' },
-      { name: 'Articles', url: '/articles/' },
-      { name: data.title, url: `/articles/${article.slug}/` },
+      { name: 'Articles', url: ARTICLE_PREFIX },
+      { name: data.title, url: articlePath(article.id) },
     ],
     pack.brand.siteUrl,
   ),
@@ -43,7 +48,7 @@ if (!isStub) {
     articleGraph(
       {
         title: data.title,
-        slug: article.slug,
+        slug: article.id,
         excerpt: data.excerpt,
         publishDate: data.publishDate,
         updatedDate: data.updatedDate,
@@ -61,7 +66,7 @@ if (!isStub) {
     ),
   );
 
-  const faqs = extractFaqs(article.body);
+  const faqs = extractFaqs(article.body ?? '');
   if (faqs.length >= 2) jsonLd.push(faqPage(faqs));
 }
 ---
@@ -91,7 +96,7 @@ if (!isStub) {
         By {data.author} · {categoryLabel(data.category)} ·{' '}
         {formatPublishDate(data.publishDate)} · {data.readTime ?? estimateReadTime(article.body)}
       </small>
-      <Content />
+      {Content && <Content />}
     </article>
   )}
 </BaseLayout>

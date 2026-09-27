@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { breadcrumbList } from '@jeldon/schema-graph';
-import { pack, categoryLabel } from '../../lib/pack';
+import { pack, categoryLabel, articlePath, ARTICLE_PREFIX } from '../../lib/pack';
 import { getPublishedArticles, formatPublishDate, estimateReadTime } from '../../lib/articles';
 
 const articles = await getPublishedArticles();
@@ -9,7 +9,7 @@ const articles = await getPublishedArticles();
 const crumbs = breadcrumbList(
   [
     { name: 'Home', url: '/' },
-    { name: 'Articles', url: '/articles/' },
+    { name: 'Articles', url: ARTICLE_PREFIX },
   ],
   pack.brand.siteUrl,
 );
@@ -23,7 +23,7 @@ const crumbs = breadcrumbList(
     <ul>
       {articles.map((a) => (
         <li>
-          <a href={`/articles/${a.slug}/`}>{a.data.title}</a>
+          <a href={articlePath(a.id)}>{a.data.title}</a>
           <p>{a.data.excerpt}</p>
           <small>
             {categoryLabel(a.data.category)} · {formatPublishDate(a.data.publishDate)} ·{' '}

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { pack } from '../lib/pack';
+import { pack, articlePath, ARTICLE_PREFIX } from '../lib/pack';
 import { getPublishedArticles, formatPublishDate } from '../lib/articles';
 
 const recent = (await getPublishedArticles()).slice(0, 6);
@@ -18,12 +18,12 @@ const recent = (await getPublishedArticles()).slice(0, 6);
       <ul>
         {recent.map((a) => (
           <li>
-            <a href={`/articles/${a.slug}/`}>{a.data.title}</a>
+            <a href={articlePath(a.id)}>{a.data.title}</a>
             <span> — {formatPublishDate(a.data.publishDate)}</span>
           </li>
         ))}
       </ul>
     )}
-    <p><a href="/articles/">All articles →</a></p>
+    <p><a href={ARTICLE_PREFIX}>All articles</a></p>
   </section>
 </BaseLayout>

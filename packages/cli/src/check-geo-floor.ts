@@ -43,7 +43,8 @@ function toLifecycleFlags(fm: Frontmatter): LifecycleFlags {
 }
 
 /**
- * Pure GEO-floor evaluation. Parses each file, skips drafts, and scores every
+ * Pure GEO-floor evaluation. Parses each file, skips drafts (unless
+ * `includeDrafts`), and scores every
  * live article with the SAME `@jeldon/core-scoring` the editor dial uses — no
  * mirrored scoring logic. An article fails when its GEO score is below its
  * category target; the GEO floor is the backstop for categories with no explicit
@@ -54,6 +55,7 @@ export function evaluateGeoFloor(
   geo: GeoConfig,
   targets: Record<string, number>,
   floor: number,
+  opts: { includeDrafts?: boolean } = {},
 ): GeoFloorReport {
   const results: GeoFloorResult[] = [];
   let skipped = 0;
@@ -61,8 +63,11 @@ export function evaluateGeoFloor(
   for (const { path, raw } of files) {
     const { frontmatter, body } = parse(raw);
 
-    // Only score articles that ship publicly. Drafts are work-in-progress.
-    if (!isLive(toLifecycleFlags(frontmatter))) {
+    // Only score articles that ship publicly — unless the caller asked for
+    // drafts. The CLI passes `includeDrafts` when files are named explicitly:
+    // an author scoring their own work-in-progress must not be told "0
+    // scored, 1 skipped" (Helix's template-script fix, mirrored here).
+    if (!opts.includeDrafts && !isLive(toLifecycleFlags(frontmatter))) {
       skipped++;
       continue;
     }
@@ -105,7 +110,8 @@ export async function runCheckGeoFloor(
   const pack = await loadDomainPack({ cwd });
   const contentDir = resolve(cwd, pack.services.contentDir ?? DEFAULT_CONTENT_DIR);
 
-  const paths = await resolveArticlePaths(cwd, contentDir, opts.files ?? []);
+  const explicit = (opts.files ?? []).filter((f) => f.endsWith('.md'));
+  const paths = await resolveArticlePaths(cwd, contentDir, explicit);
   const files = await Promise.all(
     paths.map(async (path) => ({ path, raw: await readFile(path, 'utf8') })),
   );
@@ -115,6 +121,8 @@ export async function runCheckGeoFloor(
     pack.scoring.geo,
     pack.content.categoryTargets,
     pack.scoring.geo.floor,
+    // Drafts are skipped only when no file was named.
+    { includeDrafts: explicit.length > 0 },
   );
 }
 

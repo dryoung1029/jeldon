@@ -148,3 +148,45 @@ describe('article-traffic reader + writeback', () => {
     expect(t.humanShare).toBeCloseTo(8 / 11);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Search Console CSV exports (ported from the Helix workbench, made engine-worthy)
+// ---------------------------------------------------------------------------
+import { parseSearchConsoleExport, renderSearchConsoleReport, searchConsoleOpportunities, searchConsoleTrend } from '../src/index.js';
+
+const QUERIES_CSV = `Top queries,Clicks,Impressions,CTR,Position
+"gym corvallis",12,340,3.53%,4.2
+"strength training for over 50, corvallis",3,210,1.43%,11.7
+helix training,40,90,44.44%,1.1
+`;
+
+describe('parseSearchConsoleExport', () => {
+  it('parses quoted fields, percentages and totals', () => {
+    const exp = parseSearchConsoleExport(QUERIES_CSV, 'Queries.csv');
+    expect(exp.table).toBe('queries');
+    expect(exp.keyLabel).toBe('Top queries');
+    expect(exp.rows).toHaveLength(3);
+    expect(exp.rows[1]).toEqual({ key: 'strength training for over 50, corvallis', clicks: 3, impressions: 210, ctr: 0.0143, position: 11.7 });
+    expect(exp.totals).toEqual({ clicks: 55, impressions: 640 });
+  });
+
+  it('flags weak-position / weak-ctr opportunities and renders a report', () => {
+    const exp = parseSearchConsoleExport(QUERIES_CSV, 'Queries.csv');
+    const opp = searchConsoleOpportunities(exp);
+    // "gym corvallis" sits at 4.2 with a 3.5% CTR — fine. "helix training" is
+    // brand. Only the position-11.7 query is an opportunity.
+    expect(opp.map((o) => [o.key, o.reason])).toEqual([
+      ['strength training for over 50, corvallis', 'weak-position'],
+    ]);
+    const md = renderSearchConsoleReport([{ file: 'Queries.csv', data: exp }], '2026-09-27');
+    expect(md).toContain('| Top queries | Clicks |');
+    expect(md).toContain('**Opportunities');
+  });
+
+  it('computes a first/last-7-day trend for a Dates export', () => {
+    const rows = Array.from({ length: 14 }, (_, i) => `2026-09-${String(i + 1).padStart(2, '0')},${i + 1},100,1%,5`).join('\n');
+    const exp = parseSearchConsoleExport(`Date,Clicks,Impressions,CTR,Position\n${rows}\n`, 'Dates.csv');
+    expect(exp.table).toBe('dates');
+    expect(searchConsoleTrend(exp)).toEqual({ first7: 28, last7: 77 });
+  });
+});

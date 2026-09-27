@@ -4,7 +4,7 @@
  * `isLive` / `isStub` come from `@jeldon/content-model` — the host never
  * re-implements the draft → docReviewed → ready → scheduled → live rules.
  * `INCLUDE_DRAFTS=true` unlocks drafts for preview builds (the build-parity CI
- * gate exercises this path).
+ * step exercises this path). Content-layer entries: `a.id` is the slug.
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { isLive, isStub } from '@jeldon/content-model';
@@ -40,8 +40,8 @@ export async function getStubArticles(): Promise<ArticleEntry[]> {
   return all.filter((e) => isStub(flags(e)));
 }
 
-export function estimateReadTime(body: string): string {
-  const words = body.split(/\s+/).filter(Boolean).length;
+export function estimateReadTime(body: string | undefined): string {
+  const words = (body ?? '').split(/\s+/).filter(Boolean).length;
   return `${Math.max(1, Math.round(words / 200))} MIN`;
 }
 

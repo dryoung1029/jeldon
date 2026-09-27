@@ -15,7 +15,8 @@
     "lint": "turbo run lint",
     "gen:schema": "node scripts/gen-schema.mjs",
     "changeset": "changeset",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "smoke:template": "node scripts/smoke-template.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.9",

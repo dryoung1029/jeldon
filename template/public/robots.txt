@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# The sitemap URL is the canonical host from jeldon.config.ts; keep in sync.
+Sitemap: https://example.com/sitemap-index.xml

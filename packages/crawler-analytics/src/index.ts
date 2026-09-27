@@ -70,6 +70,21 @@ export {
   upsertCrawlerSnapshot,
 } from './snapshots.js';
 
+// Google Search Console CSV exports (the no-API owner path)
+export {
+  parseCsv,
+  parseSearchConsoleExport,
+  classifySearchConsoleTable,
+  searchConsoleOpportunities,
+  searchConsoleTop,
+  searchConsoleTrend,
+  renderSearchConsoleReport,
+  type SearchConsoleRow,
+  type SearchConsoleExport,
+  type SearchConsoleTable,
+  type SearchConsoleOpportunity,
+} from './search-console.js';
+
 // Re-export the config contract this package consumes, for convenience.
 export {
   defaultAnalyticsConfig,

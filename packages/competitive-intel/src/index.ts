@@ -26,6 +26,7 @@
 export {
   runAudit,
   auditHomepage,
+  auditHomepageWithHtml,
   auditSitemap,
   auditRobots,
   auditPageSpeed,
@@ -46,6 +47,9 @@ export {
   decode,
   pick,
   originOf,
+  tagAttr,
+  metaContent,
+  linkHref,
   type SchemaAuditResult,
 } from './html.js';
 

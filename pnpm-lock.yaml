@@ -82,6 +82,9 @@ importers:
       '@jeldon/core-scoring':
         specifier: workspace:*
         version: link:../core-scoring
+      '@jeldon/drafting':
+        specifier: workspace:*
+        version: link:../drafting
     devDependencies:
       '@types/node':
         specifier: ^22.7.5

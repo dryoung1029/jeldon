@@ -1,18 +1,17 @@
-# Build output
-dist/
-.astro/
+# Build output — ANCHORED to the repo root. An unanchored `dist/` also swallowed
+# a vendored engine's dist/ folders and CI failed with exit 127 (Helix).
+/dist/
+/.astro/
+/.wrangler/
 
 # Dependencies
-node_modules/
+/node_modules/
 
-# Cloudflare / wrangler
-.wrangler/
-.dev.vars
-
-# Env
+# Secrets — never commit these
 .env
 .env.*
 !.env.example
+.dev.vars
 
 # Misc
 *.log

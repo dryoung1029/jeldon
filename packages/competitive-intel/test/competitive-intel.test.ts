@@ -194,3 +194,90 @@ describe('trackLocalRanks — guards + store wiring (no network)', () => {
     ).rejects.toThrow(/ourPlaceId/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Helix finding #9 — a PushPress/Webflow homepage with content-before-name
+// meta tags reported "Meta description: MISSING" and no template vendor.
+// ---------------------------------------------------------------------------
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { auditHomepage, linkHref, metaContent, runAudit } from '../src/index.js';
+import type { Fetcher } from '../src/index.js';
+
+const PUSHPRESS_HTML = readFileSync(resolve(__dirname, 'fixtures/pushpress-webflow-homepage.html'), 'utf8');
+
+/** Serves the fixture ONCE, then fails every later request (the rate-limit /
+ *  proxy-breaker shape that hid the vendor in the Helix scan). */
+function oneShotFetcher(html: string): Fetcher & { calls: number } {
+  const f = {
+    calls: 0,
+    async fetchHtml(url: string) {
+      f.calls++;
+      if (f.calls > 1) return { ok: false, status: 429, finalUrl: url, html: '', via: 'plain' as const, error: 'rate limited' };
+      return { ok: true, status: 200, finalUrl: url, html, via: 'plain' as const };
+    },
+  };
+  return f;
+}
+
+describe('attribute-order-agnostic meta extraction (Helix #9a)', () => {
+  it('finds <meta content=… name="description"> and <meta name=… content=…> alike', () => {
+    expect(metaContent(PUSHPRESS_HTML, 'description')).toMatch(/strength gym in Corvallis/);
+    expect(metaContent('<meta name="description" content="classic order">', 'description')).toBe('classic order');
+    expect(metaContent(PUSHPRESS_HTML, 'og:title')).toBe('Helix Training');
+    expect(metaContent(PUSHPRESS_HTML, 'twitter:card')).toBe('summary_large_image');
+    expect(metaContent(PUSHPRESS_HTML, 'nope')).toBeNull();
+  });
+
+  it('finds link hrefs in either order, including multi-valued rel', () => {
+    expect(linkHref(PUSHPRESS_HTML, 'canonical')).toBe('https://www.helixtrain.com/');
+    expect(linkHref(PUSHPRESS_HTML, 'icon')).toMatch(/favicon\.png$/);
+  });
+
+  it('auditHomepage reports the description present on the fixture', async () => {
+    const r = await auditHomepage('https://www.helixtrain.com', { fetcher: oneShotFetcher(PUSHPRESS_HTML) });
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.metaDescription).toMatch(/strength gym/);
+    expect(r.viewport).toBe(true);
+    expect(r.favicon).toBe(true);
+    expect(r.ogTags.title).toBe(true);
+    expect(r.twitterTags.card).toBe(true);
+    expect(r.canonicalUrl).toBe('https://www.helixtrain.com/');
+    expect((r as Record<string, unknown>).html).toBeUndefined(); // public shape unchanged
+  });
+});
+
+describe('template-vendor detection survives a failed re-fetch (Helix #9b)', () => {
+  it('detects PushPress from the Helix pack fingerprints using the audited document', async () => {
+    const cfg = resolveScannerConfig({
+      roster: [],
+      targetKeywords: [],
+      templateVendors: [
+        { name: 'PushPress', fingerprints: ['pushpress.com', 'Site by PushPress'] },
+        { name: 'Webflow', fingerprints: ['website-files.com', 'data-wf-page'] },
+      ],
+    });
+    const fetcher = oneShotFetcher(PUSHPRESS_HTML);
+    const audit = await runAudit({
+      url: 'https://www.helixtrain.com',
+      fetcher,
+      scannerConfig: cfg,
+      skipPageSpeed: true,
+      skipPageSampling: true,
+    });
+    expect(audit.homepage?.metaDescription).toMatch(/strength gym/);
+    expect(audit.templateVendor).toBe('PushPress'); // first fingerprint in pack order wins
+    expect(audit.homepageText).toMatch(/Strength training in Corvallis/);
+    expect(fetcher.calls).toBe(1); // no second homepage fetch
+  });
+
+  it('Webflow is detected when PushPress is not in the pack', async () => {
+    const cfg = resolveScannerConfig({
+      roster: [], targetKeywords: [],
+      templateVendors: [{ name: 'Webflow', fingerprints: ['website-files.com', 'data-wf-page'] }],
+    });
+    const audit = await runAudit({ url: 'https://x.test', fetcher: oneShotFetcher(PUSHPRESS_HTML), scannerConfig: cfg, skipPageSpeed: true, skipPageSampling: true });
+    expect(audit.templateVendor).toBe('Webflow');
+  });
+});

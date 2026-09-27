@@ -10,12 +10,12 @@
  */
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve, basename } from 'node:path';
-import { loadDomainPack } from '@jeldon/config';
+import { loadDomainPack } from '@jeldon/config/load';
 import { validateArticle } from '@jeldon/content-model';
 
-const ARTICLES_DIR = resolve('src/content/articles');
 
-async function listArticleFiles(args) {
+
+async function listArticleFiles(args, ARTICLES_DIR) {
   const explicit = args.filter((a) => a.endsWith('.md'));
   if (explicit.length) return explicit.map((f) => resolve(f));
   const files = await readdir(ARTICLES_DIR);
@@ -24,7 +24,7 @@ async function listArticleFiles(args) {
 
 async function main() {
   const pack = await loadDomainPack();
-  const files = await listArticleFiles(process.argv.slice(2));
+  const files = await listArticleFiles(process.argv.slice(2), resolve(pack.services.contentDir ?? 'src/content/articles'));
 
   let failed = 0;
   for (const file of files) {

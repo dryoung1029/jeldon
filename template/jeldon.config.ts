@@ -52,6 +52,9 @@ export default defineDomainPack({
     // article (and backfills by relevance) so your taxonomy stays consistent.
     // Leave empty to let the generator invent free-form tags instead.
     tags: ['TODO-topic-one', 'TODO-topic-two', 'TODO-topic-three'],
+    // Where articles publish. Default '/articles/' matches src/pages/articles/.
+    // Change both together (the engine builds every URL from this value).
+    articlePathPrefix: '/articles/',
     defaultAuthorSlug: 'primary-author',
     timezone: 'America/Los_Angeles',
   },
@@ -88,7 +91,9 @@ export default defineDomainPack({
   compliance: { pack: 'none' },
 
   capabilities: {
-    drafting: true,
+    // 'agent': a coding agent drafts with `jeldon brief` (no API key).
+    // 'api': the engine drives an LLM (add ANTHROPIC_API_KEY to requiredEnv).
+    drafting: 'agent',
     amplify: false,
     audio: false,
     heroImages: false,
@@ -98,8 +103,9 @@ export default defineDomainPack({
   },
 
   services: {
-    store: 'github',
+    store: 'fs',
+    contentDir: 'src/content/articles',
     analytics: 'none',
-    requiredEnv: ['GITHUB_TOKEN', 'ANTHROPIC_API_KEY'],
+    requiredEnv: [],
   },
 });
