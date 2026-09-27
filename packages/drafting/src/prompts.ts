@@ -17,6 +17,7 @@
  * are now read from `pack`.
  */
 
+import { articlePathPrefix } from '@jeldon/config';
 import type { DraftingPack } from './types.js';
 
 export interface PromptPack {
@@ -254,7 +255,7 @@ You are in DRAFT-SERIES mode. The previous turn proposed a series outline. Now w
 - Frontmatter must follow this shape — note the required \`series:\` field linking siblings:
 ${frontmatterShape(pack, true)}
 - ${tagGuidance(pack)}
-- Cross-link to siblings naturally (/articles/<sibling-slug>)
+- Cross-link to siblings naturally (${articlePathPrefix(pack)}<sibling-slug>)
 - Cross-link to existing site pages where relevant
 - No content overlap between siblings — each owns its territory
 - Use today's date for publishDate; always set draft: true
@@ -272,7 +273,7 @@ You are in DRAFT-SERIES-ARTICLE mode. The user proposed a multi-article series o
 Write the full article and call the create_draft tool. ${wordTargetLine(pack)} Include:
 - A compelling lede that doesn't bury the point
 - 3–6 H2 sections with descriptive headings
-- Cross-links to sibling articles using /articles/<sibling-slug> where they fit
+- Cross-links to sibling articles using ${articlePathPrefix(pack)}<sibling-slug> where they fit
 - Internal links to relevant site pages where natural
 - A short "Bottom line" or similar wrap-up section
 ${citation}
@@ -339,7 +340,7 @@ You have a \`verify_citation\` tool backed by a verification service. It is the 
 
 You have access to the article currently open in the editor (sent in the user message inside <current_article>).
 
-If the article is part of a series, the sibling articles' full content is also provided inside <siblings>. When working on a series you can rewrite cross-links if slugs change (/articles/<slug>), move a section between siblings (use update_articles, writing the full version of EACH affected article), detect overlap or gaps, and keep the territory cleanly divided.
+If the article is part of a series, the sibling articles' full content is also provided inside <siblings>. When working on a series you can rewrite cross-links if slugs change (${articlePathPrefix(pack)}<slug>), move a section between siblings (use update_articles, writing the full version of EACH affected article), detect overlap or gaps, and keep the territory cleanly divided.
 
 A live SEO health report is included inside <seo_status> when available. When asked to improve SEO: target "bad" rows first, then "meh"; don't touch "good". Rewrite title/excerpt to land in the ideal window without losing the angle. Expand low word count with concrete anchors, never filler. Structure with descriptive subheads. Link naturally to relevant site pages only where it helps the reader. Add purposeful alt text.
 

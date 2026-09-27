@@ -1,5 +1,5 @@
 import type { AmplifyChannel, AmplifyConfig, DomainPack } from '@jeldon/config';
-import { defaultAmplifyConfig } from '@jeldon/config';
+import { articlePath, defaultAmplifyConfig } from '@jeldon/config';
 import { buildVoiceBlock } from './voice.js';
 import type {
   AmplifyArticle,
@@ -74,8 +74,9 @@ ${article.body}
 </article>`;
 }
 
-function articleUrl(siteUrl: string, slug: string): string {
-  return `${siteUrl.replace(/\/$/, '')}/articles/${slug}`;
+function articleUrl(pack: Pick<DomainPack, 'brand'> & { content?: { articlePathPrefix?: string } }, slug: string): string {
+  // Historical shape: no trailing slash (the UTM tagger matches an optional one).
+  return `${pack.brand.siteUrl.replace(/\/$/, '')}${articlePath(pack, slug).replace(/\/$/, '')}`;
 }
 
 /** UTM-tag the bare article URL inside one channel's text. Replaces the URL
@@ -107,7 +108,7 @@ export async function generateKit(
   opts: GenerateKitOptions = {},
 ): Promise<GenerateKitResult> {
   const amplify = resolveAmplify(pack);
-  const url = articleUrl(pack.brand.siteUrl, article.slug);
+  const url = articleUrl(pack, article.slug);
   const tool = buildFullKitTool(amplify.channels);
 
   const res = await llm.callTool({
@@ -160,7 +161,7 @@ export async function regenerateChannel(
   const channel = amplify.channels.find((c) => c.id === channelId);
   if (!channel) throw new Error(`Unknown channel "${channelId}"`);
 
-  const url = articleUrl(pack.brand.siteUrl, article.slug);
+  const url = articleUrl(pack, article.slug);
   const refinementBlock = opts.refinement?.trim()
     ? `\n\nUSER REFINEMENT REQUEST: ${opts.refinement.trim()}\n\nApply this refinement to the new version. If it contradicts the channel's hard rules (e.g. asking to exceed a character limit), honor the rule and note the conflict at the end.`
     : '';

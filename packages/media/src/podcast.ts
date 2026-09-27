@@ -6,7 +6,7 @@
  * assembly, no I/O — the host wraps the returned XML in a Response.
  */
 
-import { defaultMediaConfig, type PodcastConfig } from '@jeldon/config';
+import { articlePath, defaultMediaConfig, type PodcastConfig } from '@jeldon/config';
 import type { FeedArticle } from './types.js';
 
 const DEFAULT_PODCAST = defaultMediaConfig.podcast;
@@ -18,6 +18,8 @@ export interface BuildFeedOptions {
   podcast?: PodcastConfig;
   /** Override the feed self-URL. Default `${siteUrl}/podcast.xml`. */
   feedUrl?: string;
+  /** Article URL prefix (`pack.content.articlePathPrefix`). Default `/articles/`. */
+  articlePathPrefix?: string;
 }
 
 function esc(s: string): string {
@@ -88,7 +90,7 @@ export function buildPodcastFeed(articles: FeedArticle[], opts: BuildFeedOptions
 
   const articleItems = audioArticles
     .map((a) => {
-      const articleUrl = `${site}/articles/${a.slug}/`;
+      const articleUrl = `${site}${articlePath({ content: { articlePathPrefix: opts.articlePathPrefix } }, a.slug)}`;
       const audioUrl = abs(a.audioUrl!, site);
       const pubDate = new Date(a.audioGeneratedAt ?? a.publishDate).toUTCString();
       const size = a.audioFileSize ?? 0;

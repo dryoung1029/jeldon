@@ -1,9 +1,15 @@
 {
   "name": "@jeldon/media",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Domain-agnostic media surface: markdown→narration text prep, ElevenLabs TTS synthesis, gpt-image hero generation, and the iTunes podcast feed builder. TTS/image/storage sit behind interfaces (ObjectStore + Tts + ImageGen) with null/fetch defaults; voice/pronunciation/style/podcast values come from the Domain Pack.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/media"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,7 +18,18 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",

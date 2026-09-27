@@ -1,9 +1,15 @@
 {
   "name": "@jeldon/cli",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "The `jeldon` CLI: init, validate, doctor, check-geo-floor. The agent's deterministic 'am I wired correctly?' gate.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
   "bin": {
     "jeldon": "./dist/index.js"
   },
@@ -13,7 +19,18 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",

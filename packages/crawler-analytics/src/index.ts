@@ -73,6 +73,7 @@ export {
 // Re-export the config contract this package consumes, for convenience.
 export {
   defaultAnalyticsConfig,
+  resolveAnalyticsConfig,
   type AnalyticsConfig,
   type AiBot,
   type RefererChannelRule,

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { resolveConfigPath, validateDomainPack, loadDomainPack } from '@jeldon/config';
+import { resolveConfigPath, validateDomainPack, loadDomainPack } from '@jeldon/config/load';
 import { runDoctor, type DoctorCheck } from './doctor.js';
 import { runCheckGeoFloor } from './check-geo-floor.js';
 

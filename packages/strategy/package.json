@@ -1,9 +1,15 @@
 {
   "name": "@jeldon/strategy",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Deterministic, evidence-backed strategic recommendations engine. Joins analytics, crawler activity, per-article health and keyword ranks into a prioritized action list — no AI call. Thresholds, copy templates, deep-links and category targets are config; audio/podcast/AEO rules are opt-in.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/strategy"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,7 +18,18 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",

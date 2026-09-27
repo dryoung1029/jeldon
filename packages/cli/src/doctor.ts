@@ -1,4 +1,4 @@
-import { loadDomainPack } from '@jeldon/config';
+import { loadDomainPack } from '@jeldon/config/load';
 
 export type CheckStatus = 'ok' | 'warn' | 'error';
 export interface DoctorCheck {

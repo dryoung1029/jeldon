@@ -238,3 +238,30 @@ describe('emitLlmsTxt gating (uses a typed pack slice)', () => {
     expect(res.contents).toBe('');
   });
 });
+
+describe('article + author URL prefixes come from the Domain Pack (Helix finding #3)', () => {
+  const blogPack = {
+    brand: { name: 'Helix', siteUrl: SITE },
+    content: { articlePathPrefix: '/blog/', categories: ['evidence'] },
+    authors: [{ slug: 'kathy', name: 'Kathy', schemaId: `${SITE}/coaches/#kathy`, profile: { name: 'Kathy' }, isPrimary: true, urlPrefix: '/coaches/' }],
+    schema: { orgType: ['Organization'], org: { name: 'Helix', url: SITE }, articleTypes: ['Article'] },
+  } as unknown as DomainPack;
+
+  it('articleGraph canonical uses /blog/ when the pack says so — no string rebase needed', () => {
+    const node = articleGraph(article, authors, blogPack) as Record<string, any>;
+    expect(node.mainEntityOfPage).toBe('https://example.com/blog/when-to-image/');
+    expect(JSON.stringify(node)).not.toContain('/articles/');
+  });
+
+  it('the inline-Person fallback uses authors[].urlPrefix', () => {
+    const node = articleGraph({ ...article, authorSlug: 'stranger', author: 'A Stranger' }, [], blogPack) as Record<string, any>;
+    expect(node.author.url).toBe('https://example.com/coaches/stranger');
+  });
+
+  it('sitemap exclusions follow the prefix (string or pack)', () => {
+    const stubs = [{ slug: 'stub-one', isDraft: true }];
+    expect(sitemapExcludedArticleUrls(stubs, SITE, '/blog/').has('https://example.com/blog/stub-one/')).toBe(true);
+    expect(sitemapExcludedArticleUrls(stubs, SITE, blogPack).has('https://example.com/blog/stub-one/')).toBe(true);
+    expect(sitemapExcludedArticleUrls(stubs, SITE).has('https://example.com/articles/stub-one/')).toBe(true);
+  });
+});

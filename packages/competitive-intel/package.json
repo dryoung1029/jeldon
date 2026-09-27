@@ -1,9 +1,15 @@
 {
   "name": "@jeldon/competitive-intel",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Domain-agnostic local-competitor intelligence: one bundled site auditor (homepage + schema + sitemap + PSI + GBP + page-stats + template-vendor detection + reused @jeldon/core-scoring GEO citability) importable from both an SSR Function and a Node cron, plus Claude-backed positioning extraction, a streaming gap report, and SerpApi local-pack rank tracking. Ported from Body of Health competitor-scanner.ts + audit-competitors.mjs + competitor-positioning.ts + competitor-gap-report.ts + keyword-ranks.ts.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/competitive-intel"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,7 +18,18 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",

@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve, basename } from 'node:path';
-import { loadDomainPack, type GeoConfig } from '@jeldon/config';
+import type { GeoConfig } from '@jeldon/config';
+import { loadDomainPack } from '@jeldon/config/load';
 import { calculateGeo } from '@jeldon/core-scoring';
 import { parse, isLive, type Frontmatter, type LifecycleFlags } from '@jeldon/content-model';
 

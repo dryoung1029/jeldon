@@ -1,9 +1,15 @@
 {
   "name": "@jeldon/drafting",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Domain-agnostic article drafting + editor-chat orchestration. The score->verify->one-shot-fix-pass draft loop (NDJSON events), getSiteKnowledge() prompt injection (pack.voice + priority keywords + voice memory), a VoiceMemory store (@jeldon/store), and the agentic citation-verifying chatEdit. Every prompt string is built from the Domain Pack's voice block; nothing about any vertical is hardcoded. Ported from Body of Health author.ts + chat.ts + site-knowledge.ts + voice-memory.ts + priority-keywords.ts.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/drafting"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,7 +18,18 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",

@@ -2,6 +2,14 @@ import { z } from 'zod';
 
 const tuple2 = z.tuple([z.number(), z.number()]);
 
+/** A URL path prefix like `/blog/`. Slashes are normalized on parse so
+ *  `blog`, `/blog`, and `/blog/` all mean the same thing. */
+const urlPrefix = z
+  .string()
+  .min(1)
+  .regex(/^\/?[a-z0-9][a-z0-9-]*(?:\/[a-z0-9][a-z0-9-]*)*\/?$/i, 'must be a URL path segment like /blog/')
+  .transform((s) => `/${s.replace(/^\/+|\/+$/g, '')}/`);
+
 const orgProfile = z.object({
   name: z.string(),
   url: z.string().url(),
@@ -307,6 +315,13 @@ export const domainPackSchema = z
         .optional(),
       logoUrl: z.string().optional(),
       brandColors: z.record(z.string()).optional(),
+      fonts: z
+        .object({
+          display: z.string().optional(),
+          body: z.string().optional(),
+          googleFontsHref: z.string().url().optional(),
+        })
+        .optional(),
     }),
     authors: z
       .array(
@@ -317,6 +332,7 @@ export const domainPackSchema = z
           schemaId: z.string(),
           profile: personProfile,
           isPrimary: z.boolean().optional(),
+          urlPrefix: urlPrefix.optional(),
         }),
       )
       .min(1),
@@ -332,6 +348,7 @@ export const domainPackSchema = z
       categories: z.array(z.string()).min(1),
       categoryTargets: z.record(z.number().min(0).max(100)),
       tags: z.array(z.string()).optional(),
+      articlePathPrefix: urlPrefix.optional(),
       defaultAuthorSlug: z.string(),
       timezone: z.string(),
       lifecycle: z.object({ docReviewed: z.boolean().optional() }).optional(),
@@ -395,7 +412,7 @@ export const domainPackSchema = z
       })
       .optional(),
     capabilities: z.object({
-      drafting: z.boolean().optional(),
+      drafting: z.union([z.boolean(), z.enum(['api', 'agent'])]).optional(),
       amplify: z.boolean().optional(),
       audio: z.boolean().optional(),
       heroImages: z.boolean().optional(),

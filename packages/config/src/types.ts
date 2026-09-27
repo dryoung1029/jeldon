@@ -626,6 +626,14 @@ export interface DomainPack {
     };
     logoUrl?: string;
     brandColors?: Record<string, string>;
+    /** Typography for kits that render a site (the local-business kit's
+     *  design tokens read these). `googleFontsHref` is the full stylesheet URL
+     *  when the faces come from Google Fonts; omit for system fonts. */
+    fonts?: {
+      display?: string;
+      body?: string;
+      googleFontsHref?: string;
+    };
   };
 
   authors: Array<{
@@ -636,6 +644,10 @@ export interface DomainPack {
     schemaId: string;
     profile: PersonProfile;
     isPrimary?: boolean;
+    /** URL prefix of the author's public page, e.g. `/team/` (default) or
+     *  `/coaches/`. The schema graph's inline-Person fallback URL and the
+     *  kit's team page both derive from it. */
+    urlPrefix?: string;
   }>;
 
   /** The SINGLE source for all prompt injection. Consumed by @jeldon/drafting,
@@ -659,6 +671,11 @@ export interface DomainPack {
      *  keeping the site's taxonomy consistent for topic clustering. Omit (or
      *  leave empty) to let the generator invent free-form tags instead. */
     tags?: string[];
+    /** URL prefix articles publish under, e.g. `/articles/` (default) or
+     *  `/blog/`. Threaded through schema-graph (Article canonical, sitemap
+     *  exclusions), strategy + analytics (`articlePathPattern` defaults),
+     *  drafting (cross-link hints), amplify, media, and the CLI. */
+    articlePathPrefix?: string;
     defaultAuthorSlug: string;
     timezone: string;
     lifecycle?: { docReviewed?: boolean };
@@ -723,7 +740,10 @@ export interface DomainPack {
 
   /** Which growth surfaces exist for this project. */
   capabilities: {
-    drafting?: boolean;
+    /** `true`/`'api'` — engine-driven LLM drafting (needs an API key).
+     *  `'agent'` — a coding agent drafts with the engine's prompts via
+     *  `jeldon brief`; no API key. `false`/omitted — off. */
+    drafting?: boolean | 'api' | 'agent';
     amplify?: boolean;
     audio?: boolean;
     heroImages?: boolean;

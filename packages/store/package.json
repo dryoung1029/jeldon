@@ -1,9 +1,15 @@
 {
   "name": "@jeldon/store",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Domain-agnostic content persistence. interface Store + GitHubStore (Contents/Trees API with SHA-conflict re-fetch + out-of-band frontmatter merge) + FsStore fallback for tests and non-GitHub hosts.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/store"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,7 +18,18 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",

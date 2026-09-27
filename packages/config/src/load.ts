@@ -1,32 +1,23 @@
+/**
+ * `@jeldon/config/load` — the Node-only loader entry point.
+ *
+ * Everything here touches the filesystem (`node:fs`, `node:path`, `node:url`)
+ * and jiti. It is a SEPARATE entry so that importing `@jeldon/config` (types,
+ * schema, defaults, pure helpers) from a Cloudflare Worker route never drags
+ * jiti + `node:fs` into the bundle (Helix finding #8). Build-time code —
+ * `astro.config.mjs`, `src/lib/pack.ts`, the CLI, CI scripts — imports from
+ * here; runtime routes import from the root.
+ */
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createJiti } from 'jiti';
-import { domainPackSchema } from './schema.js';
+import { validateDomainPack } from './validate.js';
 import type { DomainPack } from './types.js';
 
-export interface ValidateResult {
-  ok: boolean;
-  data?: DomainPack;
-  errors: Array<{ path: string; message: string }>;
-}
+export { validateDomainPack, defineDomainPack, type ValidateResult } from './validate.js';
 
-/** Validate a plain object against the Domain Pack schema. Pure — no I/O. */
-export function validateDomainPack(input: unknown): ValidateResult {
-  const parsed = domainPackSchema.safeParse(input);
-  if (parsed.success) {
-    return { ok: true, data: parsed.data as DomainPack, errors: [] };
-  }
-  return {
-    ok: false,
-    errors: parsed.error.issues.map((i) => ({
-      path: i.path.join('.') || '(root)',
-      message: i.message,
-    })),
-  };
-}
-
-const CONFIG_CANDIDATES = ['jeldon.config.ts', 'jeldon.config.mjs', 'jeldon.config.js'];
+export const CONFIG_CANDIDATES = ['jeldon.config.ts', 'jeldon.config.mjs', 'jeldon.config.js'];
 
 export function resolveConfigPath(cwd = process.cwd(), explicit?: string): string | null {
   if (explicit) {
@@ -62,9 +53,4 @@ export async function loadDomainPack(opts: { cwd?: string; path?: string } = {})
     throw new Error(`Invalid Domain Pack at ${configPath}:\n${lines}`);
   }
   return result.data;
-}
-
-/** Identity helper for type-safe config authoring in `jeldon.config.ts`. */
-export function defineDomainPack(pack: DomainPack): DomainPack {
-  return pack;
 }

@@ -1,4 +1,5 @@
 import type { ArticleSchemaPolicy, DomainPack } from '@jeldon/config';
+import { articlePath, authorPath } from '@jeldon/config';
 import { absUrl, orgId } from './url.js';
 import type { ArticleInput, AuthorEntry, JsonLd } from './types.js';
 
@@ -9,6 +10,11 @@ export interface ArticleGraphOptions {
   /** Per-domain article-graph policy (reviewer @id, review dates, etc.). */
   schemaPolicy?: ArticleSchemaPolicy;
   siteUrl: string;
+  /** Article URL prefix (`pack.content.articlePathPrefix`). Default `/articles/`. */
+  articlePathPrefix?: string;
+  /** Author page URL prefix used for the inline-Person fallback when the
+   *  author slug matches no entry (`authors[].urlPrefix`). Default `/team/`. */
+  authorUrlPrefix?: string;
 }
 
 function toIso(d: string | Date): string {
@@ -27,6 +33,8 @@ function resolveOptions(
           arg.schema.articleGraph?.publishingPrinciplesUrl ?? arg.schema.publishingPrinciplesUrl,
         ...arg.schema.articleGraph,
       },
+      articlePathPrefix: arg.content?.articlePathPrefix,
+      authorUrlPrefix: (arg.authors.find((a) => a.isPrimary) ?? arg.authors[0])?.urlPrefix,
     };
   }
   return arg;
@@ -61,7 +69,8 @@ export function articleGraph(
 
   const published = toIso(article.publishDate);
   const modified = article.updatedDate ? toIso(article.updatedDate) : published;
-  const canonical = absUrl(siteUrl, `/articles/${article.slug}/`);
+  const pathPack = { content: { articlePathPrefix: opts.articlePathPrefix } };
+  const canonical = absUrl(siteUrl, articlePath(pathPack, article.slug));
 
   // Author: link by @id when the slug matches a known author entity.
   const matched = authors.find((a) => a.slug === article.authorSlug);
@@ -70,7 +79,7 @@ export function articleGraph(
     : {
         '@type': 'Person',
         name: article.author,
-        url: absUrl(siteUrl, `/team/${article.authorSlug}`),
+        url: absUrl(siteUrl, authorPath({ urlPrefix: opts.authorUrlPrefix }, article.authorSlug)),
       };
 
   const node: JsonLd = {

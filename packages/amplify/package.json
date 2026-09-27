@@ -1,9 +1,15 @@
 {
   "name": "@jeldon/amplify",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Domain-agnostic content amplification. generateKit() produces per-channel distribution copy (GBP/FB/IG/LinkedIn/newsletter/podcast) + IG carousels, one BrevoClient {createScheduledCampaign, cancel, sendNow, nextSendSlot} collapsing the triple Brevo helpers, and carousel-sidecar persistence via @jeldon/store. Every prompt/channel/scheme is read from pack.voice + pack.amplify — nothing about any vertical is hardcoded. Ported from Body of Health amplify/carousel/newsletter endpoints + brevo-campaigns.ts + brevo-config.ts + auto-newsletter.mjs.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/amplify"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,7 +18,18 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",

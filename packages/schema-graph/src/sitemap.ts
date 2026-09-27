@@ -1,3 +1,4 @@
+import { articlePath } from '@jeldon/config';
 import { absUrl } from './url.js';
 
 export interface ArticleStub {
@@ -8,7 +9,7 @@ export interface ArticleStub {
 }
 
 /**
- * Build the set of `/articles/<slug>/` URLs to exclude from the sitemap.
+ * Build the set of `<articlePathPrefix><slug>/` URLs to exclude from the sitemap.
  *
  * Ported from BoH `astro.config.mjs::sitemapExcludedArticleUrls`. The original
  * coupled three things: (1) an `fs` walk of `src/content/articles`, (2) a
@@ -19,10 +20,17 @@ export interface ArticleStub {
  * owns the fs walk + parse — DECOUPLING-NOTES: "one frontmatter codec; the
  * sitemap filter imports it"). This keeps the URL-building pure and testable.
  */
-export function sitemapExcludedArticleUrls(stubs: ArticleStub[], siteUrl: string): Set<string> {
+export function sitemapExcludedArticleUrls(
+  stubs: ArticleStub[],
+  siteUrl: string,
+  /** The article URL prefix — pass `pack.content.articlePathPrefix` (or the
+   *  pack itself). Default `/articles/`. Helix finding #3. */
+  prefix?: string | { content?: { articlePathPrefix?: string } },
+): Set<string> {
+  const pathPack = typeof prefix === 'string' ? { content: { articlePathPrefix: prefix } } : prefix;
   const out = new Set<string>();
   for (const a of stubs) {
-    if (a.isDraft) out.add(absUrl(siteUrl, `/articles/${a.slug}/`));
+    if (a.isDraft) out.add(absUrl(siteUrl, articlePath(pathPack, a.slug)));
   }
   return out;
 }

@@ -1,5 +1,5 @@
 import type { AmplifyConfig, CarouselScheme, DomainPack } from '@jeldon/config';
-import { defaultAmplifyConfig } from '@jeldon/config';
+import { articlePath, defaultAmplifyConfig } from '@jeldon/config';
 import { buildVoiceBlock } from './voice.js';
 import type {
   AmplifyArticle,
@@ -86,7 +86,7 @@ export interface GenerateCarouselOptions {
 /** Generate (or iterate on) a carousel for an article. */
 export async function generateCarousel(
   article: AmplifyArticle,
-  pack: Pick<DomainPack, 'voice' | 'brand' | 'amplify'>,
+  pack: Pick<DomainPack, 'voice' | 'brand' | 'amplify'> & Partial<Pick<DomainPack, 'content'>>,
   llm: LlmClient,
   opts: GenerateCarouselOptions = {},
 ): Promise<GenerateCarouselResult> {
@@ -155,7 +155,7 @@ ${taskLine}`;
     heroImageAlt: article.heroImageAlt ?? null,
     title: article.title,
     slug: article.slug,
-    articleUrl: `${siteUrl}/articles/${article.slug}/`,
+    articleUrl: `${siteUrl}${articlePath(pack, article.slug)}`,
     model: opts.model ?? 'sonnet',
     usage: res.usage,
   };

@@ -15,6 +15,7 @@
  * GitHub coupling.
  */
 
+import { articlePathPrefix } from '@jeldon/config';
 import type {
   DraftingPack,
   KnowledgeProviders,
@@ -134,7 +135,7 @@ export async function getSiteKnowledge(
       const status = a.draft ? '[DRAFT]' : '[LIVE]';
       const series = a.series ? ` [series: ${a.series}]` : '';
       const tags = a.tags.length ? ` — tags: ${a.tags.join(', ')}` : '';
-      return `- ${status} /articles/${a.slug} (${a.category})${series} "${a.title}"${tags}\n  ${a.excerpt}`;
+      return `- ${status} ${articlePathPrefix(pack)}${a.slug} (${a.category})${series} "${a.title}"${tags}\n  ${a.excerpt}`;
     })
     .join('\n');
 

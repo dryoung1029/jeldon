@@ -17,6 +17,7 @@ export type {
 // can `import { defaultStrategyConfig } from '@jeldon/strategy'`.
 export {
   defaultStrategyConfig,
+  resolveStrategyConfig,
   type StrategyConfig,
   type StrategyThresholds,
   type StrategyRefererGroups,

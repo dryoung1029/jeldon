@@ -1,9 +1,15 @@
 {
   "name": "@jeldon/schema-graph",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Domain-agnostic schema.org graph builders (Organization / Person / Article / BreadcrumbList / FAQPage) + extractFaqs + emitLlmsTxt. Entity shapes move from page literals into the Domain Pack; generic types by default, vertical types from pack.schema.articleTypes.",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dryoung1029/jeldon.git",
+    "directory": "packages/schema-graph"
+  },
+  "homepage": "https://github.com/dryoung1029/jeldon#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,7 +19,18 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc --noEmit",
