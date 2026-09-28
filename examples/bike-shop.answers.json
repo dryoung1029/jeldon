@@ -1,0 +1,34 @@
+{
+  "$schema": "../schemas/init-answers.schema.json",
+  "kit": "local-business",
+  "vertical": "shop",
+  "business": {
+    "name": "Marys Peak Cycles",
+    "url": "https://maryspeakcycles.com",
+    "tagline": "Bikes fixed right, by people who ride them.",
+    "shortPitch": "A neighborhood bike shop in Corvallis, Oregon: repairs, fittings, and honest advice on what to ride.",
+    "descriptor": "a neighborhood bike shop",
+    "phone": "+1-541-555-0142",
+    "phoneDisplay": "(541) 555-0142",
+    "email": "hello@maryspeakcycles.com",
+    "address": { "street": "120 SW 2nd St", "city": "Corvallis", "region": "OR", "postalCode": "97333" },
+    "hoursConfirmed": false,
+    "social": { "instagram": "https://instagram.com/maryspeakcycles" }
+  },
+  "owner": { "name": "Ana Ruiz", "firstName": "Ana", "title": "Owner and head mechanic", "slug": "ana-ruiz", "knowsAbout": ["bike repair", "bike fitting", "commuting by bike", "gravel riding"] },
+  "helper": { "name": "Sam" },
+  "repo": { "name": "marys-peak-cycles-site" },
+  "brand": { "colors": { "green": "#2f6b3a", "orange": "#e8772e", "ink": "#22262a", "sand": "#e9d8a6" }, "theme": { "primary": "green", "accent": "orange", "neutral": "ink", "highlight": "sand" } },
+  "routes": { "primaryCta": "/book-a-repair/" },
+  "services": [
+    { "slug": "tune-up", "name": "Tune-up", "tagline": "Brakes, gears, wheels — everything checked and adjusted.", "audience": "Every bike, once a season", "order": 10, "price": "$89", "duration": "Same day", "serviceType": "Bicycle repair", "body": "Drop the bike off in the morning and ride it home that evening.", "confirmed": true },
+    { "slug": "bike-fitting", "name": "Bike fitting", "tagline": "Stop hurting on the bike.", "audience": "Anyone with numb hands or a sore back", "order": 20, "price": "$150", "duration": "90 minutes", "serviceType": "Bike fitting", "body": "We measure, watch you pedal, and adjust.", "confirmed": true }
+  ],
+  "team": [{ "slug": "ana-ruiz", "name": "Ana Ruiz", "role": "Owner and head mechanic", "order": 1, "bio": "Ana has fixed bikes in Corvallis for twelve years.", "confirmed": true }],
+  "faqs": [{ "pages": ["home", "faq", "primary-cta"], "question": "Do I need an appointment?", "answer": "No. Walk-ins are welcome; booking gets you same-day service." }],
+  "booking": { "kind": "link", "calendarUrl": "https://calendly.com/maryspeakcycles" },
+  "contact": { "crm": "brevo-contact", "notify": "brevo" },
+  "content": { "categories": { "guide": 80, "howto": 80, "review": 75 }, "tags": ["repair", "commuting", "gravel", "fitting"] },
+  "compliance": { "pack": "none" },
+  "copy": { "expertDescriptor": "a mechanic", "sourcesHint": "manufacturer documentation, standards bodies, CPSC", "competitorNoun": "Corvallis bike shops", "topicNoun": "bike repair" }
+}

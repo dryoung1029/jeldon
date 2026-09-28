@@ -610,6 +610,57 @@
           },
           "default": []
         },
+        "articles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "slug": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "excerpt": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": []
+              },
+              "publishDate": {
+                "type": "string"
+              },
+              "heroImage": {
+                "type": "string"
+              },
+              "heroImageAlt": {
+                "type": "string"
+              },
+              "docNotes": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slug",
+              "title",
+              "excerpt",
+              "category",
+              "body"
+            ],
+            "additionalProperties": false
+          },
+          "default": []
+        },
         "pricing": {
           "type": "array",
           "items": {

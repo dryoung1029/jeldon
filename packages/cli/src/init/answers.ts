@@ -17,7 +17,7 @@ export const initAnswersSchema = z.object({
 
   business: z.object({
     name: z.string().min(1),
-    /** Canonical URL of the NEW site, e.g. https://helixtrain.com */
+    /** Canonical URL of the NEW site, e.g. https://www.acme-gym.com */
     url: url,
     /** The OLD site to learn from (scraped). Omit for a brand-new business. */
     oldUrl: url.optional(),
@@ -37,14 +37,14 @@ export const initAnswersSchema = z.object({
     hours: z.record(z.string()).optional(),
     hoursConfirmed: z.boolean().default(false),
     social: z.record(z.string()).optional(),
-    /** Area framing for the pack (brand.geoFraming), e.g. "Corvallis, Oregon and the mid-Willamette Valley". */
+    /** Area framing for the pack (brand.geoFraming), e.g. "Springfield, Oregon and the surrounding valley". */
     geoFraming: z.string().optional(),
     priceRange: z.string().optional(),
   }),
 
   owner: z.object({
     name: z.string().min(1),
-    /** How the owner should be addressed in the agent kit ("Kathy"). */
+    /** How the owner should be addressed in the agent kit (their first name). */
     firstName: z.string().optional(),
     title: z.string().optional(),
     credential: z.string().optional(),
@@ -141,6 +141,21 @@ export const initAnswersSchema = z.object({
     order: z.number().optional(),
     question: z.string(),
     answer: z.string(),
+  })).default([]),
+
+  /** Seed articles, written as DRAFTS (the owner approves with /publish). */
+  articles: z.array(z.object({
+    slug: z.string(),
+    title: z.string(),
+    excerpt: z.string(),
+    category: z.string(),
+    tags: z.array(z.string()).default([]),
+    publishDate: z.string().optional(),
+    heroImage: z.string().optional(),
+    heroImageAlt: z.string().optional(),
+    docNotes: z.string().optional(),
+    /** Markdown body. */
+    body: z.string(),
   })).default([]),
 
   pricing: z.array(z.object({

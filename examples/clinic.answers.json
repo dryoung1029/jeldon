@@ -1,0 +1,30 @@
+{
+  "$schema": "../schemas/init-answers.schema.json",
+  "kit": "local-business",
+  "vertical": "clinic",
+  "business": {
+    "name": "Willamette Family Chiropractic",
+    "url": "https://willamettefamilychiro.com",
+    "tagline": "Evidence-informed chiropractic care for the whole family.",
+    "shortPitch": "A family chiropractic clinic in Albany, Oregon. Conservative, evidence-informed care with clear next steps.",
+    "descriptor": "a family chiropractic clinic",
+    "phone": "+1-541-555-0199",
+    "phoneDisplay": "(541) 555-0199",
+    "email": "frontdesk@willamettefamilychiro.com",
+    "address": { "street": "400 Pacific Blvd SE", "city": "Albany", "region": "OR", "postalCode": "97321" },
+    "hoursConfirmed": false
+  },
+  "owner": { "name": "Dr. Priya Nair, DC", "firstName": "Priya", "title": "Owner, Chiropractor", "credential": "DC", "slug": "priya-nair" },
+  "helper": { "name": "Jason" },
+  "repo": { "name": "willamette-family-chiro-site" },
+  "brand": { "colors": { "teal": "#12736d", "coral": "#d95d39", "slate": "#2b2f36", "cream": "#f3ead8" } },
+  "routes": { "services": "/care/", "team": "/providers/", "primaryCta": "/new-patients/", "blog": "/articles/" },
+  "collections": { "services": "src/content/care", "team": "src/content/providers" },
+  "services": [{ "slug": "back-pain", "name": "Back pain care", "tagline": "A plan in the first visit.", "audience": "Adults with new or recurring back pain", "order": 10, "serviceType": "Chiropractic care", "body": "We start with a history and exam, then a plan.", "confirmed": true }],
+  "team": [{ "slug": "priya-nair", "name": "Dr. Priya Nair", "role": "Chiropractor", "credentials": "DC", "order": 1, "bio": "Dr. Nair has practiced in Albany since 2015.", "confirmed": true }],
+  "faqs": [{ "pages": ["home", "faq", "primary-cta"], "question": "Do you take insurance?", "answer": "Most plans, yes. Call and we'll check yours." }],
+  "booking": { "kind": "link", "calendarUrl": "https://willamette.janeapp.com/" },
+  "contact": { "crm": "none", "notify": "resend" },
+  "compliance": { "pack": "hipaa", "requireHumanReviewTags": ["diagnosis", "medication"] },
+  "copy": { "expertDescriptor": "a clinician", "competitorNoun": "Albany chiropractic clinics", "topicNoun": "back pain" }
+}
