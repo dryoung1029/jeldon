@@ -395,12 +395,23 @@ export async function listSitemapUrls(sitemapUrl: string, fetchImpl: typeof fetc
       const res = await fetchImpl(next, { headers: { 'User-Agent': RANK_UA } });
       if (!res.ok) continue;
       const xml = await res.text();
+      // Child sitemaps and URLs are re-homed onto the origin we're reading
+      // from: a sitemap bakes its build-time `site:` host, which points at
+      // production even on a preview or a local build.
+      const origin = originOf(next);
+      const rehome = (u: string) => {
+        try {
+          return origin ? new URL(new URL(u).pathname + new URL(u).search, origin).toString() : u;
+        } catch {
+          return u;
+        }
+      };
       const childSitemaps = Array.from(xml.matchAll(/<sitemap>[\s\S]*?<loc>([^<]+)<\/loc>/gi)).map(
-        (m) => (m[1] ?? '').trim(),
+        (m) => rehome((m[1] ?? '').trim()),
       );
       for (const c of childSitemaps) if (visited.size < 10) queue.push(c);
       const urls = Array.from(xml.matchAll(/<url>[\s\S]*?<loc>([^<]+)<\/loc>/gi)).map((m) =>
-        (m[1] ?? '').trim(),
+        rehome((m[1] ?? '').trim()),
       );
       for (const u of urls) all.add(u);
     } catch {

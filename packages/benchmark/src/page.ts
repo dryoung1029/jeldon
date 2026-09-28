@@ -27,9 +27,11 @@ export function analyzePage(url: string, html: string, status: number, opts: Pag
   const imagesWithAlt = imgs.filter((t) => /\salt=["'][^"']+["']/i.test(t)).length;
   const inputs = Array.from(html.matchAll(/<(input|select|textarea)\b[^>]*>/gi)).map((m) => m[0]).filter((t) => !/type=["'](hidden|submit|button)["']/i.test(t));
   const labelIds = new Set(Array.from(html.matchAll(/<label\b[^>]*\sfor=["']([^"']+)["']/gi)).map((m) => m[1]));
+  // A control nested inside <label>…</label> is implicitly labelled (HTML spec).
+  const wrapped = new Set(Array.from(html.matchAll(/<label\b[^>]*>[\s\S]*?<\/label>/gi)).flatMap((m) => Array.from(m[0].matchAll(/<(input|select|textarea)\b[^>]*>/gi)).map((x) => x[0])));
   const inputsLabeled = inputs.filter((t) => {
     const id = t.match(/\sid=["']([^"']+)["']/i)?.[1];
-    return (id && labelIds.has(id)) || /aria-label=|aria-labelledby=/i.test(t);
+    return (id && labelIds.has(id)) || wrapped.has(t) || /aria-label=|aria-labelledby=/i.test(t);
   }).length;
   const links = Array.from(html.matchAll(/<a\b[^>]*\shref=["']([^"']*)["']/gi)).map((m) => m[1] ?? '');
   const hashLinks = links.filter((h) => h === '#' || h === '' || h.startsWith('javascript:')).length;
@@ -69,7 +71,14 @@ export function analyzePage(url: string, html: string, status: number, opts: Pag
     raw.forEach((r) => (Array.isArray(r) ? r.forEach(walkFaq) : walkFaq(r)));
     return n || (html.match(/<details\b/gi) ?? []).length;
   })();
-  const firstSection = html.slice(0, Math.min(html.length, 20_000)).match(/<main\b[\s\S]*?(?:<\/section>|<\/header>)/i)?.[0] ?? html.slice(0, 20_000);
+  // "Above the fold" ≈ the first section inside <main> (or the first 20 KB of
+  // the body when there is no <main>). Start AFTER <main so a large inline
+  // stylesheet in <head> can't push the hero out of the window.
+  const mainAt = html.search(/<main\b/i);
+  const bodyAt = html.search(/<body\b/i);
+  const from = mainAt >= 0 ? mainAt : bodyAt >= 0 ? bodyAt : 0;
+  const afterMain = html.slice(from, from + 30_000);
+  const firstSection = afterMain.match(/^[\s\S]*?(?:<\/section>|<\/header>)/i)?.[0] ?? afterMain.slice(0, 20_000);
   const ctaAboveFold = Array.from(firstSection.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/gi)).some((m) => CTA_WORDS.test(stripTags(m[1] ?? '')));
   const bookingLinks = [...new Set(links.filter((h) => bookingVendorOf(h)))];
   const articleRe = opts.articlePrefix ? new RegExp(`^${opts.articlePrefix.replace(/\/$/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/[^/]+$`) : /^\/(blog|articles?|news|posts?|journal)\/[^/]+$/i;
@@ -89,7 +98,7 @@ export function analyzePage(url: string, html: string, status: number, opts: Pag
     robotsMeta: metaContent(html, 'robots'),
     schemaTypes: types,
     schemaNap: { address: napAddress, telephone: napTel },
-    hasFaqText: /\b(faq|frequently asked|common questions|questions we get)\b/i.test(text),
+    hasFaqText: /<h[1-3]\b[^>]*>[^<]*\b(faqs?|frequently asked|common questions|questions we get)\b/i.test(html),
     images: imgs.length,
     imagesWithAlt,
     inputs: inputs.length,

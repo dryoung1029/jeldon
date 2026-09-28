@@ -85,7 +85,7 @@ export { snapshotSite, type SnapshotOptions } from './snapshot.js';
 export { analyzePage, type PageOptions } from './page.js';
 export { runPsi } from './psi.js';
 export {
-  measureAll, compare, duplicateIntentGroups, measureSpeed, measureSearchHygiene, measureDuplicateUrls, measureStructuredData,
+  measureAll, compare, duplicateIntentGroups, uniqueIndexableCount, measureSpeed, measureSearchHygiene, measureDuplicateUrls, measureStructuredData,
   measureCitability, measureContentDepth, measureConversionPath, measureAccessibility, measureHonesty, measureLocal,
   DIMENSION_ORDER, type MeasureOptions,
 } from './dimensions.js';

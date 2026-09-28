@@ -79,6 +79,12 @@ describe('analyzePage', () => {
     expect(o.unsourcedStats).toBe(1);
     expect(o.imagesWithAlt).toBe(0);
   });
+  it('counts a control wrapped in <label> as labelled, ignores hidden/submit', () => {
+    const html = '<html><body><main><form><label for="a">A</label><input id="a"><label>Hp<input type="text" name="website"></label><input type="hidden" name="p"><select name="x"></select><button type="submit">Go</button></form></main></body></html>';
+    const p = analyzePage('https://new.test/c', html, 200, { origin: 'https://new.test' });
+    expect(p.inputs).toBe(3);
+    expect(p.inputsLabeled).toBe(2);
+  });
 });
 
 describe('runBenchmark (no network — injected fetchers)', () => {

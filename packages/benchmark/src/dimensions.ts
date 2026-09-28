@@ -82,7 +82,7 @@ export function duplicateIntentGroups(urls: string[]): string[][] {
     const seg = path.split('/').filter(Boolean);
     if (seg.length !== 1) continue; // only top-level pages
     const base = seg[0]!.toLowerCase()
-      .replace(/-(?:[a-z0-9]+-)*in-[a-z]+(?:-[a-z]+)*$/, '') // "-helix-training-in-corvallis-or"
+      .replace(/-(?:[a-z0-9]+-)*in-[a-z]+(?:-[a-z]+)*$/, '') // "-acme-gym-in-springfield-or"
       .replace(/-(?:request|page|form)$/, '')
       .replace(/s$/, '');
     if (!base) continue;
@@ -136,8 +136,18 @@ export function measureCitability(s: SiteSnapshot, targets: { home?: number; art
   return { id: 'citability', score, value: `home ${home}/100${artAvg != null ? `, articles avg ${artAvg}/100 (${articles.length})` : ''}`, details: { home, articleAvg: artAvg, articles: articles.length }, issues };
 }
 
+const PLACEHOLDER_PATH = /\/(event-name|challenge-name|untitled|test|sample|template|page-\d+|copy-of-|lorem)/i;
+
+/** Indexable pages that are not duplicate-intent twins or placeholder paths. */
+export function uniqueIndexableCount(s: SiteSnapshot): number {
+  const urls = s.sitemapUrls.length ? s.sitemapUrls : publicPages(s).map((p) => p.url);
+  const dupExtras = duplicateIntentGroups(urls).reduce((a, g) => a + g.length - 1, 0);
+  const placeholders = urls.filter((u) => PLACEHOLDER_PATH.test(u)).length;
+  return Math.max(0, urls.length - dupExtras - placeholders);
+}
+
 export function measureContentDepth(s: SiteSnapshot): Measurement {
-  const indexable = s.sitemapUrls.length || publicPages(s).length;
+  const indexable = uniqueIndexableCount(s);
   const homeWords = s.home?.wordCount ?? 0;
   const articles = s.pages.filter((p) => p.isArticle);
   const goodPosts = articles.filter((p) => p.wordCount >= 600 && p.hasReferences).length;
@@ -147,7 +157,7 @@ export function measureContentDepth(s: SiteSnapshot): Measurement {
   if (articles.length && goodPosts === 0) issues.push('no article has ≥ 600 words AND a References section');
   if (!faqs) issues.push('no FAQ block found');
   const score = Math.min(100, Math.round(Math.min(indexable, 30) * 1.5 + Math.min(homeWords, 800) / 16 + goodPosts * 8 + Math.min(faqs, 10) * 2));
-  return { id: 'content-depth', score, value: `${indexable} indexable pages, home ${homeWords} words, ${goodPosts} sourced post(s) ≥600w, ${faqs} FAQ(s)`, details: { indexable, homeWords, goodPosts, articles: articles.length, faqs }, issues };
+  return { id: 'content-depth', score, value: `${indexable} unique indexable pages, home ${homeWords} words, ${goodPosts} sourced post(s) ≥600w, ${faqs} FAQ(s)`, details: { indexable, homeWords, goodPosts, articles: articles.length, faqs }, issues };
 }
 
 export function measureConversionPath(s: SiteSnapshot, opts: MeasureOptions): Measurement {

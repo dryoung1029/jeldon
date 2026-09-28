@@ -22,7 +22,10 @@ export function buildScorecard(args: { oldUrl: string | null; newUrl: string; ol
 
   const fixList: string[] = [];
   for (const r of rows) {
-    if (r.verdict === 'behind') fixList.push(...r.new.issues.map((i) => `[${r.label} — BEHIND] ${i}`));
+    if (r.verdict === 'behind') {
+      const lines = r.new.issues.length ? r.new.issues : [behindHint(r.id, r.old, r.new)];
+      fixList.push(...lines.map((i) => `[${r.label} — BEHIND] ${i}`));
+    }
     else if (r.verdict === 'tie' && r.new.issues.length) fixList.push(...r.new.issues.slice(0, 3).map((i) => `[${r.label} — tie, could win] ${i}`));
   }
   return {
@@ -38,6 +41,23 @@ export function buildScorecard(args: { oldUrl: string | null; newUrl: string; ol
     biggestWins,
     fixList,
   };
+}
+
+/** When a dimension is behind but the new site has no flagged issue of its
+ *  own, say what the old site has more of — that IS the fix list. */
+function behindHint(id: string, o: Measurement | null, n: Measurement): string {
+  const d = n.details;
+  const od = o?.details ?? {};
+  if (id === 'content-depth') {
+    const parts: string[] = [];
+    if (Number(od.indexable) > Number(d.indexable)) parts.push(`the old site has ${od.indexable} unique indexable pages vs ${d.indexable} — add real pages (or confirm the missing ones were placeholders/duplicates)`);
+    if (Number(od.homeWords) > Number(d.homeWords)) parts.push(`old home page ${od.homeWords} words vs ${d.homeWords} — expand the home copy with real detail (pillars, steps, FAQ answers)`);
+    if (Number(od.goodPosts) > Number(d.goodPosts)) parts.push(`old site has ${od.goodPosts} sourced post(s) ≥600 words vs ${d.goodPosts}`);
+    if (Number(d.goodPosts) === 0) parts.push('publish the first sourced article (a draft in src/content/articles counts once /publish flips it)');
+    if (Number(od.faqs) > Number(d.faqs)) parts.push(`old site shows ${od.faqs} FAQ entries vs ${d.faqs} — add FAQs (they also emit FAQPage schema)`);
+    return parts.join('; ') || `${n.value} vs ${o?.value ?? '—'}`;
+  }
+  return `${n.value} vs ${o?.value ?? '—'}`;
 }
 
 function plainWin(id: string, o: Measurement | null, n: Measurement): string {

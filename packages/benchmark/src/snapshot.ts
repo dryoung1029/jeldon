@@ -81,11 +81,16 @@ export async function snapshotSite(url: string, opts: SnapshotOptions = {}): Pro
   // Prefer service + blog pages, then the rest, up to maxPages.
   const candidates = [...new Set([...sitemapUrls, ...(opts.extraUrls ?? [])])].filter((u) => new URL(u).pathname.replace(/\/$/, '') !== '');
   const hintRe = opts.servicePrefixHints?.length ? new RegExp(`(${opts.servicePrefixHints.map((h) => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'i') : SERVICE_HINT;
-  const ranked = [
-    ...candidates.filter((u) => hintRe.test(new URL(u).pathname)),
-    ...candidates.filter((u) => BLOG_HINT.test(new URL(u).pathname) && !hintRe.test(new URL(u).pathname)),
-    ...candidates.filter((u) => !hintRe.test(new URL(u).pathname) && !BLOG_HINT.test(new URL(u).pathname)),
-  ].slice(0, opts.maxPages ?? 12);
+  // Priority: the pages every local site has (pricing, contact, FAQ, the
+  // primary CTA, about, team, schedule), then up to 3 service pages, then
+  // blog pages, then the rest — so the sample compares like with like.
+  const KEY = /\/(pricing|contact|faq|about|team|coaches|providers|staff|schedule|hours|free|start|new-patient|book|programs?|services?|care|blog|articles?)\/?$/i;
+  const path = (u: string) => new URL(u).pathname;
+  const key = candidates.filter((u) => KEY.test(path(u)));
+  const svc = candidates.filter((u) => hintRe.test(path(u)) && !key.includes(u)).slice(0, 3);
+  const blog = candidates.filter((u) => BLOG_HINT.test(path(u)) && !key.includes(u) && !svc.includes(u)).slice(0, 4);
+  const rest = candidates.filter((u) => !key.includes(u) && !svc.includes(u) && !blog.includes(u));
+  const ranked = [...key, ...svc, ...blog, ...rest].slice(0, opts.maxPages ?? 16);
 
   for (const u of ranked) {
     try {
