@@ -25,7 +25,7 @@ const days = Object.entries(kit.site.hours ?? {}) as [string, string][];
 
 <BaseLayout
   title={labels.schedule ?? 'Schedule'}
-  description={`${labels.schedule ?? 'Schedule'} for ${kit.site.name}${kit.site.address?.city ? ` in ${kit.site.address.city}` : ''}. ${labels.primaryCta.pitch ?? ''}`.trim()}
+  description={`${labels.schedule ?? 'Schedule'} for ${kit.site.name}${kit.site.address?.city ? ` in ${kit.site.address.city}` : ''}: current times, how to reserve a spot, and what to expect at your first visit. ${labels.primaryCta.pitch ?? ''}`.trim().slice(0, 160)}
   jsonLd={[crumbs(items)]}
 >
   <div class="container">

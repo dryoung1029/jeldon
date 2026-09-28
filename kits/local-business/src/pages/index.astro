@@ -6,7 +6,7 @@ import Reviews from '../components/Reviews.astro';
 import { kit, labels, routes } from '../lib/kit';
 import { pack, articlePath } from '../lib/pack';
 import { getServices, getFaqsFor, getPublishedArticles, formatDate } from '../lib/content';
-import { faqJsonLd } from '../lib/seo';
+import { faqJsonLd, clampTitle } from '../lib/seo';
 
 const services = await getServices();
 const faqs = await getFaqsFor('home');
@@ -15,7 +15,7 @@ const jsonLd = [faqJsonLd(faqs.map((f) => f.data))].filter(Boolean) as Record<st
 const a = kit.site.address;
 
 // SETUP: the wizard writes the real title/description with the owner.
-const title = `${kit.site.tagline ?? kit.site.name}`.slice(0, 60);
+const title = clampTitle(kit.site.tagline ?? kit.site.name);
 const description = kit.site.shortPitch ?? pack.brand.tagline ?? kit.site.name;
 ---
 

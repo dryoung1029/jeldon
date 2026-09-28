@@ -7,7 +7,7 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, r
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { articlePathSegment, normalizePrefix } from '@jeldon/config';
-import { LABEL_PRESETS, VERTICAL_SCORING, planRedirects, renderOldUrlsDoc, renderRedirectsFile, resolveLabels, DEFAULT_ROUTES, type KitRoutes } from '@jeldon/kit-local-business';
+import { LABEL_PRESETS, VERTICAL_SCORING, matchSlug, pathOf, planRedirects, renderOldUrlsDoc, renderRedirectsFile, resolveLabels, DEFAULT_ROUTES, type KitRoutes } from '@jeldon/kit-local-business';
 import type { InitAnswers } from './answers.js';
 import { renderTemplate } from './render.js';
 import type { Scrape } from './scrape.js';
@@ -268,6 +268,7 @@ export default defineDomainPack({
     categoryTargets: ${ts(categories, 4)},
     tags: ${ts(a.content.tags ?? [], 4)},${setup(Boolean(a.content.tags?.length), 'curated tag vocabulary (3–6 per article are drawn from here)')}
     articlePathPrefix: ${q(routes.blog)},
+    noindexPaths: [${q(routes.thanks)}],
     defaultAuthorSlug: ${q(ownerSlug)},
     timezone: ${q(a.content.timezone ?? a.booking.timezone ?? 'America/Los_Angeles')},
   },
@@ -525,7 +526,7 @@ export function generate(opts: GenerateOptions): GenerateReport {
   cpSync(join(kitDir, 'DESIGN.md'), join(dir, 'docs/DESIGN.md'));
 
   // 2. Rename page files + content dirs to the configured routes / collections.
-  const pageMoves: Array<[keyof KitRoutes, string]> = [['services', 'services'], ['team', 'team.astro'], ['pricing', 'pricing.astro'], ['schedule', 'schedule.astro'], ['contact', 'contact.astro'], ['primaryCta', 'get-started.astro'], ['blog', 'articles'], ['faq', 'faq.astro'], ['about', 'about.astro'], ['members', 'members.astro'], ['privacy', 'privacy.astro'], ['terms', 'terms.astro'], ['thanks', 'thanks.astro']];
+  const pageMoves: Array<[keyof KitRoutes, string]> = [['services', 'services'], ['team', 'team'], ['pricing', 'pricing.astro'], ['schedule', 'schedule.astro'], ['contact', 'contact.astro'], ['primaryCta', 'get-started.astro'], ['blog', 'articles'], ['faq', 'faq.astro'], ['about', 'about.astro'], ['members', 'members.astro'], ['privacy', 'privacy.astro'], ['terms', 'terms.astro'], ['thanks', 'thanks.astro']];
   for (const [key, file] of pageMoves) {
     const target = routes[key].replace(/^\/|\/$/g, '');
     const from = join(dir, 'src/pages', file);
@@ -568,6 +569,13 @@ export function generate(opts: GenerateOptions): GenerateReport {
     write(join(dir, 'src/content/faqs.json'), JSON.stringify(a.faqs.map((f, i) => ({ id: f.id ?? slugify(f.question), pages: f.pages, order: f.order ?? (i + 1) * 10, question: f.question, answer: f.answer })), null, 2) + '\n', force, report, true);
   }
 
+  // 5a. Seed articles from the answers (always drafts).
+  for (const art of a.articles) {
+    const author = a.owner;
+    const ownerSlug = author.slug ?? slugify(author.name.replace(/^Dr\.\s*/, '').replace(/,.*$/, ''));
+    write(join(dir, 'src/content/articles', `${art.slug}.md`), `${frontmatter({ title: art.title, excerpt: art.excerpt, publishDate: art.publishDate ?? new Date().toISOString().slice(0, 10), category: art.category, tags: art.tags, author: author.name, authorSlug: ownerSlug, heroImage: art.heroImage, heroImageAlt: art.heroImageAlt, draft: true, docNotes: art.docNotes ?? 'SEED ARTICLE written by jeldon init as a working example. The owner reviews, edits into their own voice, and /publish flips draft to false. Every reference link must be opened and confirmed before publishing.' })}\n\n${art.body.trim()}\n`, force, report);
+  }
+
   // 5. Migrated posts as drafts.
   const migrate = a.content.migratePosts ?? Boolean(a.business.oldUrl);
   if (migrate && scrape?.posts.length) {
@@ -584,8 +592,19 @@ export function generate(opts: GenerateOptions): GenerateReport {
   if (scrape?.sitemapUrls.length) {
     const serviceSlugMap: Record<string, string> = {};
     for (const s of a.services) for (const old of s.oldSlugs ?? []) serviceSlugMap[old] = s.slug;
-    const newPaths = [...Object.values(routes), ...a.services.map((s) => `${routes.services}${s.slug}/`), ...(scrape.posts.map((p) => `${routes.blog}${slugify(p.path.split('/').filter(Boolean).pop() ?? '')}/`))];
-    const plan = planRedirects(scrape.sitemapUrls, { routes, overrides: a.redirects, serviceSlugMap, newPaths });
+    // Old person pages → the matching new per-person page (exact slug, else shared name tokens).
+    const teamSlugMap: Record<string, string> = {};
+    const teamSlugs = a.team.map((t) => t.slug);
+    for (const u of scrape.sitemapUrls) {
+      const seg = pathOf(u).split('/').filter(Boolean);
+      const last = seg[seg.length - 1];
+      if (seg.length >= 2 && last && !teamSlugMap[last]) {
+        const hit = matchSlug(last, teamSlugs);
+        if (hit) teamSlugMap[last] = hit;
+      }
+    }
+    const newPaths = [...Object.values(routes), ...a.services.map((s) => `${routes.services}${s.slug}/`), ...teamSlugs.map((s) => `${routes.team}${s}/`), ...(scrape.posts.map((p) => `${routes.blog}${slugify(p.path.split('/').filter(Boolean).pop() ?? '')}/`))];
+    const plan = planRedirects(scrape.sitemapUrls, { routes, overrides: a.redirects, serviceSlugMap, teamSlugMap, newPaths });
     const header = `# Old-site URLs → new pages. Generated by \`jeldon init\` from ${new URL(scrape.finalUrl).host}'s sitemap;\n# the human table is docs/OLD-URLS.md. Add a line to both when a page moves.\n`;
     write(join(dir, 'public/_redirects'), header + renderRedirectsFile(plan), force, report, true);
     write(join(dir, 'docs/OLD-URLS.md'), renderOldUrlsDoc(plan, { oldHost: new URL(scrape.finalUrl).host, notes: [scrape.templateVendor ? `The old site was built on ${scrape.templateVendor}.` : '', scrape.homepageGeoScore != null ? `Old homepage citability (GEO) score: ${scrape.homepageGeoScore}/100 on ${new Date().toISOString().slice(0, 10)}.` : ''].filter(Boolean) }), force, report, true);

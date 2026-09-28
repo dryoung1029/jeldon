@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  buildGlobalCss, complianceCopy, contrastRatio, openingHoursSpec, planRedirects, processContact, renderOldUrlsDoc,
+  buildGlobalCss, complianceCopy, contrastRatio, matchSlug, openingHoursSpec, planRedirects, processContact, renderOldUrlsDoc,
   renderRedirectsFile, resolveBooking, resolveLabels, resolveTheme, validateKitConfig, bookingVendorOf, DEFAULT_ROUTES,
   type KitConfig, type LeadSink, type Notifier,
 } from '../src/index.js';
@@ -89,13 +89,24 @@ describe('redirect generator', () => {
     'https://www.helixtrain.com/hsa-fsa',
     'https://www.helixtrain.com/something-weird',
     'https://www.helixtrain.com/privacy-policy',
+    'https://www.helixtrain.com/coaches/dr-mel-mcnulty',
   ];
+  it('matchSlug: exact, then shared name tokens ignoring titles, else null', () => {
+    const team = ['kathy-lynch', 'mel-mcnulty', 'sara-kellogg-maddox', 'amy-clem'];
+    expect(matchSlug('kathy-lynch', team)).toBe('kathy-lynch');
+    expect(matchSlug('dr-mel-mcnulty', team)).toBe('mel-mcnulty');
+    expect(matchSlug('sara-maddox', team)).toBe('sara-kellogg-maddox');
+    expect(matchSlug('coach-bio-request', team)).toBeNull();
+    expect(matchSlug('amy', team)).toBe('amy-clem');
+  });
   it('maps by override, service slug, heuristic, then fallback; renders both files from one plan', () => {
     const plan = planRedirects(oldUrls, {
       routes: helixRoutes,
       overrides: { '/programs/get-started': '/free-class/' },
       serviceSlugMap: { 'community-strength-classes': 'group-strength-classes' },
+      teamSlugMap: { 'dr-mel-mcnulty': 'mel-mcnulty' },
     });
+    expect(Object.fromEntries(plan.rules.map((r) => [r.from, r.to]))['/coaches/dr-mel-mcnulty']).toBe('/coaches/mel-mcnulty/');
     const to = Object.fromEntries(plan.rules.map((r) => [r.from, r.to]));
     expect(to['/blog-helix-training-in-corvallis-or']).toBe('/blog/');
     expect(to['/membership-pricing-request']).toBe('/pricing/');

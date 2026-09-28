@@ -23,6 +23,6 @@ export {
   type ContactEnv, type Lead, type LeadSink, type Notifier, type SinkResult, type HandleContactOptions, type ContactOutcome,
 } from './contact.js';
 export { resolveBooking, bookingVendorOf, suggestBookingKind, type BookingResolution, type BookingVendor } from './booking.js';
-export { planRedirects, renderRedirectsFile, renderOldUrlsDoc, pathOf, type RedirectRule, type RedirectPlan, type RedirectOptions } from './redirects.js';
+export { planRedirects, renderRedirectsFile, renderOldUrlsDoc, pathOf, matchSlug, type RedirectRule, type RedirectPlan, type RedirectOptions } from './redirects.js';
 export { serviceNode, areaServedOf } from './schema.js';
 export { complianceCopy, type ComplianceCopy } from './compliance.js';

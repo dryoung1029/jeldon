@@ -1,13 +1,13 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import PageHeader from '../components/PageHeader.astro';
-import Breadcrumbs from '../components/Breadcrumbs.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import { render } from 'astro:content';
 import { personGraph } from '@jeldon/schema-graph';
-import { getTeam } from '../lib/content';
-import { crumbs } from '../lib/seo';
-import { pack } from '../lib/pack';
-import { kit, labels, routes } from '../lib/kit';
+import { getTeam } from '../../lib/content';
+import { crumbs } from '../../lib/seo';
+import { pack } from '../../lib/pack';
+import { kit, labels, routes } from '../../lib/kit';
 
 const team = await getTeam();
 const rendered = await Promise.all(team.map(async (c) => ({ c, Content: (await render(c)).Content })));
@@ -30,19 +30,19 @@ const city = kit.site.address?.city ? ` in ${kit.site.address.city}` : '';
     <PageHeader title={labels.team.pageTitle ?? labels.team.plural} />
     <div class="grid grid--2" style="gap: var(--s2)">
       {rendered.map(({ c, Content }) => (
-        <div class="person" id={c.id}>
+        <article class="person" id={c.id}>
           {c.data.photo ? (
             <img src={c.data.photo} alt={c.data.photoAlt ?? c.data.name} width="80" height="80" loading="lazy" />
           ) : (
             <div class="avatar" aria-hidden="true">{initials(c.data.name)}</div>
           )}
           <div>
-            <h3>{c.data.name}{c.data.credentials ? `, ${c.data.credentials}` : ''}</h3>
+            <h3><a href={`${routes.team}${c.id}/`}>{c.data.name}{c.data.credentials ? `, ${c.data.credentials}` : ''}</a></h3>
             <p class="role">{c.data.role}</p>
             <div class="prose"><Content /></div>
             {c.data.specialties.length > 0 && <p>{c.data.specialties.map((s) => <span class="tag">{s}</span>)}</p>}
           </div>
-        </div>
+        </article>
       ))}
     </div>
   </div>

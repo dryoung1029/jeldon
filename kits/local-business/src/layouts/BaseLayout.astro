@@ -36,7 +36,9 @@ const {
 
 const canonical = new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = new URL(ogImage, Astro.site).toString();
-const fullTitle = title.includes(kit.site.name) ? title : `${title} | ${kit.site.name}`;
+// Brand suffix only while the whole title stays within the ~60-char SERP budget.
+const suffixed = `${title} | ${kit.site.name}`;
+const fullTitle = title.includes(kit.site.name) || (suffixed.length > 60 && title.length >= 40) ? title : suffixed;
 
 const org = organizationGraph(pack) as Record<string, unknown>;
 if (kit.site.hoursConfirmed) {

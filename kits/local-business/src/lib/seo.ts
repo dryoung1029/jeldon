@@ -44,6 +44,18 @@ export function articleJsonLd(article: Article, body: string): Record<string, un
   return nodes;
 }
 
+/** Clamp a <title> to the SERP budget at a word boundary, never mid-word. */
+export function clampTitle(text: string, max = 60): string {
+  const t = text.trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max + 1);
+  // Prefer a whole sentence, then a whole word; never a mid-word cut.
+  const sentence = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+  if (sentence >= max * 0.4) return cut.slice(0, sentence + 1);
+  const at = cut.lastIndexOf(' ');
+  return (at > max * 0.6 ? cut.slice(0, at) : cut.slice(0, max)).replace(/[\s,;:\-–—]+$/, '');
+}
+
 export function crumbs(items: { name: string; url: string }[]): Record<string, unknown> {
   return breadcrumbList([{ name: 'Home', url: '/' }, ...items], pack.brand.siteUrl) as Record<string, unknown>;
 }

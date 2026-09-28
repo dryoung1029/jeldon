@@ -7,7 +7,7 @@ const title = labels.members ?? `Current ${labels.client.plural}`;
 const items = [{ name: title, url: routes.members }];
 ---
 
-<BaseLayout title={title} description={`Links for current ${kit.site.name} ${labels.client.plural}: booking, the app, and account requests.`} robots="noindex,follow" hideFooterCta>
+<BaseLayout title={title} description={`Links for current ${kit.site.name} ${labels.client.plural}: booking, the app, and account requests.`} hideFooterCta>
   <div class="container">
     <Breadcrumbs items={items} />
     <PageHeader title={title} lede="Everything you need in one place." />

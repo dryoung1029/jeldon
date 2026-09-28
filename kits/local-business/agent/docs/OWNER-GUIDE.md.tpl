@@ -11,7 +11,7 @@ You never need to open these files yourself.
 | {{servicesPlural}} | `{{routeServices}}` | Each {{servicesSingularLower}} has its own page under `{{routeServices}}...` |
 | {{scheduleLabel}} | `{{routeSchedule}}` | {{scheduleDescription}} |
 | {{pricingLabel}} | `{{routePricing}}` | Plans and prices, with sign-up buttons |
-| {{teamPlural}} | `{{routeTeam}}` | Everyone on the team with a bio and photo |
+| {{teamPlural}} | `{{routeTeam}}` | Everyone on the team, plus one page per person (`{{routeTeam}}<name>/`) with bio, photo and credentials |
 | {{blogLabel}} | `{{routeBlog}}` | Articles. Only published ones show |
 | {{primaryCtaShort}} | `{{routePrimaryCta}}` | The page everything points to: how to start + the booking button |
 | Contact | `{{routeContact}}` | The form, phone, email, map |

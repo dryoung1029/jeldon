@@ -7,11 +7,12 @@ import { pack } from '../lib/pack';
 import { crumbs } from '../lib/seo';
 const items = [{ name: labels.about ?? 'About', url: routes.about }];
 const owner = pack.authors.find((a) => a.isPrimary) ?? pack.authors[0];
+const city = kit.site.address?.city ? ` in ${kit.site.address.city}` : '';
 ---
 
 <BaseLayout
   title={`About ${kit.site.name}`}
-  description={kit.site.shortPitch ?? `${kit.site.name}: who we are and what we're built on.`}
+  description={`Who runs ${kit.site.name}${city}, what we believe, and how we work. ${kit.site.shortPitch ?? ''}`.trim().slice(0, 160)}
   jsonLd={[crumbs(items)]}
 >
   <div class="container">

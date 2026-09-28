@@ -1,0 +1,104 @@
+---
+/**
+ * One page per team member (E-E-A-T): the person's bio, role, credentials and
+ * a Person node. The owner's page reuses the Domain Pack author @id so every
+ * article's `author` links here; everyone else gets `<page>#person`.
+ */
+import { render } from 'astro:content';
+import { personGraph } from '@jeldon/schema-graph';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getTeam, getPublishedArticles, formatDate, type Person } from '../../lib/content';
+import { crumbs } from '../../lib/seo';
+import { pack, articlePath } from '../../lib/pack';
+import { kit, labels, routes, orgId } from '../../lib/kit';
+
+export async function getStaticPaths() {
+  const team = await getTeam();
+  return team.map((person) => ({ params: { slug: person.id }, props: { person } }));
+}
+
+const { person } = Astro.props as { person: Person };
+const d = person.data;
+const { Content } = await render(person);
+const pageUrl = `${routes.team}${person.id}/`;
+const items = [
+  { name: labels.team.plural, url: routes.team },
+  { name: d.name, url: pageUrl },
+];
+const author = pack.authors.find((a) => a.slug === person.id);
+const byThem = author ? (await getPublishedArticles()).filter((a) => a.data.authorSlug === author.slug).slice(0, 5) : [];
+const siteUrl = pack.brand.siteUrl.replace(/\/$/, '');
+const personNode = author
+  ? { ...(personGraph({ schemaId: author.schemaId, profile: { ...author.profile, url: `${siteUrl}${pageUrl}` }, siteUrl: pack.brand.siteUrl }) as Record<string, unknown>), worksFor: { '@id': orgId } }
+  : {
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      '@id': `${siteUrl}${pageUrl}#person`,
+      name: d.name,
+      jobTitle: d.role,
+      url: `${siteUrl}${pageUrl}`,
+      ...(d.photo ? { image: new URL(d.photo, pack.brand.siteUrl).toString() } : {}),
+      ...(d.credentials ? { hasCredential: { '@type': 'EducationalOccupationalCredential', name: d.credentials } } : {}),
+      ...(d.specialties.length ? { knowsAbout: d.specialties } : {}),
+      ...(d.links.length ? { sameAs: d.links.map((l) => l.url) } : {}),
+      worksFor: { '@id': orgId },
+    };
+const city = kit.site.address?.city ? ` in ${kit.site.address.city}` : '';
+const title = `${d.name}${d.credentials ? `, ${d.credentials}` : ''} — ${d.role}`;
+const first = d.name.replace(/^Dr\.\s*/, '').split(' ')[0];
+const description = `${d.name} is ${/^[aeiou]/i.test(d.role) ? 'an' : 'a'} ${d.role.toLowerCase()} at ${kit.site.name}${city}.${d.specialties.length ? ` Works with: ${d.specialties.slice(0, 4).join(', ')}.` : ''} Read ${first}'s bio and credentials, then ${labels.primaryCta.label.toLowerCase()}.`.slice(0, 160);
+---
+
+<BaseLayout title={title} description={description} jsonLd={[crumbs(items), personNode]} ogImage={d.photo}>
+  <div class="container">
+    <Breadcrumbs items={items} />
+    <article class="person-page">
+      <header class="person-head">
+        {d.photo ? (
+          <img src={d.photo} alt={d.photoAlt ?? d.name} width="160" height="160" loading="eager" />
+        ) : (
+          <div class="avatar avatar--lg" aria-hidden="true">{d.name.replace(/^Dr\.\s*/, '').split(' ').map((w) => w[0]).slice(0, 2).join('')}</div>
+        )}
+        <div>
+          <p class="eyebrow">{labels.team.singular}</p>
+          <h1>{d.name}{d.credentials ? <span class="credentials">, {d.credentials}</span> : null}</h1>
+          <p class="role">{d.role}</p>
+          {d.specialties.length > 0 && <p class="tags">{d.specialties.map((s) => <span class="tag">{s}</span>)}</p>}
+        </div>
+      </header>
+      <div class="prose person-bio"><Content /></div>
+      {d.links.length > 0 && (
+        <p class="person-links">{d.links.map((l) => <a href={l.url} rel="me noopener" target="_blank">{l.label}</a>)}</p>
+      )}
+      {byThem.length > 0 && (
+        <section class="person-articles">
+          <h2>Written by {first}</h2>
+          <ul>
+            {byThem.map((a) => (
+              <li><a href={articlePath(a.id)}>{a.data.title}</a> <span class="muted">· {formatDate(a.data.publishDate)}</span></li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <p class="person-cta"><a class="btn btn--primary" href={routes.primaryCta}>{labels.primaryCta.label}</a> <a class="btn btn--ghost" href={routes.team}>All {labels.team.plural.toLowerCase()}</a></p>
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .person-page { max-width: 46rem; padding-block: var(--s2) var(--s3); }
+  .person-head { display: grid; grid-template-columns: auto 1fr; gap: var(--s2); align-items: start; margin-bottom: var(--s2); }
+  .person-head img { border-radius: var(--radius-lg); object-fit: cover; width: 160px; height: 160px; }
+  .avatar--lg { width: 160px; height: 160px; font-size: 2.5rem; display: grid; place-items: center; border-radius: var(--radius-lg); background: var(--color-primary-soft, #eef2f7); color: var(--color-primary); font-weight: 700; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; color: var(--color-muted); margin: 0 0 0.25rem; }
+  .person-head h1 { margin: 0 0 0.25rem; }
+  .credentials { font-weight: 400; font-size: 0.75em; }
+  .role { color: var(--color-muted); margin: 0 0 0.5rem; }
+  .tags .tag { display: inline-block; margin: 0 0.4rem 0.4rem 0; }
+  .person-links a { margin-right: 1rem; }
+  .person-articles { margin-top: var(--s2); }
+  .person-cta { margin-top: var(--s2); display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .muted { color: var(--color-muted); font-size: 0.9rem; }
+  @media (max-width: 600px) { .person-head { grid-template-columns: 1fr; } .person-head img, .avatar--lg { width: 120px; height: 120px; } }
+</style>

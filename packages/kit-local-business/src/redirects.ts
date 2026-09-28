@@ -30,7 +30,32 @@ export interface RedirectOptions {
   newPaths?: string[];
   /** Old service slugs → new service slugs under routes.services. */
   serviceSlugMap?: Record<string, string>;
+  /** Old person-page slugs → new slugs under routes.team (per-person pages). */
+  teamSlugMap?: Record<string, string>;
   fallback?: string;
+}
+
+const SLUG_NOISE = /^(dr|coach|mr|mrs|ms|the|and|of|a)$/;
+
+/**
+ * Pick the new slug an old slug most plausibly means: exact match first, then
+ * the candidate sharing the most name tokens (≥ 2, or all of the shorter
+ * side) once titles like "dr"/"coach" are ignored — so `dr-mel-mcnulty` finds
+ * `mel-mcnulty` and `sara-maddox` finds `sara-kellogg-maddox`. Returns null
+ * rather than guessing when nothing clears the bar.
+ */
+export function matchSlug(oldSlug: string, candidates: string[]): string | null {
+  const norm = (s: string) => s.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t && !SLUG_NOISE.test(t));
+  const o = norm(oldSlug);
+  if (candidates.includes(oldSlug)) return oldSlug;
+  let best: { slug: string; shared: number } | null = null;
+  for (const c of candidates) {
+    const n = norm(c);
+    const shared = n.filter((t) => o.includes(t)).length;
+    const need = Math.min(2, Math.min(o.length, n.length));
+    if (shared >= need && shared > 0 && (!best || shared > best.shared)) best = { slug: c, shared };
+  }
+  return best?.slug ?? null;
 }
 
 const HEURISTICS: Array<[RegExp, keyof KitRoutes]> = [
@@ -82,6 +107,10 @@ export function planRedirects(oldUrls: string[], opts: RedirectOptions): Redirec
     const last = seg[seg.length - 1] ?? '';
     if (opts.serviceSlugMap && seg.length >= 2 && opts.serviceSlugMap[last]) {
       rules.push({ from, to: `${opts.routes.services}${opts.serviceSlugMap[last]}/`, status: 301, via: 'heuristic' });
+      continue;
+    }
+    if (opts.teamSlugMap && seg.length >= 2 && opts.teamSlugMap[last]) {
+      rules.push({ from, to: `${opts.routes.team}${opts.teamSlugMap[last]}/`, status: 301, via: 'heuristic' });
       continue;
     }
     const hit = HEURISTICS.find(([re]) => re.test(from));

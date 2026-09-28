@@ -13,7 +13,7 @@ const owner = pack.authors.find((a) => a.isPrimary) ?? pack.authors[0];
 ---
 
 <BaseLayout
-  title={`${labels.blog} — ${pack.brand.tagline ?? kit.site.name}`.slice(0, 60)}
+  title={labels.blog}
   description={`Plain-language answers from the ${kit.site.name} ${labels.team.plural.toLowerCase()}${owner ? `, written by ${owner.name}` : ''}, with sources.`}
   jsonLd={[crumbs(items)]}
 >
