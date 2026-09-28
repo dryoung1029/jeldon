@@ -25,12 +25,19 @@ export function sitemapExcludedArticleUrls(
   siteUrl: string,
   /** The article URL prefix — pass `pack.content.articlePathPrefix` (or the
    *  pack itself). Default `/articles/`. Helix finding #3. */
-  prefix?: string | { content?: { articlePathPrefix?: string } },
+  prefix?: string | { content?: { articlePathPrefix?: string; noindexPaths?: string[] } },
 ): Set<string> {
   const pathPack = typeof prefix === 'string' ? { content: { articlePathPrefix: prefix } } : prefix;
   const out = new Set<string>();
   for (const a of stubs) {
     if (a.isDraft) out.add(absUrl(siteUrl, articlePath(pathPack, a.slug)));
+  }
+  // Pages the pack declares noindex never belong in the sitemap either (both
+  // trailing-slash forms, since the host's `trailingSlash` setting decides).
+  for (const p of pathPack?.content?.noindexPaths ?? []) {
+    const bare = p.replace(/\/+$/, '');
+    if (bare) out.add(absUrl(siteUrl, bare));
+    out.add(absUrl(siteUrl, `${bare}/`));
   }
   return out;
 }

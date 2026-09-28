@@ -676,6 +676,10 @@ export interface DomainPack {
      *  exclusions), strategy + analytics (`articlePathPattern` defaults),
      *  drafting (cross-link hints), amplify, media, and the CLI. */
     articlePathPrefix?: string;
+    /** Paths the site serves with `noindex` (a form thank-you page, a preview
+     *  route). `sitemapExcludedArticleUrls` drops them from the sitemap so a
+     *  noindexed URL is never also advertised to crawlers. */
+    noindexPaths?: string[];
     defaultAuthorSlug: string;
     timezone: string;
     lifecycle?: { docReviewed?: boolean };

@@ -204,6 +204,13 @@ describe('sitemapExcludedArticleUrls', () => {
     expect(set.has('https://example.com/articles/stub-one/')).toBe(true);
     expect(set.has('https://example.com/articles/live-one/')).toBe(false);
   });
+  it('also drops the pack\'s noindexPaths (both trailing-slash forms)', () => {
+    const set = sitemapExcludedArticleUrls([], SITE, { content: { articlePathPrefix: '/blog/', noindexPaths: ['/thanks/', '/preview'] } });
+    expect(set.has('https://example.com/thanks/')).toBe(true);
+    expect(set.has('https://example.com/thanks')).toBe(true);
+    expect(set.has('https://example.com/preview/')).toBe(true);
+    expect(set.has('https://example.com/blog/')).toBe(false);
+  });
 });
 
 describe('renderLlmsTxt — content is config', () => {

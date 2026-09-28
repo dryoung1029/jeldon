@@ -349,6 +349,7 @@ export const domainPackSchema = z
       categoryTargets: z.record(z.number().min(0).max(100)),
       tags: z.array(z.string()).optional(),
       articlePathPrefix: urlPrefix.optional(),
+      noindexPaths: z.array(z.string()).optional(),
       defaultAuthorSlug: z.string(),
       timezone: z.string(),
       lifecycle: z.object({ docReviewed: z.boolean().optional() }).optional(),
