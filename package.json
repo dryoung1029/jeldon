@@ -16,6 +16,7 @@
     "gen:schema": "node scripts/gen-schema.mjs",
     "changeset": "changeset",
     "release": "changeset publish",
+    "publish:dry": "pnpm -r publish --dry-run --no-git-checks",
     "smoke:template": "node scripts/smoke-template.mjs"
   },
   "devDependencies": {
