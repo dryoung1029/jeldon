@@ -1,6 +1,6 @@
 {
   "name": "@jeldon/competitive-intel",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Domain-agnostic local-competitor intelligence: one bundled site auditor (homepage + schema + sitemap + PSI + GBP + page-stats + template-vendor detection + reused @jeldon/core-scoring GEO citability) importable from both an SSR Function and a Node cron, plus Claude-backed positioning extraction, a streaming gap report, and SerpApi local-pack rank tracking. Ported from Body of Health competitor-scanner.ts + audit-competitors.mjs + competitor-positioning.ts + competitor-gap-report.ts + keyword-ranks.ts.",
   "type": "module",
   "license": "UNLICENSED",

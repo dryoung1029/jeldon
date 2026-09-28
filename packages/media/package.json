@@ -1,6 +1,6 @@
 {
   "name": "@jeldon/media",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Domain-agnostic media surface: markdown→narration text prep, ElevenLabs TTS synthesis, gpt-image hero generation, and the iTunes podcast feed builder. TTS/image/storage sit behind interfaces (ObjectStore + Tts + ImageGen) with null/fetch defaults; voice/pronunciation/style/podcast values come from the Domain Pack.",
   "type": "module",
   "license": "UNLICENSED",

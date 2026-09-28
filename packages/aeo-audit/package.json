@@ -1,6 +1,6 @@
 {
   "name": "@jeldon/aeo-audit",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Domain-agnostic answer-engine citation-presence audit. Runs a query set against pluggable engines (Perplexity / Anthropic web_search / Google AIO / OpenAI), records per-engine citation rank + brand mentions, and aggregates snapshots into engine stats, wins/drops, trend, and deterministic action items. Ported from Body of Health aeo-audit.mjs + command/aeo.ts.",
   "type": "module",
   "license": "UNLICENSED",

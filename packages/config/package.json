@@ -1,6 +1,6 @@
 {
   "name": "@jeldon/config",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "The Jeldon Domain Pack contract: types, Zod schema, defaults, pure URL/capability helpers (root, isomorphic) and the jiti loader (`@jeldon/config/load`, Node-only). The single file a new project edits validates against this.",
   "type": "module",
   "license": "UNLICENSED",
