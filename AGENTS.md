@@ -16,9 +16,10 @@ extracted, domain-agnostic engine behind a proven content-ranking platform
   engine for a project. In a consumer project this is the *only* file you edit.
 
 > **If you are setting up Jeldon in a new project, you are NOT in this repo.**
-> You clone the `template/`, fill `jeldon.config.ts`, and run `jeldon doctor`.
-> Follow `docs/IMPLEMENTATION.md` step by step. Stop when doctor exits 0 and CI
-> is green.
+> You run `npx jeldon init` (it scrapes the old site, asks what it couldn't
+> find, generates the site + agent kit, and verifies), then hand the owner
+> `docs/START-HERE.md`. Follow `docs/IMPLEMENTATION.md` step by step. Stop when
+> doctor exits 0, CI is green, and `jeldon benchmark --ci` shows nothing behind.
 
 ## Stack
 
@@ -30,9 +31,9 @@ Workers**.
 
 1. `packages/config/` — the Domain Pack contract (`@jeldon/config`). The keystone.
 2. `packages/*/` — the engine modules. Each reads config, hardcodes no domain values.
-3. `template/` — the thin starter consumers clone. Keep it minimal.
+3. `template/` + `kits/` — the thin starter and the kit overlays `jeldon init` copies. Keep them minimal.
 4. `docs/` — the agent-facing docs (see `docs/` index below).
-5. `schemas/` — JSON-Schema source of truth, generated from the Zod schema.
+5. `schemas/` — JSON-Schema source of truth, generated from the Zod schemas.
 
 ## Commands
 
@@ -41,9 +42,14 @@ pnpm install
 pnpm build            # turbo build all packages
 pnpm test             # turbo test
 pnpm typecheck
-pnpm gen:schema       # regenerate schemas/ from the Zod schema
+pnpm gen:schema       # regenerate schemas/ (Domain Pack + init answers) from Zod
+pnpm smoke:template   # install the template with npm and run every consumer gate
+npx jeldon init <dir> --kit local-business --from <old-url> --answers <file>   # spawn a site
 npx jeldon validate   # validate a project's jeldon.config.ts
-npx jeldon doctor     # the "wired correctly?" gate (--json for machines)
+npx jeldon doctor     # the "wired correctly?" gate (+ registered checks; --json for machines)
+npx jeldon score <f>  # GEO + SEO + reading level for one article, in plain words
+npx jeldon brief <t>  # the drafting brief for a coding agent (drafting: 'agent')
+npx jeldon benchmark --old <url> --new <url>   # ten dimensions, win/tie/behind; --ci gates launch
 ```
 
 ## Hard boundaries (see docs/CONSTITUTION.md for the full list)
@@ -57,6 +63,11 @@ npx jeldon doctor     # the "wired correctly?" gate (--json for machines)
   `compliance.pack`, never baked into core. Default is `none`.
 - **One scorer, no mirrors.** `@jeldon/core-scoring` is the only scoring source;
   the editor dial imports the same package. Never hand-copy scoring logic.
+- **No consumer literal in `packages/*` or `kits/*` code.** "Corvallis",
+  "PushPress", "helixtrain", "#008abd" in engine or kit code is a bug; vendor
+  code lives in adapters selected by config, vocabulary in `kit.labels`.
+- **Better in every way is provable; the owner never needs a terminal.**
+  (Proposed articles 10–11 in the constitution.)
 - **Keep this file lean.** Do not grow AGENTS.md into a session log. That is the
   anti-pattern that exhausts the instruction budget. Put depth in `docs/`.
 

@@ -52,9 +52,30 @@ core-scoring  content-model  schema-graph  store  verify  …
 @jeldon/cli  (validate · doctor · check-geo-floor · audit · migrate)
 ```
 
-`@jeldon/config` depends on nothing but `zod` + `jiti`. Every other package
-depends on `@jeldon/config` for types and reads values from the loaded
-`DomainPack`. No engine package depends on another's *domain* assumptions.
+`@jeldon/config` depends on nothing but `zod` + `jiti`, and only its `./load`
+entry touches jiti or `node:fs` — the root is isomorphic so a Worker route can
+import it. Every other package depends on `@jeldon/config` for types and reads
+values from the loaded `DomainPack`. No engine package depends on another's
+*domain* assumptions.
+
+## Kits (Landmark 5)
+
+A **kit** is everything a class of site needs *around* the article engine. The
+first is `@jeldon/kit-local-business` + its Astro overlay `kits/local-business/`:
+a neutral page set whose every visible word comes from `kit.labels`, a contact
+route with vendor adapters, design tokens generated from the pack, and its own
+registered doctor checks. `jeldon init --kit <name>` copies `template/`, overlays
+the kit, renames pages to the configured routes, and renders the kit's agent
+templates. Kit code follows the same rule as engine code: no vertical, no vendor
+literal — adapters and labels are selected by config.
+
+```
+jeldon init  ──scrape old site──▶ baseline.json
+             ──answers/interview─▶ jeldon.config.ts + kit.config.ts + content
+             ──template + kit────▶ pages · contact route · CI · agent kit
+             ──verify────────────▶ install · validate · doctor · build ×2
+jeldon benchmark ──old vs new──▶ scorecard (win · tie · behind) ──gates──▶ /launch
+```
 
 ## The adapter interfaces (decoupling layer)
 

@@ -17,15 +17,60 @@ Domain Pack split: you specialize the engine by editing **one** config file.
 **Acceptance:** you can state, in one sentence, what goes in `jeldon.config.ts`
 vs what stays in `@jeldon/*`.
 
-## Step 1 — Scaffold
+## Step 1 — Spawn the site with `jeldon init`
 
 ```bash
-npx degit dryoung1029/jeldon/template my-site
-cd my-site && pnpm install
+mkdir my-site && cd my-site
+npx jeldon init . --kit local-business \
+  --name "Helix Training" \
+  --url https://helixtrain.com \            # canonical host of the NEW site
+  --from https://www.helixtrain.com \       # the OLD site to learn from
+  --crm pushpress --notify brevo
+# or, for an agent in another session: fill schemas/init-answers.schema.json and
+npx jeldon init . --answers answers.json
 ```
 
-**Acceptance:** `pnpm install` exits 0; `@jeldon/config` and
-`@jeldon/core-scoring` resolve (`node -e "require.resolve('@jeldon/config')"`).
+What it does, in order (each step idempotent; re-running fills gaps):
+
+1. **Scrapes the old site** (`@jeldon/competitive-intel`): title/description,
+   NAP from schema, phone, social links, logo, nav labels, every sitemap URL,
+   blog posts (migrated as drafts), booking/checkout vendors by host, the
+   Search Console tag, the template vendor. **Stores the baseline scorecard**
+   (`data/benchmark/baseline.json`) — the number the new site must beat.
+2. **Interviews** (or reads `--answers`): only what the scrape couldn't find or
+   must be confirmed. Every scraped fact is written with a `SETUP:` marker
+   until the owner confirms it in `/setup`. The wizard confirms; it never supplies.
+3. **Generates**: `jeldon.config.ts` (with the vertical's scoring preset —
+   `gym`, `clinic`, `studio`, `shop`, `generic`), `kit.config.ts`, content for
+   services/team/FAQs, `public/_redirects` + `docs/OLD-URLS.md` from one
+   redirect plan, the rendered agent kit (`CLAUDE.md`, `.claude/commands/*`,
+   `docs/*`), CI, README.
+4. **Verifies**: `npm install`, `jeldon validate`, `jeldon doctor --pre`,
+   `astro build`, `INCLUDE_DRAFTS=true astro build`. Prints the `SETUP:` marker
+   count and the next step.
+
+**Acceptance:** exit 0; `data/benchmark/baseline.json` exists; the printed
+page list contains the site's public pages at the configured routes.
+
+> Until `@jeldon/*` is on npm, pass `--vendor-from vendor/@jeldon` after
+> `node scripts/vendor-engine.mjs <dir>` from the engine repo (the same
+> `file:` shape Helix used). `pnpm smoke:template --kit local-business` runs
+> the whole consumer gate set the same way.
+
+### Reproducing the reference consumer
+
+`examples/helix.answers.json` is the answers file for Helix Training.
+`npx jeldon init /tmp/helix2 --kit local-business --from https://www.helixtrain.com --answers examples/helix.answers.json`
+produces the same 15 indexable pages at the same URLs as
+`dryoung1029/helix-site-template` (home, programs + 5 program pages, schedule,
+pricing, coaches, blog, free-class, contact, faq, about; members/privacy/terms/
+thanks noindex), the same redirect map, the same seed article as a draft.
+Expected differences in `diff -r`: `vendor/` absent; `kit.config.ts` replaces
+`site.config.ts`; `src/lib/pushpress.ts`, `ProgramList.astro`, `global.css` and
+`scripts/check-site.mjs` are replaced by the kit package (tokens are inlined
+from the pack, checks are registered); prose in the agent kit is
+label-rendered rather than hand-written; brand image binaries are not
+generated (upload in `/setup` stage 5).
 
 ## Step 2 — First doctor pass
 
@@ -102,12 +147,32 @@ npx jeldon audit --engines perplexity,anthropic --dry-run
 **Acceptance:** returns a snapshot; brand-match logic resolves your brand
 mentions.
 
-## Step 9 — Open a PR
+## Step 9 — Benchmark against the old site
 
-**Acceptance / STOP condition:** `jeldon doctor` exits 0 **AND** all CI gates
-(geo-floor, citation-lint, build-parity, frontmatter-guard, doctor) are green
-**AND** one article scores ≥ its category target. When all three hold, the
-project is correctly primed. Stop.
+```bash
+npx jeldon benchmark --old https://www.old-site.com --new https://<project>.workers.dev
+npx jeldon benchmark --ci        # NEW vs the stored baseline; exit 1 on any "behind"
+```
+
+**Acceptance:** every dimension is **win** or **tie** (speed needs
+`PAGESPEED_API_KEY` and a public URL). `data/benchmark/scorecard-<date>.md` is
+committed. The agent kit's `/launch` refuses while anything is behind. The
+reference run (Helix old site vs the spawned build, 7 win / 2 tie / 0 behind)
+is in `examples/helix/benchmark/` with the redirect plan it produced.
+
+## Step 10 — Hand to the owner
+
+Send the owner `docs/START-HERE.md` (four steps: GitHub account, "Use this
+template", open in Claude Code, type `/setup`) and the note in
+`docs/KICKOFF-MESSAGE.md`. From here the **owner never uses a terminal**: the
+agent runs every command; the owner clicks in browsers and answers questions.
+`/setup` confirms every `SETUP:` marker, `/article` drafts with
+`npm run brief` (the engine's prompts), `/publish` needs the owner's approval,
+`/launch` is a two-person DNS step with the named helper.
+
+**Acceptance / STOP condition:** `jeldon doctor` exits 0 **AND** the consumer
+CI workflow is green **AND** `jeldon benchmark --ci` shows nothing behind
+**AND** the owner has `START-HERE.md`. Stop.
 
 ---
 

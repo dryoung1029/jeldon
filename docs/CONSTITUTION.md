@@ -70,3 +70,32 @@ belongs in commit messages and changesets, not in the constitution.
 Work is done when `jeldon doctor` exits 0, all CI gates are green, and (for
 content) the article scores at or above its category target. "Looks right" is
 not done. The runbook's STOP condition is the contract.
+
+---
+
+## Proposed additions (Landmark 5) — written for the owner to ratify
+
+These two came out of the Helix Training build. They are proposed, not yet
+ratified; strike this heading when they are.
+
+## 10. Better in every way is provable
+
+A spawned site ships with a **baseline** of the site it replaces
+(`data/benchmark/baseline.json`, captured by `jeldon init` on day one) and a
+**benchmark** (`jeldon benchmark`) that measures old and new with the same
+method on every dimension that can be measured — speed, search hygiene,
+duplicate-intent URLs, structured data, citability, content depth, conversion
+path, accessibility, honesty, local. No dimension may be **behind** before
+launch; the `--ci` gate and the agent kit's `/launch` refuse while one is.
+"It looks better" is not evidence. A dimension that cannot be measured is
+reported as *unmeasured*, never silently counted as a win.
+
+## 11. The owner never needs a terminal
+
+Everything a consumer's owner must do is a click in a browser or a message to
+an agent; every command is run by the agent. The kit's docs give exact click
+paths as best-known maps ("describe what you see" when they drift) and never
+ask for a secret in chat or a file in the repo. A kit that requires the owner
+to run a command, edit code, or paste a key is broken — fix the kit, not the
+owner.
+

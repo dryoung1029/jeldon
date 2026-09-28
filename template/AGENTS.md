@@ -28,26 +28,27 @@ model, scoring, schema graph, and citation verification all come from
 
 ## Commands
 
+Scripts call each tool's JS entry directly (`node node_modules/astro/astro.js`),
+so a bin-less `npm ci` still works.
+
 ```
-pnpm install
-pnpm run validate          # jeldon validate — Domain Pack shape
-pnpm run doctor            # jeldon doctor — "wired correctly?" (config + env)
-pnpm run build             # production build (drafts excluded)
-INCLUDE_DRAFTS=true pnpm run build   # preview build (drafts rendered, noindex)
-pnpm run check:geo         # GEO floor — score articles vs category targets
-pnpm run check:citations   # citation lint under pack.citation.policy
-pnpm run check:frontmatter # validate frontmatter vs the derived schema
+npm install
+npm run check:engine       # the engine resolves (guards the swallowed-dist bug)
+npm run validate           # jeldon validate — Domain Pack shape
+npm run doctor             # jeldon doctor — "wired correctly?" (config + env + registered checks)
+npm run build              # production build (drafts excluded)
+INCLUDE_DRAFTS=true npm run build   # preview build (drafts rendered, noindex)
+npm run check:geo -- <file>   # GEO floor — score articles vs category targets (drafts only when named)
+npm run check:citations    # citation lint under pack.citation.policy
+npm run check:frontmatter  # validate frontmatter vs the derived schema
+npm run deploy:cf -- --dry-run   # the Worker + assets upload, without deploying
 ```
 
-## CI gates (`.github/workflows/`)
+## CI (`.github/workflows/ci.yml`)
 
-| Gate | What it proves |
-|---|---|
-| `geo-floor` | Every published article scores ≥ its category target (same `@jeldon/core-scoring` as the editor dial). |
-| `citation-lint` | No forbidden citation patterns under `pack.citation.policy`. |
-| `build-parity` | Production AND `INCLUDE_DRAFTS=true` builds both succeed. |
-| `frontmatter-guard` | Frontmatter validates against the pack-derived Zod schema. |
-| `doctor` | `jeldon validate` + `jeldon doctor` are green. |
+One workflow, named steps — each backed by a `@jeldon/*` package, no mirrored
+logic: engine resolves · validate + doctor · frontmatter · citations · geo-floor
+· types · production build · preview build · `wrangler deploy --dry-run`.
 
 Engine updates arrive automatically: a `@jeldon/*` version bump opens a Renovate
 PR that **auto-merges on green CI** (`renovate.json`).
@@ -69,9 +70,13 @@ Follow the engine's runbook step by step; stop at its STOP condition:
 
 - `jeldon.config.ts` — the Domain Pack. The only file you edit to specialize.
 - `src/lib/pack.ts` — loads the pack once; every page reads domain values here.
-- `src/content/config.ts` — article schema, **derived** from `pack.content.categories`.
+- `src/content.config.ts` — Astro 5 content layer; article schema **derived** from `pack.content.categories`.
 - `src/layouts/BaseLayout.astro` — emits the JSON-LD graph from the pack.
-- `src/pages/articles/` — the list + `[slug]` detail pages.
-- `scripts/` — the thin CI steps (`check-geo-floor`, `lint-citations`, `check-frontmatter`).
-- `wrangler.toml` — Workers config; R2/D1/KV bindings ship commented, fill as you
-  enable capabilities.
+- `src/pages/articles/` — the list + `[slug]` detail pages (move the folder if
+  you change `content.articlePathPrefix`; every link is built from the pack).
+- `scripts/` — the thin CI steps (`lint-citations`, `check-frontmatter`); geo-floor is `jeldon check-geo-floor`.
+- `wrangler.jsonc` — Workers config (`main` + `assets`); R2/D1/KV bindings ship
+  commented, fill as you enable capabilities. `public/.assetsignore` keeps the
+  Worker bundle out of the asset upload.
+- Build-time code imports `@jeldon/config/load`; a server route must import the
+  root `@jeldon/config` (no jiti / `node:fs` in the Worker bundle).

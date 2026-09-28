@@ -19,12 +19,16 @@ export default defineDomainPack({ /* ... */ });
 Identity that was hardcoded everywhere in the source system. `name`, `siteUrl`
 (single canonical host, threaded through schema/sitemap/OG), optional `tagline`,
 `geoFraming` (arbitrary, e.g. "Corvallis and Albany"), `nap` (local-business
-address/phone/placeId), `logoUrl`, `brandColors`.
+address/phone/placeId), `logoUrl`, `brandColors` (a named palette; the
+local-business kit maps roles onto it), `fonts` (`display`, `body`,
+`googleFontsHref` — the kit's design tokens read these).
 
 ### `authors`
 Array of author identities. Each has a `slug`, `name`, a `schemaId` (the `@id`
-every Article graph links to for E-E-A-T consolidation), and a `profile`
-(`PersonProfile`: credentials, `knowsAbout`, `memberOf`, `awards`, `sameAs`).
+every Article graph links to for E-E-A-T consolidation), a `profile`
+(`PersonProfile`: credentials, `knowsAbout`, `memberOf`, `awards`, `sameAs`),
+and an optional `urlPrefix` (default `/team/`; Helix uses `/coaches/`) that the
+schema graph's inline-Person fallback URL derives from.
 `content.defaultAuthorSlug` must match one of these slugs.
 
 ### `voice` — the single source for all prompt injection
@@ -35,7 +39,14 @@ one copy (the source system hand-duplicated it across four files; do not).
 
 ### `content`
 `categories` (the valid category enum), `categoryTargets` (GEO target per
-category — each ≥ `scoring.geo.floor`), `defaultAuthorSlug`, `timezone`, optional
+category — each ≥ `scoring.geo.floor`), `articlePathPrefix` (default
+`/articles/`; the URL articles publish under — schema-graph canonicals and
+sitemap exclusions, strategy/analytics path patterns, drafting cross-link
+hints, amplify/media URLs and the CLI all read it, so a `/blog/` site never
+string-rebases anything), optional `noindexPaths` (paths served with
+`noindex` — a form thank-you page, a preview route — that
+`sitemapExcludedArticleUrls` also drops from the sitemap, so a noindexed URL is
+never advertised to crawlers), `defaultAuthorSlug`, `timezone`, optional
 `lifecycle.docReviewed` to enable the extra review state. Optional `tags` — a
 curated tag vocabulary: when set, the drafting generator picks an article's tags
 from it (and a deterministic reconcile pass backfills by relevance) so every
@@ -81,9 +92,11 @@ for non-local verticals), `querySet` (the queries audited), `engines`
 here, never in the engine.**
 
 ### `capabilities`
-Booleans gating growth surfaces: `drafting`, `amplify`, `audio`, `heroImages`,
-`competitiveIntel`, `engagementAnalytics`, `entityPresence`. Turn on only what
-you use; disabled surfaces are absent from the build.
+Flags gating growth surfaces: `drafting` (`'api'` — the engine drives an LLM,
+needs a key in `requiredEnv`; `'agent'` — a coding agent drafts with `jeldon
+brief`, no key; `true` = `'api'`; `false` off), `amplify`, `audio`,
+`heroImages`, `competitiveIntel`, `engagementAnalytics`, `entityPresence`.
+Turn on only what you use; disabled surfaces are absent from the build.
 
 ### `services`
 `store` (`github` | `fs`), `analytics` (`cloudflare` | `none`), and
