@@ -1,0 +1,664 @@
+{
+  "scorecard": {
+    "generatedAt": "2026-09-28T00:17:21.176Z",
+    "oldUrl": "https://www.helixtrain.com",
+    "newUrl": "http://localhost:4321",
+    "rows": [
+      {
+        "id": "speed",
+        "label": "Speed",
+        "old": {
+          "id": "speed",
+          "score": null,
+          "value": "not measured",
+          "details": {},
+          "issues": [],
+          "note": "PageSpeed not run (pass --psi / a PAGESPEED_API_KEY)"
+        },
+        "new": {
+          "id": "speed",
+          "score": null,
+          "value": "not measured",
+          "details": {},
+          "issues": [],
+          "note": "PageSpeed not run (pass --psi / a PAGESPEED_API_KEY)"
+        },
+        "verdict": "unmeasured",
+        "why": "PageSpeed not run (pass --psi / a PAGESPEED_API_KEY)"
+      },
+      {
+        "id": "search-hygiene",
+        "label": "Search hygiene",
+        "old": {
+          "id": "search-hygiene",
+          "score": 86,
+          "value": "91/106 checks pass across 17 pages",
+          "details": {
+            "passed": 91,
+            "total": 106,
+            "pages": 17,
+            "dupTitles": 0,
+            "dupDescs": 0
+          },
+          "issues": [
+            "/: meta description 180 chars (aim 120–160)",
+            "/coaches: title 7 chars (aim 40–60)",
+            "/programs/community-strength-classes: meta description 527 chars (aim 120–160)",
+            "/programs/drop-in: meta description 352 chars (aim 120–160)",
+            "/programs/get-started: meta description 466 chars (aim 120–160)",
+            "/blog-helix-training-in-corvallis-or: meta description 202 chars (aim 120–160)",
+            "/coach-bio-request: meta description 56 chars (aim 120–160)",
+            "/contact-helix-training-in-corvallis-or: meta description 177 chars (aim 120–160)",
+            "/membership-pricing-request: meta description 239 chars (aim 120–160)",
+            "/privacy-policy: meta description 238 chars (aim 120–160)",
+            "/schedule-helix-training-in-corvallis-or: meta description 180 chars (aim 120–160)",
+            "/terms-of-use: meta description 226 chars (aim 120–160)",
+            "/hsa-fsa: title 7 chars (aim 40–60)",
+            "/hsa-fsa: meta description missing (aim 120–160)",
+            "/programs/intro-to-strength-training-class: meta description 446 chars (aim 120–160)"
+          ]
+        },
+        "new": {
+          "id": "search-hygiene",
+          "score": 100,
+          "value": "106/106 checks pass across 17 pages",
+          "details": {
+            "passed": 106,
+            "total": 106,
+            "pages": 17,
+            "dupTitles": 0,
+            "dupDescs": 0
+          },
+          "issues": []
+        },
+        "verdict": "win",
+        "why": "100 vs 86"
+      },
+      {
+        "id": "duplicate-urls",
+        "label": "Duplicate-intent URLs",
+        "old": {
+          "id": "duplicate-urls",
+          "score": 100,
+          "value": "0 duplicate-intent group(s)",
+          "details": {
+            "groups": 0,
+            "urls": 30
+          },
+          "issues": []
+        },
+        "new": {
+          "id": "duplicate-urls",
+          "score": 100,
+          "value": "0 duplicate-intent group(s)",
+          "details": {
+            "groups": 0,
+            "urls": 25
+          },
+          "issues": []
+        },
+        "verdict": "tie",
+        "why": "100 vs 100 (within 2)"
+      },
+      {
+        "id": "structured-data",
+        "label": "Structured data",
+        "old": {
+          "id": "structured-data",
+          "score": 29,
+          "value": "2 type(s); 2/7 coverage checks",
+          "details": {
+            "types": "FAQPage, Product",
+            "passed": 2,
+            "total": 7,
+            "articlesWithSchema": 0,
+            "articles": 0
+          },
+          "issues": [
+            "missing: Organization/LocalBusiness on the site",
+            "missing: NAP (address + phone) in the Organization node",
+            "missing: WebSite node",
+            "missing: BreadcrumbList on inner pages",
+            "missing: Person node for the author/owner"
+          ]
+        },
+        "new": {
+          "id": "structured-data",
+          "score": 100,
+          "value": "7 type(s); 7/7 coverage checks",
+          "details": {
+            "types": "BreadcrumbList, FAQPage, HealthClub, LocalBusiness, Organization, Person, WebSite",
+            "passed": 7,
+            "total": 7,
+            "articlesWithSchema": 0,
+            "articles": 0
+          },
+          "issues": []
+        },
+        "verdict": "win",
+        "why": "100 vs 29"
+      },
+      {
+        "id": "citability",
+        "label": "Citability (GEO)",
+        "old": {
+          "id": "citability",
+          "score": 25,
+          "value": "home 25/100",
+          "details": {
+            "home": 25,
+            "articleAvg": null,
+            "articles": 0
+          },
+          "issues": [
+            "home page GEO 25 (target 50+): add real statistics, a question-style H2, a first-person line, a source link"
+          ]
+        },
+        "new": {
+          "id": "citability",
+          "score": 38,
+          "value": "home 38/100",
+          "details": {
+            "home": 38,
+            "articleAvg": null,
+            "articles": 0
+          },
+          "issues": [
+            "home page GEO 38 (target 50+): add real statistics, a question-style H2, a first-person line, a source link"
+          ]
+        },
+        "verdict": "win",
+        "why": "38 vs 25"
+      },
+      {
+        "id": "content-depth",
+        "label": "Content depth",
+        "old": {
+          "id": "content-depth",
+          "score": 100,
+          "value": "28 unique indexable pages, home 998 words, 0 sourced post(s) ≥600w, 20 FAQ(s)",
+          "details": {
+            "indexable": 28,
+            "homeWords": 998,
+            "goodPosts": 0,
+            "articles": 0,
+            "faqs": 20
+          },
+          "issues": []
+        },
+        "new": {
+          "id": "content-depth",
+          "score": 100,
+          "value": "25 unique indexable pages, home 677 words, 0 sourced post(s) ≥600w, 13 FAQ(s)",
+          "details": {
+            "indexable": 25,
+            "homeWords": 677,
+            "goodPosts": 0,
+            "articles": 0,
+            "faqs": 13
+          },
+          "issues": []
+        },
+        "verdict": "tie",
+        "why": "100 vs 100 (within 2)"
+      },
+      {
+        "id": "conversion-path",
+        "label": "Conversion path",
+        "old": {
+          "id": "conversion-path",
+          "score": 20,
+          "value": "1 click(s) to book, CTA above fold: no, 6 dead + 523 \"#\" links",
+          "details": {
+            "clicksToBook": 1,
+            "ctaAboveFold": false,
+            "deadLinks": 6,
+            "hashLinks": 523,
+            "checkedLinks": 37,
+            "contactOk": null
+          },
+          "issues": [
+            "no call-to-action link in the first section of the home page",
+            "6 dead internal link(s): https://www.helixtrain.com/partners (404), https://www.helixtrain.com/hsn-nutrition-page (404), https://www.helixtrain.com/recipes (404), https://www.helixtrain.com/challenges-and-events (404), https://www.helixtrain.com/careers (404)",
+            "523 placeholder \"#\" link(s)"
+          ]
+        },
+        "new": {
+          "id": "conversion-path",
+          "score": 100,
+          "value": "1 click(s) to book, CTA above fold: yes, 0 dead + 0 \"#\" links",
+          "details": {
+            "clicksToBook": 1,
+            "ctaAboveFold": true,
+            "deadLinks": 0,
+            "hashLinks": 0,
+            "checkedLinks": 27,
+            "contactOk": null
+          },
+          "issues": []
+        },
+        "verdict": "win",
+        "why": "100 vs 20"
+      },
+      {
+        "id": "accessibility",
+        "label": "Accessibility",
+        "old": {
+          "id": "accessibility",
+          "score": 57,
+          "value": "4/7 checks; alt 100%",
+          "details": {
+            "passed": 4,
+            "total": 7,
+            "images": 406,
+            "imagesWithAlt": 406,
+            "inputs": 81,
+            "labeled": 73,
+            "contrast": null
+          },
+          "issues": [
+            "missing: labels on all form fields",
+            "missing: visible focus styles",
+            "missing: reduced-motion respected"
+          ]
+        },
+        "new": {
+          "id": "accessibility",
+          "score": 100,
+          "value": "7/7 checks; alt 100%, contrast 15.33",
+          "details": {
+            "passed": 7,
+            "total": 7,
+            "images": 34,
+            "imagesWithAlt": 34,
+            "inputs": 6,
+            "labeled": 6,
+            "contrast": 15.33
+          },
+          "issues": []
+        },
+        "verdict": "win",
+        "why": "100 vs 57"
+      },
+      {
+        "id": "honesty",
+        "label": "Honesty",
+        "old": {
+          "id": "honesty",
+          "score": 28,
+          "value": "6 issue(s)",
+          "details": {
+            "unsourcedStats": 2,
+            "expiredPromos": "Summer Special",
+            "staleCopyright": "2022",
+            "placeholders": "\\bTab [123]\\b, \\bcoming soon\\b"
+          },
+          "issues": [
+            "2 statistic(s) stated without a source link",
+            "time-bound promotion copy still live: Summer Special",
+            "copyright year 2022 (it is 2026)",
+            "placeholder text visible: \\bTab [123]\\b, \\bcoming soon\\b"
+          ]
+        },
+        "new": {
+          "id": "honesty",
+          "score": 100,
+          "value": "0 issue(s)",
+          "details": {
+            "unsourcedStats": 0,
+            "expiredPromos": "",
+            "staleCopyright": "",
+            "placeholders": ""
+          },
+          "issues": []
+        },
+        "verdict": "win",
+        "why": "100 vs 28"
+      },
+      {
+        "id": "local",
+        "label": "Local",
+        "old": {
+          "id": "local",
+          "score": 67,
+          "value": "4/6 local signals",
+          "details": {
+            "nap": false,
+            "tel": true,
+            "map": true,
+            "hours": false,
+            "streetMatch": true,
+            "phoneMatch": true,
+            "homeBooking": 2
+          },
+          "issues": [
+            "missing: NAP in structured data",
+            "missing: hours published"
+          ]
+        },
+        "new": {
+          "id": "local",
+          "score": 100,
+          "value": "6/6 local signals",
+          "details": {
+            "nap": true,
+            "tel": true,
+            "map": true,
+            "hours": true,
+            "streetMatch": true,
+            "phoneMatch": true,
+            "homeBooking": 3
+          },
+          "issues": []
+        },
+        "verdict": "win",
+        "why": "100 vs 67"
+      }
+    ],
+    "wins": 7,
+    "ties": 2,
+    "behind": 0,
+    "unmeasured": 1,
+    "passes": true,
+    "biggestWins": [
+      "Booking is 1 click(s) from the home page with a clear call-to-action above the fold and 0 dead links (was 1 click(s), 6 dead links).",
+      "No stale promotions, placeholder text, or unsourced statistics on the new site (the old one had 6 such issue(s)).",
+      "Search engines and AI assistants can now read BreadcrumbList, FAQPage, HealthClub, LocalBusiness, Organization, Person, WebSite from the pages, instead of FAQPage, Product."
+    ],
+    "fixList": []
+  },
+  "newMeasurements": [
+    {
+      "id": "speed",
+      "score": null,
+      "value": "not measured",
+      "details": {},
+      "issues": [],
+      "note": "PageSpeed not run (pass --psi / a PAGESPEED_API_KEY)"
+    },
+    {
+      "id": "search-hygiene",
+      "score": 100,
+      "value": "106/106 checks pass across 17 pages",
+      "details": {
+        "passed": 106,
+        "total": 106,
+        "pages": 17,
+        "dupTitles": 0,
+        "dupDescs": 0
+      },
+      "issues": []
+    },
+    {
+      "id": "duplicate-urls",
+      "score": 100,
+      "value": "0 duplicate-intent group(s)",
+      "details": {
+        "groups": 0,
+        "urls": 25
+      },
+      "issues": []
+    },
+    {
+      "id": "structured-data",
+      "score": 100,
+      "value": "7 type(s); 7/7 coverage checks",
+      "details": {
+        "types": "BreadcrumbList, FAQPage, HealthClub, LocalBusiness, Organization, Person, WebSite",
+        "passed": 7,
+        "total": 7,
+        "articlesWithSchema": 0,
+        "articles": 0
+      },
+      "issues": []
+    },
+    {
+      "id": "citability",
+      "score": 38,
+      "value": "home 38/100",
+      "details": {
+        "home": 38,
+        "articleAvg": null,
+        "articles": 0
+      },
+      "issues": [
+        "home page GEO 38 (target 50+): add real statistics, a question-style H2, a first-person line, a source link"
+      ]
+    },
+    {
+      "id": "content-depth",
+      "score": 100,
+      "value": "25 unique indexable pages, home 677 words, 0 sourced post(s) ≥600w, 13 FAQ(s)",
+      "details": {
+        "indexable": 25,
+        "homeWords": 677,
+        "goodPosts": 0,
+        "articles": 0,
+        "faqs": 13
+      },
+      "issues": []
+    },
+    {
+      "id": "conversion-path",
+      "score": 100,
+      "value": "1 click(s) to book, CTA above fold: yes, 0 dead + 0 \"#\" links",
+      "details": {
+        "clicksToBook": 1,
+        "ctaAboveFold": true,
+        "deadLinks": 0,
+        "hashLinks": 0,
+        "checkedLinks": 27,
+        "contactOk": null
+      },
+      "issues": []
+    },
+    {
+      "id": "accessibility",
+      "score": 100,
+      "value": "7/7 checks; alt 100%, contrast 15.33",
+      "details": {
+        "passed": 7,
+        "total": 7,
+        "images": 34,
+        "imagesWithAlt": 34,
+        "inputs": 6,
+        "labeled": 6,
+        "contrast": 15.33
+      },
+      "issues": []
+    },
+    {
+      "id": "honesty",
+      "score": 100,
+      "value": "0 issue(s)",
+      "details": {
+        "unsourcedStats": 0,
+        "expiredPromos": "",
+        "staleCopyright": "",
+        "placeholders": ""
+      },
+      "issues": []
+    },
+    {
+      "id": "local",
+      "score": 100,
+      "value": "6/6 local signals",
+      "details": {
+        "nap": true,
+        "tel": true,
+        "map": true,
+        "hours": true,
+        "streetMatch": true,
+        "phoneMatch": true,
+        "homeBooking": 3
+      },
+      "issues": []
+    }
+  ],
+  "oldMeasurements": [
+    {
+      "id": "speed",
+      "score": null,
+      "value": "not measured",
+      "details": {},
+      "issues": [],
+      "note": "PageSpeed not run (pass --psi / a PAGESPEED_API_KEY)"
+    },
+    {
+      "id": "search-hygiene",
+      "score": 86,
+      "value": "91/106 checks pass across 17 pages",
+      "details": {
+        "passed": 91,
+        "total": 106,
+        "pages": 17,
+        "dupTitles": 0,
+        "dupDescs": 0
+      },
+      "issues": [
+        "/: meta description 180 chars (aim 120–160)",
+        "/coaches: title 7 chars (aim 40–60)",
+        "/programs/community-strength-classes: meta description 527 chars (aim 120–160)",
+        "/programs/drop-in: meta description 352 chars (aim 120–160)",
+        "/programs/get-started: meta description 466 chars (aim 120–160)",
+        "/blog-helix-training-in-corvallis-or: meta description 202 chars (aim 120–160)",
+        "/coach-bio-request: meta description 56 chars (aim 120–160)",
+        "/contact-helix-training-in-corvallis-or: meta description 177 chars (aim 120–160)",
+        "/membership-pricing-request: meta description 239 chars (aim 120–160)",
+        "/privacy-policy: meta description 238 chars (aim 120–160)",
+        "/schedule-helix-training-in-corvallis-or: meta description 180 chars (aim 120–160)",
+        "/terms-of-use: meta description 226 chars (aim 120–160)",
+        "/hsa-fsa: title 7 chars (aim 40–60)",
+        "/hsa-fsa: meta description missing (aim 120–160)",
+        "/programs/intro-to-strength-training-class: meta description 446 chars (aim 120–160)"
+      ]
+    },
+    {
+      "id": "duplicate-urls",
+      "score": 100,
+      "value": "0 duplicate-intent group(s)",
+      "details": {
+        "groups": 0,
+        "urls": 30
+      },
+      "issues": []
+    },
+    {
+      "id": "structured-data",
+      "score": 29,
+      "value": "2 type(s); 2/7 coverage checks",
+      "details": {
+        "types": "FAQPage, Product",
+        "passed": 2,
+        "total": 7,
+        "articlesWithSchema": 0,
+        "articles": 0
+      },
+      "issues": [
+        "missing: Organization/LocalBusiness on the site",
+        "missing: NAP (address + phone) in the Organization node",
+        "missing: WebSite node",
+        "missing: BreadcrumbList on inner pages",
+        "missing: Person node for the author/owner"
+      ]
+    },
+    {
+      "id": "citability",
+      "score": 25,
+      "value": "home 25/100",
+      "details": {
+        "home": 25,
+        "articleAvg": null,
+        "articles": 0
+      },
+      "issues": [
+        "home page GEO 25 (target 50+): add real statistics, a question-style H2, a first-person line, a source link"
+      ]
+    },
+    {
+      "id": "content-depth",
+      "score": 100,
+      "value": "28 unique indexable pages, home 998 words, 0 sourced post(s) ≥600w, 20 FAQ(s)",
+      "details": {
+        "indexable": 28,
+        "homeWords": 998,
+        "goodPosts": 0,
+        "articles": 0,
+        "faqs": 20
+      },
+      "issues": []
+    },
+    {
+      "id": "conversion-path",
+      "score": 20,
+      "value": "1 click(s) to book, CTA above fold: no, 6 dead + 523 \"#\" links",
+      "details": {
+        "clicksToBook": 1,
+        "ctaAboveFold": false,
+        "deadLinks": 6,
+        "hashLinks": 523,
+        "checkedLinks": 37,
+        "contactOk": null
+      },
+      "issues": [
+        "no call-to-action link in the first section of the home page",
+        "6 dead internal link(s): https://www.helixtrain.com/partners (404), https://www.helixtrain.com/hsn-nutrition-page (404), https://www.helixtrain.com/recipes (404), https://www.helixtrain.com/challenges-and-events (404), https://www.helixtrain.com/careers (404)",
+        "523 placeholder \"#\" link(s)"
+      ]
+    },
+    {
+      "id": "accessibility",
+      "score": 57,
+      "value": "4/7 checks; alt 100%",
+      "details": {
+        "passed": 4,
+        "total": 7,
+        "images": 406,
+        "imagesWithAlt": 406,
+        "inputs": 81,
+        "labeled": 73,
+        "contrast": null
+      },
+      "issues": [
+        "missing: labels on all form fields",
+        "missing: visible focus styles",
+        "missing: reduced-motion respected"
+      ]
+    },
+    {
+      "id": "honesty",
+      "score": 28,
+      "value": "6 issue(s)",
+      "details": {
+        "unsourcedStats": 2,
+        "expiredPromos": "Summer Special",
+        "staleCopyright": "2022",
+        "placeholders": "\\bTab [123]\\b, \\bcoming soon\\b"
+      },
+      "issues": [
+        "2 statistic(s) stated without a source link",
+        "time-bound promotion copy still live: Summer Special",
+        "copyright year 2022 (it is 2026)",
+        "placeholder text visible: \\bTab [123]\\b, \\bcoming soon\\b"
+      ]
+    },
+    {
+      "id": "local",
+      "score": 67,
+      "value": "4/6 local signals",
+      "details": {
+        "nap": false,
+        "tel": true,
+        "map": true,
+        "hours": false,
+        "streetMatch": true,
+        "phoneMatch": true,
+        "homeBooking": 2
+      },
+      "issues": [
+        "missing: NAP in structured data",
+        "missing: hours published"
+      ]
+    }
+  ]
+}
