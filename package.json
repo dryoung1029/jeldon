@@ -4,7 +4,7 @@
   "private": true,
   "description": "Jeldon Core — a portable article + AEO/SEO + analytics engine. The engine is the invariant; a Domain Pack is the only thing a new project edits.",
   "type": "module",
-  "packageManager": "pnpm@9.12.0",
+  "packageManager": "pnpm@12.18.0",
   "engines": {
     "node": ">=22.18"
   },
