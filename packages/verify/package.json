@@ -1,6 +1,6 @@
 {
   "name": "@jeldon/verify",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Domain-agnostic citation verification + citation linting. Pluggable ClaimVerifier (NullVerifier default, Cite8Verifier health plugin, PrimarySourceVerifier generic) + lintCitations driven by the citation policy in the Domain Pack.",
   "type": "module",
   "license": "UNLICENSED",

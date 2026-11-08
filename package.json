@@ -18,7 +18,7 @@
     "release": "changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.9",
+    "@changesets/cli": "^3.0.3",
     "@jeldon/config": "workspace:*",
     "@types/node": "^22.7.5",
     "tsup": "^9.0.0",

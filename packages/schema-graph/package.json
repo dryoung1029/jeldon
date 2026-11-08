@@ -1,6 +1,6 @@
 {
   "name": "@jeldon/schema-graph",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Domain-agnostic schema.org graph builders (Organization / Person / Article / BreadcrumbList / FAQPage) + extractFaqs + emitLlmsTxt. Entity shapes move from page literals into the Domain Pack; generic types by default, vertical types from pack.schema.articleTypes.",
   "type": "module",
   "license": "UNLICENSED",

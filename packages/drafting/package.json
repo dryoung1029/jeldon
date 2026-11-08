@@ -1,6 +1,6 @@
 {
   "name": "@jeldon/drafting",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Domain-agnostic article drafting + editor-chat orchestration. The score->verify->one-shot-fix-pass draft loop (NDJSON events), getSiteKnowledge() prompt injection (pack.voice + priority keywords + voice memory), a VoiceMemory store (@jeldon/store), and the agentic citation-verifying chatEdit. Every prompt string is built from the Domain Pack's voice block; nothing about any vertical is hardcoded. Ported from Body of Health author.ts + chat.ts + site-knowledge.ts + voice-memory.ts + priority-keywords.ts.",
   "type": "module",
   "license": "UNLICENSED",
