@@ -1,6 +1,6 @@
 {
   "name": "@jeldon/crawler-analytics",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Domain-agnostic AI-crawler detection, edge-analytics ingestion, referer classification, and a first-party engagement beacon. CF is one AnalyticsProvider adapter; D1 is one EventStore adapter — every default is null/in-memory.",
   "type": "module",
   "license": "UNLICENSED",
@@ -23,8 +23,9 @@
     "@jeldon/config": "workspace:*"
   },
   "devDependencies": {
-    "tsup": "^8.3.0",
+    "tsup": "^9.0.0",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.4"
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
   }
 }

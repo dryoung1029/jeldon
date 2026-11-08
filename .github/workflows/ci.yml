@@ -1,0 +1,40 @@
+name: ci
+
+# The engine repo's own build/test/typecheck/audit gate. Runs on every PR and
+# on push to main — this repo previously shipped changes with no automated
+# verification at all (local `pnpm build`/`test`/`typecheck` runs were the
+# only check). Mirrors the 15/15 build + 21/21 test/typecheck bar maintained
+# by hand; `pnpm audit` catches a regression in the dependency tree before it
+# lands.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Typecheck all packages
+        run: pnpm typecheck
+
+      - name: Test all packages
+        run: pnpm test
+
+      - name: Audit dependencies (high + critical)
+        run: pnpm audit --audit-level=high

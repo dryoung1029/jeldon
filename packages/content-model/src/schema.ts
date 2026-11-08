@@ -65,7 +65,7 @@ export function buildArticleSchema(pack: DomainPack, opts: BuildArticleSchemaOpt
     audioBodyLength: z.number().optional(),
     audioFileSize: z.number().optional(),
     audioGeneratedAt: z.coerce.date().optional(),
-    sourceEpisode: z.string().url().optional(),
+    sourceEpisode: z.url().optional(),
     // Newsletter automation state — written by the auto-newsletter cron. Brevo
     // returns numeric campaign IDs the cron sometimes writes unquoted, so coerce
     // to string rather than fail the schema and abort the build.

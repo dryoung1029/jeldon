@@ -4,10 +4,10 @@ const tuple2 = z.tuple([z.number(), z.number()]);
 
 const orgProfile = z.object({
   name: z.string(),
-  url: z.string().url(),
+  url: z.url(),
   logoUrl: z.string().optional(),
   sameAs: z.array(z.string()).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
 });
 
 const personProfile = z.object({
@@ -21,7 +21,7 @@ const personProfile = z.object({
   memberOf: z.array(z.string()).optional(),
   awards: z.array(z.string()).optional(),
   sameAs: z.array(z.string()).optional(),
-  extra: z.record(z.unknown()).optional(),
+  extra: z.record(z.string(), z.unknown()).optional(),
 });
 
 const geoCheck = z.object({
@@ -102,8 +102,8 @@ const strategyConfig = z.object({
     search: z.array(z.string()),
   }),
   liveCrawlPurpose: z.string(),
-  deepLinks: z.record(z.object({ link: z.string(), linkLabel: z.string().optional() })),
-  copy: z.record(z.object({ title: z.string(), evidence: z.string() })),
+  deepLinks: z.record(z.string(), z.object({ link: z.string(), linkLabel: z.string().optional() })),
+  copy: z.record(z.string(), z.object({ title: z.string(), evidence: z.string() })),
 });
 
 const competitorsConfig = z.object({
@@ -128,7 +128,7 @@ const competitorsConfig = z.object({
 });
 
 const draftingConfig = z.object({
-  models: z.record(z.string()),
+  models: z.record(z.string(), z.string()),
   defaultModel: z.string(),
   utilityModel: z.string(),
   draftFloor: z.object({ seo: z.number(), geo: z.number() }),
@@ -144,7 +144,7 @@ const draftingConfig = z.object({
     extractClaims: z.number().int().positive(),
     chat: z.number().int().positive(),
   }),
-  promptOverrides: z.record(z.string()).optional(),
+  promptOverrides: z.record(z.string(), z.string()).optional(),
 });
 
 const amplifyConfig = z.object({
@@ -275,14 +275,14 @@ const entityPresenceConfig = z.object({
   engineAffinities: z.array(
     z.object({
       engine: z.string(),
-      affinity: z.record(z.number().min(0).max(1)),
+      affinity: z.record(z.string(), z.number().min(0).max(1)),
       note: z.string().optional(),
     }),
   ),
   consistencyTargets: z
     .object({
       name: z.string().optional(),
-      nap: z.record(z.string()),
+      nap: z.record(z.string(), z.string()),
     })
     .optional(),
   establishedThreshold: z.number().int().positive().optional(),
@@ -292,7 +292,7 @@ export const domainPackSchema = z
   .object({
     brand: z.object({
       name: z.string().min(1),
-      siteUrl: z.string().url(),
+      siteUrl: z.url(),
       tagline: z.string().optional(),
       geoFraming: z.string().optional(),
       nap: z
@@ -306,7 +306,7 @@ export const domainPackSchema = z
         })
         .optional(),
       logoUrl: z.string().optional(),
-      brandColors: z.record(z.string()).optional(),
+      brandColors: z.record(z.string(), z.string()).optional(),
     }),
     authors: z
       .array(
@@ -330,7 +330,7 @@ export const domainPackSchema = z
     }),
     content: z.object({
       categories: z.array(z.string()).min(1),
-      categoryTargets: z.record(z.number().min(0).max(100)),
+      categoryTargets: z.record(z.string(), z.number().min(0).max(100)),
       tags: z.array(z.string()).optional(),
       defaultAuthorSlug: z.string(),
       timezone: z.string(),
@@ -418,7 +418,7 @@ export const domainPackSchema = z
       const minTarget = Math.min(...targets);
       if (pack.scoring.geo.floor > minTarget) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['scoring', 'geo', 'floor'],
           message: `GEO floor (${pack.scoring.geo.floor}) must be <= the lowest category target (${minTarget}).`,
         });
@@ -427,7 +427,7 @@ export const domainPackSchema = z
     for (const cat of Object.keys(pack.content.categoryTargets)) {
       if (!pack.content.categories.includes(cat)) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: 'custom',
           path: ['content', 'categoryTargets', cat],
           message: `categoryTargets references "${cat}" which is not in content.categories.`,
         });
@@ -435,7 +435,7 @@ export const domainPackSchema = z
     }
     if (!pack.authors.some((a) => a.slug === pack.content.defaultAuthorSlug)) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: 'custom',
         path: ['content', 'defaultAuthorSlug'],
         message: `defaultAuthorSlug "${pack.content.defaultAuthorSlug}" matches no author slug.`,
       });
