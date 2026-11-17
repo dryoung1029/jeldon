@@ -1450,6 +1450,100 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "autonomous": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "maxDraftsPerRun": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "digestDays": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "relevance": {
+              "type": "object",
+              "properties": {
+                "topics": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "requireTopic": {
+                  "type": "boolean"
+                },
+                "requirePriorityKeyword": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "topics",
+                "requireTopic",
+                "requirePriorityKeyword"
+              ],
+              "additionalProperties": false
+            },
+            "category": {
+              "type": "string"
+            },
+            "coverageTitleChars": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "promptTemplate": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "source",
+            "maxDraftsPerRun",
+            "digestDays",
+            "relevance",
+            "coverageTitleChars"
+          ],
+          "additionalProperties": false
+        },
+        "backlinks": {
+          "type": "object",
+          "properties": {
+            "chunkSize": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "internalPathPrefix": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxTokens": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minAnchorChars": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "model": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "chunkSize",
+            "internalPathPrefix",
+            "maxTokens",
+            "minAnchorChars"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -2694,6 +2788,277 @@
       ],
       "additionalProperties": false
     },
+    "ideation": {
+      "type": "object",
+      "properties": {
+        "transcriptMiner": {
+          "type": "object",
+          "properties": {
+            "maxChars": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minChars": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "publishedSourceNoun": {
+              "type": "string",
+              "minLength": 1
+            },
+            "listenCalloutLabel": {
+              "type": "string",
+              "minLength": 1
+            },
+            "maxProposals": {
+              "type": "object",
+              "properties": {
+                "published": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "private": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "published",
+                "private"
+              ],
+              "additionalProperties": false
+            },
+            "privateSourceGuidance": {
+              "type": "string"
+            },
+            "publishedSourceGuidance": {
+              "type": "string"
+            },
+            "anchorEverySeconds": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxTokens": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "model": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "maxChars",
+            "minChars",
+            "publishedSourceNoun",
+            "listenCalloutLabel",
+            "maxProposals",
+            "anchorEverySeconds",
+            "maxTokens"
+          ],
+          "additionalProperties": false
+        },
+        "backlog": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "transcriptMiner",
+        "backlog"
+      ],
+      "additionalProperties": false
+    },
+    "listening": {
+      "type": "object",
+      "properties": {
+        "reddit": {
+          "type": "object",
+          "properties": {
+            "geoSubreddits": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "conditionSubreddits": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "brandTerms": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "genericPhraseExclusions": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "serviceKeywords": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "targetSearches": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "sub": {
+                    "type": "string"
+                  },
+                  "query": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "sub",
+                  "query"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "retentionDays": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxItems": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "archivedAfterDays": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "staleAfterDays": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "stalePenalty": {
+              "type": "number"
+            },
+            "recency": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "maxDays": {
+                    "type": "number"
+                  },
+                  "bonus": {
+                    "type": "number"
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "maxDays",
+                  "bonus",
+                  "label"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "competitorMinNameLength": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxTargets": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "userAgent": {
+              "type": "string",
+              "minLength": 1
+            },
+            "requestDelayMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "rssRetryMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "retryBudgetMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxRssRetries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "model": {
+              "type": "string"
+            },
+            "maxTokens": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "geoSubreddits",
+            "conditionSubreddits",
+            "brandTerms",
+            "serviceKeywords",
+            "targetSearches",
+            "retentionDays",
+            "maxItems",
+            "archivedAfterDays",
+            "staleAfterDays",
+            "stalePenalty",
+            "recency",
+            "competitorMinNameLength",
+            "maxTargets",
+            "userAgent",
+            "requestDelayMs",
+            "rssRetryMs",
+            "retryBudgetMs",
+            "maxRssRetries",
+            "maxTokens"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "schema": {
       "type": "object",
       "properties": {
@@ -3084,6 +3449,12 @@
           "type": "boolean"
         },
         "businessHours": {
+          "type": "boolean"
+        },
+        "ideation": {
+          "type": "boolean"
+        },
+        "listening": {
           "type": "boolean"
         }
       },

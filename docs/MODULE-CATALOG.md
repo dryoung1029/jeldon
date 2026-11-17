@@ -75,6 +75,7 @@ new code.
 | `@jeldon/google` | ✅ | `google-auth.ts`, `gmail.ts` (send half) | — |
 | `@jeldon/entity-presence` | ✅ (scaffold) | NEW — off-site brand-mention + per-engine citation-pattern signals | `entityPresence` |
 | `@jeldon/search-console` | ✅ | `fetch-search-console.mjs`, `api/admin/command/search.ts`, `api/admin/snippets*.ts` | `searchConsole` |
+| `@jeldon/ideation` | ✅ | `topics/episode.ts`, `youtube-transcript.ts`, `topics/backlog.ts`, `topics/reddit.ts`, `command/reddit.ts`, `fetch-reddit-radar.mjs` | `ideation`, `listening` |
 
 > `@jeldon/entity-presence` is the one module **not** in the source system. The
 > audit flags off-site mentions as correlating ~3× stronger with AI citation
@@ -169,6 +170,21 @@ iss/aud/exp/nbf), `createAccessMiddleware` — fails closed (500) without
 schema-graph (`openingHoursSpecification`, `specialOpeningHoursSpecification`).
 Template: `src/components/OpenNow.astro`, `scripts/fetch-hours.mjs`. Extracts
 BoH `fetch-hours.mjs`, `hours.ts`, `OpenNow.astro`.
+
+### `@jeldon/ideation`
+Where article ideas come from and where they are kept. `mineTranscript()` mines
+a published recording (via a `TranscriptFetcher`, e.g. `YoutubeTranscriptFetcher`)
+or a pasted/private one; the prompt drops the listen callout for a private
+source, and the start timestamp is required only when the source has `[m:ss]`
+anchors. `runRedditRadar()` is a read-only listener (GET to reddit.com only;
+JSON then RSS with 429 backoff) and `scoreRedditTargets()` /
+`proposeRedditBriefs()` rank threads using the AEO snapshot's
+`redditCitations`; archived cited threads become "out-publish it" briefs.
+`topicEntrySchema` is the single backlog entry schema for reader and writer
+(`TopicBacklog` over a `Store` data file). The drafting side of section 7 lives
+in `@jeldon/drafting`: `runAutonomousDrafts()` (research digest → `draft()` →
+`draft: true` + `autonomous: true`, capped per run; digest contract and the
+cite8 adapter in `@jeldon/verify`) and `proposeBacklinks()` / `applyBacklinks()`.
 
 Before extending a package or finishing a `TODO(port)`, read
 `docs/DECOUPLING-NOTES.md` first — it names the exact coupling each module breaks

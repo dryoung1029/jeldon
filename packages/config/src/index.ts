@@ -118,3 +118,21 @@ export type {
   SecurityConfig,
 } from './types.js';
 export { defaultSiteAlertConfig, defaultSecurityConfig } from './defaults.js';
+// Ideation, listening, autonomous drafting, backlinks.
+export type {
+  IdeationConfig,
+  TranscriptMinerConfig,
+  TopicBacklogConfig,
+  ListeningConfig,
+  RedditListeningConfig,
+  RedditTargetSearch,
+  RecencyBand,
+  AutonomousDraftingConfig,
+  BacklinksConfig,
+} from './types.js';
+export {
+  defaultIdeationConfig,
+  defaultRedditListeningConfig,
+  defaultAutonomousDraftingConfig,
+  defaultBacklinksConfig,
+} from './defaults.js';

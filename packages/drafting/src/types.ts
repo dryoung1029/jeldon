@@ -17,6 +17,7 @@
  */
 
 import type { DomainPack, DraftingConfig, LlmEffort } from '@jeldon/config';
+import type { VerificationReport } from '@jeldon/verify';
 
 // ---------------------------------------------------------------------------
 // LLM provider — the injectable boundary (replaces BoH's hardwired Anthropic
@@ -233,6 +234,8 @@ export type DraftEvent =
       scoresSeries?: Array<(ScorePair & { slug: string }) | null> | null;
       fixPassFired?: boolean;
       fixPassesSeries?: number[];
+      /** The single draft's final verification report (after any fix-pass). */
+      verification?: VerificationReport | null;
       model: string;
       stopReason: string | null;
       usage: { input_tokens: number; output_tokens: number };
