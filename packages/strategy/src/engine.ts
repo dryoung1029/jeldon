@@ -224,6 +224,35 @@ const ruleSeoClimb: RuleFn = ({ input, cfg }) => {
   }));
 };
 
+// Search Console (BoH command/search.ts): queries at positions 5-15, and
+// page-1 URLs earning well under the expected CTR for their position.
+const ruleScStriking: RuleFn = ({ input, cfg }) =>
+  (input.searchConsole?.strikingDistance ?? []).slice(0, cfg.thresholds.climbMax).map((r) => ({
+    id: `sc-striking-${r.query}`,
+    priority: 'medium' as Priority,
+    category: 'seo' as const,
+    ...copyOf(cfg, 'sc-striking-distance', { query: r.query, position: r.position.toFixed(1), impressions: r.impressions }),
+  }));
+
+const ruleScLowCtr: RuleFn = ({ input, cfg }) => {
+  const sc = input.searchConsole;
+  if (!sc) return [];
+  const ratio = Math.round((sc.lowCtrRatio ?? 0.6) * 100);
+  return sc.lowCtr.slice(0, cfg.thresholds.climbMax).map((r) => ({
+    id: `sc-lowctr-${r.page}`,
+    priority: 'medium' as Priority,
+    category: 'seo' as const,
+    ...copyOf(cfg, 'sc-low-ctr', {
+      page: r.page,
+      position: r.position.toFixed(1),
+      ctr: (r.ctr * 100).toFixed(1),
+      expected: (r.expectedCtr * 100).toFixed(1),
+      ratio,
+    }),
+    ...deepLink(cfg, 'snippetLab'),
+  }));
+};
+
 // strategy.ts:206-219 — live-retrieval crawlers → verify citations. Opt-in.
 const ruleAeoLiveCrawl: RuleFn = ({ input, cfg }) => {
   const crawlers = input.crawlers;
@@ -254,6 +283,8 @@ const BUILTIN_RULES: Record<BuiltinRuleId, RuleFn> = {
   'audio-coverage': ruleAudioCoverage,
   'dist-social': ruleDistSocial,
   'seo-climb': ruleSeoClimb,
+  'sc-striking-distance': ruleScStriking,
+  'sc-low-ctr': ruleScLowCtr,
   'aeo-live-crawl': ruleAeoLiveCrawl,
 };
 
@@ -268,6 +299,8 @@ export const defaultRuleSet: RuleSet = {
     { id: 'audio-coverage', enabled: false }, // opt-in (podcast/audio surface)
     { id: 'dist-social', enabled: true },
     { id: 'seo-climb', enabled: true },
+    { id: 'sc-striking-distance', enabled: true }, // no-op without searchConsole input
+    { id: 'sc-low-ctr', enabled: true },
     { id: 'aeo-live-crawl', enabled: false }, // opt-in (answer-engine surface)
   ],
 };

@@ -154,6 +154,7 @@ export const defaultStrategyConfig: StrategyConfig = {
     brokenLinks: { link: '/admin/links', linkLabel: 'Broken links' },
     editArticle: { link: '/admin/{slug}', linkLabel: 'Edit' },
     amplify: { link: '/admin', linkLabel: 'Pick an article → Amplify' },
+    snippetLab: { link: '/admin/snippets', linkLabel: 'Snippet lab' },
     priorityKeywords: { link: '/admin/competitors/priority-keywords', linkLabel: 'Priority keywords' },
   },
   copy: {
@@ -186,6 +187,16 @@ export const defaultStrategyConfig: StrategyConfig = {
       title: 'Climb "{keyword}" (rank #{rank})',
       evidence:
         'Search is already a top referrer, and you sit at #{rank} for "{keyword}" — the page-2-to-1 range where small gains convert. Strengthen the matching page.',
+    },
+    'sc-striking-distance': {
+      title: 'Push "{query}" onto page 1 (position {position})',
+      evidence:
+        'Search Console: "{query}" averages position {position} on {impressions} impressions. One focused edit (the query\'s literal words in the title/H1, the answer in the first sentences) is often enough to move it up.',
+    },
+    'sc-low-ctr': {
+      title: 'Rewrite the snippet for {page}',
+      evidence:
+        'Search Console: {page} ranks {position} but earns {ctr}% CTR, under {ratio}% of what that position usually gets ({expected}%). Rewrite the title and description and log the change so the result can be compared.',
     },
     'aeo-live-crawl': {
       title: 'Answer engines are fetching you live — verify citations',

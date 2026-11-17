@@ -174,3 +174,25 @@ describe('config-driven portability (no engine code changes)', () => {
     expect(recs.find((r) => r.id === 'dist-social')).toBeDefined();
   });
 });
+
+describe('Search Console rules', () => {
+  it('turn striking-distance and low-CTR rows into SEO recommendations, and stay quiet without data', async () => {
+    const { buildRecommendations } = await import('../src/index.js');
+    const base = { cf: null, crawlers: null, articles: [], keywords: [] };
+    expect(buildRecommendations(base).filter((r) => r.id.startsWith('sc-'))).toEqual([]);
+    const recs = buildRecommendations({
+      ...base,
+      searchConsole: {
+        strikingDistance: [{ query: 'hip pain at night', position: 8.4, impressions: 120 }],
+        lowCtr: [{ page: '/articles/x/', position: 2.1, impressions: 400, ctr: 0.03, expectedCtr: 0.15 }],
+        lowCtrRatio: 0.6,
+      },
+    });
+    const striking = recs.find((r) => r.id === 'sc-striking-hip pain at night');
+    expect(striking?.title).toContain('position 8.4');
+    const low = recs.find((r) => r.id === 'sc-lowctr-/articles/x/');
+    expect(low?.evidence).toContain('3.0% CTR');
+    expect(low?.evidence).toContain('under 60%');
+    expect(low?.link).toBe('/admin/snippets');
+  });
+});
