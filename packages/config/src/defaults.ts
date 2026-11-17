@@ -7,6 +7,7 @@ import type {
   MediaConfig,
   OpsConfig,
   ScoringConfig,
+  SearchConsoleConfig,
   SeoConfig,
   StrategyConfig,
 } from './types.js';
@@ -771,3 +772,29 @@ export const defaultOpsDispatchTiming = {
   timeoutMinutes: 20,
   createdAtSlackSeconds: 90,
 } as const;
+
+/**
+ * Search Console defaults, ported from Body of Health
+ * `scripts/fetch-search-console.mjs` (28-day window ending 3 days back, 500
+ * rows per dimension) and `api/admin/command/search.ts` (striking distance
+ * 5–15 with >= 10 impressions; low CTR on page 1 with >= 30 impressions and
+ * CTR < 0.6 x the expected curve). The env names are generic; the curve is a
+ * rough blended desktop+mobile organic CTR-by-position table.
+ */
+export const defaultSearchConsoleConfig: SearchConsoleConfig = {
+  propertyEnv: 'GSC_PROPERTY',
+  saKeyEnv: 'GOOGLE_SEARCH_CONSOLE_SA_KEY',
+  rangeDays: 28,
+  lagDays: 3,
+  rowLimit: 500,
+  snapshotPath: 'src/data/search-console.json',
+  strikingDistance: { minPosition: 5, maxPosition: 15, minImpressions: 10, limit: 15 },
+  lowCtr: {
+    maxPosition: 10,
+    minImpressions: 30,
+    ratio: 0.6,
+    expectedCtrCurve: [0.28, 0.15, 0.1, 0.07, 0.05, 0.04, 0.033, 0.027, 0.022, 0.018],
+    limit: 15,
+  },
+  snippetLab: { logPath: 'src/data/snippet-lab.json', maxEntries: 200 },
+};

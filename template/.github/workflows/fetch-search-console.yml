@@ -1,0 +1,92 @@
+name: fetch-search-console
+
+# Daily Search Console snapshot (@jeldon/search-console via the jeldon CLI).
+# Writes `searchConsole.snapshotPath` from jeldon.config.ts when the numbers
+# change and commits it, which triggers a rebuild so the striking-distance and
+# low-CTR tables pick up fresh data.
+#
+# Secrets (Settings → Secrets and variables → Actions). The names must match
+# `searchConsole.saKeyEnv` / `searchConsole.propertyEnv` in jeldon.config.ts:
+#   GOOGLE_SEARCH_CONSOLE_SA_KEY  service-account JSON key, raw or base64
+#   GSC_PROPERTY                  exactly as Search Console shows it:
+#                                 `sc-domain:example.com` or `https://example.com/`
+#
+# Missing secrets: the job SKIPS with a `::warning::` annotation (exit 0), so it
+# is safe to enable before creds land but never reads as a silent green.
+# A misspelled secret name expands to "" — the env block in the log then prints
+# blank instead of `***`. Run this workflow manually with "diagnose" checked to
+# run `jeldon doctor --online`, which names the fix for the look-alike 403s
+# (API not enabled / service account not a user / property string mismatch).
+
+on:
+  schedule:
+    - cron: '30 10 * * *' # daily 10:30 UTC — pick your own quiet hour
+  workflow_dispatch:
+    inputs:
+      diagnose:
+        description: 'Run `jeldon doctor --online` instead of fetching'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-search-console
+  cancel-in-progress: false
+
+env:
+  # Keep in sync with searchConsole.snapshotPath in jeldon.config.ts.
+  SNAPSHOT_PATH: src/data/search-console.json
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Diagnose Search Console setup (online)
+        if: ${{ inputs.diagnose }}
+        env:
+          GOOGLE_SEARCH_CONSOLE_SA_KEY: ${{ secrets.GOOGLE_SEARCH_CONSOLE_SA_KEY }}
+          GSC_PROPERTY: ${{ secrets.GSC_PROPERTY }}
+        run: pnpm jeldon doctor --online
+
+      - name: Fetch Search Console snapshot
+        if: ${{ !inputs.diagnose }}
+        env:
+          GOOGLE_SEARCH_CONSOLE_SA_KEY: ${{ secrets.GOOGLE_SEARCH_CONSOLE_SA_KEY }}
+          GSC_PROPERTY: ${{ secrets.GSC_PROPERTY }}
+        run: pnpm jeldon fetch-search-console
+
+      - name: Commit and push (only if the snapshot changed)
+        if: ${{ !inputs.diagnose }}
+        run: |
+          if [ -z "$(git status --porcelain -- "$SNAPSHOT_PATH")" ]; then
+            echo "No Search Console changes; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$SNAPSHOT_PATH"
+          git commit -m "auto: refresh Search Console snapshot"
+          # Rebase-and-retry: other crons commit to main too, and a bare push
+          # loses the race. Each cron writes its own data file, so a rebase
+          # applies cleanly; a genuine conflict still fails loudly.
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            echo "push rejected (main moved) — rebasing, attempt $attempt"
+            git pull --rebase origin "${GITHUB_REF_NAME}" || { echo "rebase conflict — failing"; exit 1; }
+            sleep $((attempt * 5))
+          done
+          # The loop rebases on its last iteration too; publish that commit.
+          git push || { echo "push still failing after 3 rebase attempts"; exit 1; }

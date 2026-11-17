@@ -56,7 +56,7 @@ Thresholds/copy/deep-links/category-targets externalized; audio/podcast/AEO
 rules opt-in. Extracts `strategy.ts`.
 
 ### `@jeldon/cli` — ✅ built (validate + doctor; init/audit/migrate pending)
-`jeldon validate | doctor [--pre] [--json]`. `check-geo-floor`, `audit`,
+`jeldon validate | doctor [--pre] [--online] [--json] | fetch-search-console`. `check-geo-floor`, `audit`,
 `migrate`, and Copier-backed `init` are 🟡. Extracts `check-geo-floor.ts` +
 new code.
 
@@ -70,6 +70,7 @@ new code.
 | `@jeldon/competitive-intel` | ✅ | `competitor-scanner.ts`, `audit-competitors.mjs`, `competitor-gap-report.ts`, `keyword-ranks.ts` | `competitiveIntel` |
 | `@jeldon/crawler-analytics` | ✅ | `ai-crawlers.ts`, `fetch-cf-analytics.mjs`, `article-analytics.ts`, `api/track.ts` | `engagementAnalytics` |
 | `@jeldon/entity-presence` | ✅ (scaffold) | NEW — off-site brand-mention + per-engine citation-pattern signals | `entityPresence` |
+| `@jeldon/search-console` | ✅ | `fetch-search-console.mjs`, `api/admin/command/search.ts`, `api/admin/snippets*.ts` | `searchConsole` |
 
 > `@jeldon/entity-presence` is the one module **not** in the source system. The
 > audit flags off-site mentions as correlating ~3× stronger with AI citation
@@ -98,6 +99,18 @@ pre-read run and runs created before the click minus slack), `dispatchAndWait`.
 loop, and the cron `::warning` pattern. Template ships
 `.github/actions/commit-and-push` (push retry ×3 with `git pull --rebase`) and
 `docs/accuracy-audit-prompt.md`.
+
+### `@jeldon/search-console`
+Service-account auth signed with WebCrypto (Workers-safe; key raw or base64),
+`fetchSearchAnalytics` / `fetchSnapshot` / `listSites` over an injected
+`fetch`. Pure `strikingDistance` and `lowCtr` (curve + thresholds from
+`pack.searchConsole`). Snippet lab: `applySnippetChange` rewrites title/excerpt
+through `Store`, logs the SC numbers at change time (capped), and
+`compareSince` diffs them against current rows; limits come from
+`scoring.seo`. `diagnoseSearchConsoleError` names the fix for the look-alike
+setup failures (empty secret, API not enabled, SA not a user, property-string
+mismatch); anything else is `unattestable`. Backs `jeldon doctor [--online]`
+and `jeldon fetch-search-console` (template cron `fetch-search-console.yml`).
 
 Before extending a package or finishing a `TODO(port)`, read
 `docs/DECOUPLING-NOTES.md` first — it names the exact coupling each module breaks

@@ -51,9 +51,9 @@ Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 4a Striking distance (pos 5–15) + low CTR for position | missing | new `@jeldon/search-console` + strategy rule | M | `searchConsole { propertyEnv, saKeyEnv, rangeDays, strikingDistance, lowCtr { expectedCtrCurve, ratio } }` |
-| 4b Doctor checks for the four look-alike setup failures | missing (doctor makes no network calls) | cli (`doctor --online`) | M | — |
-| 4c Snippet lab | missing | search-console + store | S–M | `searchConsole.snippetLab { logPath, maxEntries }` |
+| 4a Striking distance (pos 5–15) + low CTR for position | **done** (`@jeldon/search-console`, cli doctor) | new `@jeldon/search-console` + strategy rule | M | `searchConsole { propertyEnv, saKeyEnv, rangeDays, strikingDistance, lowCtr { expectedCtrCurve, ratio } }` |
+| 4b Doctor checks for the four look-alike setup failures | **done** (`@jeldon/search-console`, cli doctor) | cli (`doctor --online`) | M | — |
+| 4c Snippet lab | **done** (`@jeldon/search-console`, cli doctor) | search-console + store | S–M | `searchConsole.snippetLab { logPath, maxEntries }` |
 
 ## 5. Ops observability
 

@@ -3,6 +3,7 @@ import { resolveConfigPath, validateDomainPack, loadDomainPack } from '@jeldon/c
 import { runDoctor, type DoctorCheck } from './doctor.js';
 import { runCheckGeoFloor } from './check-geo-floor.js';
 import { runCheckMetaLength } from './check-meta-length.js';
+import { runFetchSearchConsole } from './search-console.js';
 
 const ICON: Record<string, string> = { ok: '✔', warn: '⚠', error: '✖' };
 
@@ -38,7 +39,7 @@ async function main(): Promise<void> {
     }
 
     case 'doctor': {
-      const report = await runDoctor({ pre: hasFlag(rest, '--pre') });
+      const report = await runDoctor({ pre: hasFlag(rest, '--pre'), online: hasFlag(rest, '--online') });
       if (json) {
         console.log(JSON.stringify(report, null, 2));
       } else {
@@ -101,6 +102,17 @@ async function main(): Promise<void> {
       return;
     }
 
+    case 'fetch-search-console': {
+      try {
+        const pack = await loadDomainPack();
+        const { exitCode } = await runFetchSearchConsole(pack, { env: process.env });
+        process.exitCode = exitCode;
+      } catch (err) {
+        fail(err instanceof Error ? err.message : String(err), json);
+      }
+      return;
+    }
+
     case 'init': {
       console.log(
         [
@@ -125,8 +137,10 @@ async function main(): Promise<void> {
           '',
           '  validate                 Validate jeldon.config.ts against the Domain Pack schema',
           '  doctor [--pre]           Run the "wired correctly?" health check (--json for machines)',
+          '         [--online]        Also probe third-party APIs (Search Console token + 1-row query)',
           '  check-geo-floor [file…]  Score articles; fail if any are below their category target',
           '  check-meta-length [file…]  Check title/description length on hand-coded .astro pages',
+          '  fetch-search-console     Refresh the Search Console snapshot (cron step)',
           '  init                     Scaffold a new project (see docs/IMPLEMENTATION.md)',
           '',
           'Flags: --json  machine-readable output',

@@ -389,6 +389,35 @@ const opsConfig = z
     });
   });
 
+const searchConsoleConfig = z.object({
+  propertyEnv: z.string().min(1),
+  saKeyEnv: z.string().min(1),
+  property: z.string().optional(),
+  rangeDays: z.number().int().positive(),
+  lagDays: z.number().int().nonnegative(),
+  rowLimit: z.number().int().positive().max(25000),
+  snapshotPath: z.string().min(1),
+  strikingDistance: z.object({
+    minPosition: z.number().positive(),
+    maxPosition: z.number().positive(),
+    minImpressions: z.number().nonnegative(),
+    limit: z.number().int().positive(),
+  }),
+  lowCtr: z.object({
+    maxPosition: z.number().positive(),
+    minImpressions: z.number().nonnegative(),
+    ratio: z.number().positive(),
+    expectedCtrCurve: z.array(z.number().min(0).max(1)).min(1),
+    limit: z.number().int().positive(),
+  }),
+  snippetLab: z
+    .object({
+      logPath: z.string().min(1),
+      maxEntries: z.number().int().positive(),
+    })
+    .optional(),
+});
+
 export const domainPackSchema = z
   .object({
     brand: z.object({
@@ -449,6 +478,7 @@ export const domainPackSchema = z
     analytics: analyticsConfig.optional(),
     entityPresence: entityPresenceConfig.optional(),
     ops: opsConfig.optional(),
+    searchConsole: searchConsoleConfig.optional(),
     schema: z.object({
       orgType: z.array(z.string()).min(1),
       org: orgProfile,
@@ -506,6 +536,7 @@ export const domainPackSchema = z
       engagementAnalytics: z.boolean().optional(),
       entityPresence: z.boolean().optional(),
       ops: z.boolean().optional(),
+      searchConsole: z.boolean().optional(),
     }),
     services: z.object({
       store: z.enum(['github', 'fs']),

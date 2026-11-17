@@ -782,6 +782,11 @@ export interface DomainPack {
    *  cadence alerts, and on-demand workflow dispatch (@jeldon/ops). Optional —
    *  engine falls back to `defaultOpsConfig`. Gated by `capabilities.ops`. */
   ops?: OpsConfig;
+  /** Google Search Console ingestion + derived signals + snippet lab
+   *  (@jeldon/search-console). Optional — absent means the module is off and
+   *  `jeldon doctor` skips its checks. Gated by `capabilities.searchConsole`.
+   *  Start from `defaultSearchConsoleConfig` and override. */
+  searchConsole?: SearchConsoleConfig;
 
   schema: {
     orgType: string[];
@@ -816,6 +821,8 @@ export interface DomainPack {
     entityPresence?: boolean;
     /** Pipeline freshness strip, attention feed, workflow dispatch (@jeldon/ops). */
     ops?: boolean;
+    /** Search Console snapshot, striking-distance / low-CTR tables, snippet lab. */
+    searchConsole?: boolean;
   };
 
   /** Required services + env. `jeldon doctor` verifies these. */
@@ -926,4 +933,63 @@ export interface OpsConfig {
    *  `newsletter`, `autonomous`, `hero`, …). The engine has no admin routes of
    *  its own, so items carry no link unless one is set here or by the caller. */
   links?: Record<string, OpsLink>;
+}
+
+// ---------------------------------------------------------------------------
+// Search Console (consumed by @jeldon/search-console + `jeldon doctor`)
+// ---------------------------------------------------------------------------
+
+/** Queries ranking just off page 1, where one good edit moves them up. */
+export interface StrikingDistanceConfig {
+  /** Inclusive position band. BoH: 5–15. */
+  minPosition: number;
+  maxPosition: number;
+  /** Ignore rows with fewer impressions than this (noise). BoH: 10. */
+  minImpressions: number;
+  /** Max rows returned, sorted by impressions desc. BoH: 15. */
+  limit: number;
+}
+
+/** Pages on page 1 whose CTR is well below what their position should earn. */
+export interface LowCtrConfig {
+  /** Only rows at or above this position (1 = top). BoH: 10 (page 1). */
+  maxPosition: number;
+  minImpressions: number;
+  /** Flag when `ctr < ratio * expectedCtr(position)`. BoH: 0.6. */
+  ratio: number;
+  /** Expected organic CTR by rounded position: index 0 is position 1. A
+   *  position past the end uses the last value. Rough, blended — it flags
+   *  anomalies, it does not forecast. */
+  expectedCtrCurve: number[];
+  limit: number;
+}
+
+export interface SnippetLabConfig {
+  /** Repo-relative JSON file the change log lives in (via Store.saveDataFile). */
+  logPath: string;
+  /** Newest entries kept; older ones fall off. BoH: 200. */
+  maxEntries: number;
+}
+
+export interface SearchConsoleConfig {
+  /** Env var holding the property id (`sc-domain:example.com` or
+   *  `https://example.com/`). Ignored when `property` is set. */
+  propertyEnv: string;
+  /** Env var holding the service-account JSON key, raw or base64. */
+  saKeyEnv: string;
+  /** Property id inline, when it is not a secret. Overrides `propertyEnv`. */
+  property?: string;
+  /** Lookback window in days. */
+  rangeDays: number;
+  /** Days to end the window before today (GSC data lags ~2–3 days). */
+  lagDays: number;
+  /** Rows per dimension query. */
+  rowLimit: number;
+  /** Repo-relative path the snapshot is written to by the cron. */
+  snapshotPath: string;
+  strikingDistance: StrikingDistanceConfig;
+  lowCtr: LowCtrConfig;
+  /** Inline title/excerpt edits logged with the SC numbers at change time.
+   *  Title/excerpt limits come from `scoring.seo`, not from here. */
+  snippetLab?: SnippetLabConfig;
 }
