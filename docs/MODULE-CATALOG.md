@@ -65,7 +65,7 @@ new code.
 | Package | Status | Extracts from | Capability flag |
 |---|---|---|---|
 | `@jeldon/drafting` | ✅ | `author.ts`, `site-knowledge.ts`, `voice-memory.ts`, `priority-keywords.ts`, `chat.ts` | `drafting` |
-| `@jeldon/amplify` | ✅ | amplify/carousel/newsletter endpoints, `brevo-campaigns.ts`, `auto-newsletter.mjs` | `amplify` |
+| `@jeldon/amplify` | ✅ | amplify, carousel-import and newsletter-schedule endpoints, `brevo-campaigns.ts`, `auto-newsletter.mjs` | `amplify` |
 | `@jeldon/media` | ✅ | `narration.ts`, audio/image routes, `podcast.xml.ts`, R2 proxies | `audio`, `heroImages` |
 | `@jeldon/competitive-intel` | ✅ | `competitor-scanner.ts`, `audit-competitors.mjs`, `competitor-gap-report.ts`, `keyword-ranks.ts` | `competitiveIntel` |
 | `@jeldon/crawler-analytics` | ✅ | `ai-crawlers.ts`, `fetch-cf-analytics.mjs`, `article-analytics.ts`, `api/track.ts` | `engagementAnalytics` |

@@ -25,7 +25,7 @@ intentional gaps — not unfinished scaffolding.
 | `@jeldon/verify` | ✅ built | `ClaimVerifier` + cite8/null/primary-source; `lintCitations`. |
 | `@jeldon/strategy` | ✅ built | Deterministic recommendations; thresholds/copy/links externalized to `StrategyConfig`. |
 | `@jeldon/drafting` | ✅ built | Score→verify→fix-pass loop; LLM provider fully injectable; voice from `pack.voice`. Controlled-vocabulary tag generation (`content.tags`) + hero concept/alt-text/image generation (`LlmConceptProposer`, `generateHeroForDraft`), both wired into the draft loop. |
-| `@jeldon/amplify` | ✅ built | Channel kit + Brevo client + carousel sidecar; one voice block. |
+| `@jeldon/amplify` | ✅ built | Channel kit (incl. reel script + educational-CTA policy), Brevo client + "Queue in Brevo" scheduling, carousel-studio hand-off (in-page carousel retired); one voice block. |
 | `@jeldon/media` | ✅ built | Narration core + TTS/image behind interfaces + podcast feed. Hero-concept proposer now wired (via `@jeldon/drafting`'s `LlmConceptProposer`). `TODO(port)`: the audio pronunciation pre-pass. |
 | `@jeldon/competitive-intel` | ✅ built | One bundled scanner core (kills TS/JS dup) + gap report + rank tracking. |
 | `@jeldon/crawler-analytics` | ✅ built | UA classifier + `AnalyticsProvider` (CF/null). `TODO(port)`: CF Web-Vitals introspection query. |

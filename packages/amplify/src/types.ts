@@ -4,7 +4,7 @@ import type { LlmEffort } from '@jeldon/config';
  * @jeldon/amplify types.
  *
  * The article shape the kit reads is intentionally narrow — slug + the
- * frontmatter/body fields the BoH amplify/carousel/newsletter endpoints
+ * frontmatter/body fields the BoH amplify/newsletter endpoints
  * actually used. A host adapts its own article record to this.
  */
 
@@ -40,27 +40,6 @@ export interface RegenerateChannelResult {
   channel: string;
   text: string;
   meta: { url: string; title: string; isDraft: boolean };
-  model: string;
-  usage?: LlmUsage;
-}
-
-/** One carousel text slide as the model returns it. */
-export interface CarouselSlide {
-  kicker?: string;
-  body: string;
-  footer?: string;
-}
-
-export interface GenerateCarouselResult {
-  schemeId: string;
-  scheme: { id: string; label: string; bg: string; fg: string; accent: string };
-  schemes: Array<{ id: string; label: string; bg: string; fg: string; accent: string }>;
-  slides: CarouselSlide[];
-  heroImage: string | null;
-  heroImageAlt: string | null;
-  title: string;
-  slug: string;
-  articleUrl: string;
   model: string;
   usage?: LlmUsage;
 }

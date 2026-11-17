@@ -28,7 +28,17 @@ export function buildKitSystem(pack: Pick<DomainPack, 'voice' | 'brand' | 'ampli
   const amplify = resolveAmplify(pack);
   const voiceBlock = buildVoiceBlock(pack);
   const channelGuidance = amplify.channels.map((c) => c.guidance).join('\n\n');
-  return `${amplify.systemPreamble}\n\n${voiceBlock}\n\nChannel-specific guidance:\n\n${channelGuidance}`;
+  return `${amplify.systemPreamble}\n\n${voiceBlock}\n\nChannel-specific guidance:\n\n${channelGuidance}${ctaPolicyBlock(amplify)}`;
+}
+
+/** The educational-CTA rule for the channels `ctaPolicy` names. Empty when
+ *  no policy is set or none of its channels are in the kit. */
+export function ctaPolicyBlock(amplify: AmplifyConfig): string {
+  const policy = amplify.ctaPolicy;
+  if (!policy) return '';
+  const labels = amplify.channels.filter((c) => policy.channels.includes(c.id)).map((c) => c.label);
+  if (!labels.length) return '';
+  return `\n\nCTA RULE for ${labels.join(', ')} (non-negotiable): this is education, not an ad. The call to action must be one of: ${policy.allowed.join('; ')}. It must never be: ${policy.banned.join('; ')}. If a draft ends with a banned CTA, rewrite it.`;
 }
 
 function buildFullKitTool(channels: AmplifyChannel[]): LlmTool {

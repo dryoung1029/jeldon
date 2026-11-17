@@ -332,16 +332,37 @@ export interface AmplifyChannel {
   noUrl?: boolean;
 }
 
-/** One high-contrast carousel color scheme (BoH `COLOR_SCHEMES`). */
-export interface CarouselScheme {
-  id: string;
-  label: string;
-  bg: string;
-  fg: string;
-  accent: string;
+/** Rules for a call to action that must stay educational (reel scripts,
+ *  short video). Injected into the kit prompt for the listed channels. */
+export interface CtaPolicy {
+  /** Channel ids the policy applies to, e.g. ["reelScript"]. */
+  channels: string[];
+  /** Allowed CTA kinds, e.g. "follow for more", "save this", "ask in the comments". */
+  allowed: string[];
+  /** CTA kinds that are never acceptable, e.g. "book an appointment". */
+  banned: string[];
 }
 
-/** Config for the amplification kit + IG carousel + newsletter content gen.
+/** Hand-off to an external carousel renderer (BoH: Carousel Studio,
+ *  docs/carousel-studio-import-contract.md). The engine sends the article; the
+ *  studio owns generation, layout and export. Secrets stay in env. */
+export interface CarouselStudioConfig {
+  /** Studio base URL, e.g. "https://studio.example". */
+  baseUrl: string;
+  /** Brand id configured on the studio side (voice + palette live there). */
+  brandId: string;
+  /** Prefix for the upsert key; the project id is `<prefix>-<slug>`. */
+  projectIdPrefix: string;
+  /** Optional scheme name; omit for the brand default. */
+  schemeName?: string;
+  /** Env var names for the service-token pair sent as CF-Access-Client-Id / -Secret. */
+  clientIdEnv: string;
+  clientSecretEnv: string;
+  /** Request timeout. Default 88000 (stays under a ~100 s edge ceiling). */
+  timeoutMs?: number;
+}
+
+/** Config for the amplification kit + newsletter content gen.
  *  Optional on the pack — `@jeldon/amplify` falls back to `defaultAmplifyConfig`. */
 export interface AmplifyConfig {
   /** Distribution channels the full kit produces. */
@@ -350,16 +371,15 @@ export interface AmplifyConfig {
    *  The voice block itself comes from `pack.voice` — this is just the
    *  "you are a content distribution editor for X" framing. */
   systemPreamble: string;
-  /** IG carousel color schemes (the model picks one, the host renders it). */
-  carouselSchemes: CarouselScheme[];
-  /** The carousel design system prompt (hook/reveal/payoff playbook). Domain
-   *  voice still injected from `pack.voice`; this is the structural craft. */
-  carouselGuidance: string;
   /** Newsletter content spec: the subject/body shape paragraph. */
   newsletterGuidance: string;
-  /** Repo-relative dir holding `<slug>.json` carousel sidecars. Default
-   *  `src/data/carousel-state`. */
-  carouselStateDir?: string;
+  /** Educational-CTA rules for channels like reel scripts. */
+  ctaPolicy?: CtaPolicy;
+  /** External carousel studio hand-off. Absent = no carousel surface. */
+  carouselStudio?: CarouselStudioConfig;
+  /** Newsletter send slot: the next `sendHour`:00 in `content.timezone`, at
+   *  least `floorHours` from now. Default 10 / 4. */
+  newsletter?: { sendHour?: number; floorHours?: number };
 }
 
 // ---------------------------------------------------------------------------

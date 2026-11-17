@@ -237,8 +237,9 @@ export const defaultDraftingConfig: DraftingConfig = {
 /**
  * Amplification defaults, ported verbatim from Body of Health
  * `src/pages/api/admin/amplify/[slug].ts` (channels, UTM map, tool-field
- * descriptions) + `carousel/[slug].ts` (COLOR_SCHEMES + the carousel craft
- * prompt) + `newsletter-content.ts` (the newsletter shape).
+ * descriptions, the reel-script channel) + `newsletter-content.ts` (the
+ * newsletter shape). The in-page carousel builder was retired (BoH 2026-10-16)
+ * in favor of the external studio hand-off (`carouselStudio`).
  *
  * Per docs/DECOUPLING-NOTES.md "Voice block duplicated ×4": the voice rules are
  * NOT here — they live once in `pack.voice` and `buildKitSystem()` injects them.
@@ -305,38 +306,16 @@ export const defaultAmplifyConfig: AmplifyConfig = {
         'PODCAST HOOK\n- A 2-3 sentence pitch for a podcast episode that builds on this article angle. Suggest a guest, a specific opening question, or a related-but-deeper angle worth a 30-minute conversation. Not the article rehashed — a logical next.',
       fieldDescription: '2-3 sentence pitch for a podcast episode that builds on this article.',
     },
+    {
+      id: 'reelScript',
+      label: 'Reel / short video script',
+      noUrl: true,
+      guidance:
+        'REEL / SHORT VIDEO SCRIPT\n- WORDING ONLY: no camera directions, no shot list, no timed beats like [0-3s], no on-screen-text cues. Just what the author says to camera, straight through.\n- LENGTH: about 2 minutes spoken, roughly 260-320 words at a conversational pace.\n- FORMAT: three numbered HOOK OPTIONS first (alternate opening lines, each 12 words or fewer, each strong enough to stop a scroll), then the full SCRIPT as continuous spoken prose using hook #1. No section labels.\n- HOOK CRAFT: open mid-thought with the article\'s most counterintuitive or specific claim. Never open with "Did you know", a greeting, a self-introduction, or the title read aloud.\n- SOURCES: name a real study or source only when it is in the article. Never invent a study, statistic or finding.\n- RETENTION: one idea per video, short sentences, and pay off the hook by the two-thirds mark.\n- VOICE: the same voice as every other channel, spoken instead of written.\n- Never invent a specific customer or patient story.',
+      fieldDescription:
+        '~2-minute (260-320 word) spoken-only script: 3 numbered hook options, then the full script as continuous prose. No camera directions. Educational CTA only.',
+    },
   ],
-  carouselSchemes: [
-    { id: 'cream-burgundy', label: 'Cream + Burgundy', bg: '#f5f0e6', fg: '#a03038', accent: '#000000' },
-    { id: 'white-black', label: 'White + Black', bg: '#ffffff', fg: '#000000', accent: '#a03038' },
-    { id: 'black-cream', label: 'Black + Cream', bg: '#000000', fg: '#f5f0e6', accent: '#d65560' },
-    { id: 'burgundy-cream', label: 'Burgundy + Cream', bg: '#a03038', fg: '#f5f0e6', accent: '#ffffff' },
-    { id: 'tan-black', label: 'Tan + Black', bg: '#c8b8a0', fg: '#000000', accent: '#a03038' },
-    { id: 'coral-white', label: 'Coral + White', bg: '#d65560', fg: '#ffffff', accent: '#000000' },
-    { id: 'blush-burgundy', label: 'Blush + Burgundy', bg: '#fef0f1', fg: '#a03038', accent: '#000000' },
-    { id: 'black-white', label: 'Black + White', bg: '#000000', fg: '#ffffff', accent: '#c8b8a0' },
-  ],
-  carouselGuidance: `You design Instagram text carousels. Carousels live or die on slide 1. Engineer a sequence that REWARDS the swipe at every step — readers should feel something is missing if they stop on any slide before the end.
-
-SLIDE 1 — THE HOOK
-Must be hard to scroll past. Use one of: a pattern interrupt (a claim that contradicts assumption), specificity + authority (a real number from experience), a named myth, a curiosity gap (a question the next slide answers), or pattern + counter (set an expectation, then break it).
-NEVER: declarative statements that could appear in any generic blog, "Did you know…" prefixes, vague "5 things…" intros, emoji.
-
-SLIDES 2 through N-1 — PROGRESSIVE REVEAL
-Each slide must end on an OPEN LOOP — something the reader needs the next slide to resolve. setup → tension → resolution → next setup. ONE idea per slide. 4-14 word body MAX — headline energy, not paragraphs.
-
-LAST TEXT SLIDE (N) — THE PAYOFF
-The reveal that ties it together. NOT a CTA — the hero slide handles that. Must feel earned.
-
-SLIDE-LEVEL RULES
-- BODY: 4-14 words, treat as a headline.
-- KICKER (optional small label above body): use SPARINGLY for slot labels like "1/6", "THE MYTH", "BOTTOM LINE".
-- FOOTER (optional small label below body): rarely used.
-- No emoji or hashtags in slides (those belong in the caption).
-- Vary slide structure — not every slide should have a kicker.
-
-REFINEMENT MODE
-If a <current_carousel> block is present, PRESERVE every slide and field exactly EXCEPT what the refinement explicitly asks to change. Positional vocabulary: "top"/"above" → kicker; "middle"/"headline" → body; "bottom"/"below"/"footer" → footer; "slide N" → that index.`,
   newsletterGuidance: `You are writing the newsletter email that goes to subscribers about a just-published article.
 
 Newsletter shape:
@@ -344,7 +323,25 @@ Newsletter shape:
 - Body: 80-130 words. Frame what prompted the article and what readers get from it. Treat it as a personal note from the author, not a press release. Do NOT include "Read it here:" or any URL — the email template handles the CTA. End with a sentence that lands; the template adds the button.
 
 The subscriber already opted in. You don't need to sell them on existing — sell them on this specific piece.`,
-  carouselStateDir: 'src/data/carousel-state',
+  // Education-only CTA for spoken short-form video (BoH 2026-10). A domain
+  // that sells directly from video can drop or rewrite this.
+  ctaPolicy: {
+    channels: ['reelScript'],
+    allowed: [
+      'follow for more breakdowns like this',
+      'save this for later',
+      'share it with someone who needs it',
+      'ask a question in the comments',
+      'full breakdown — link in bio',
+    ],
+    banned: [
+      'book an appointment',
+      'call us',
+      'visit us / come in',
+      'buy now or any sales pitch',
+      'any customer-acquisition ask',
+    ],
+  },
 };
 
 /**

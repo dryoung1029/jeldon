@@ -165,20 +165,24 @@ const amplifyConfig = z.object({
     )
     .min(1),
   systemPreamble: z.string(),
-  carouselSchemes: z
-    .array(
-      z.object({
-        id: z.string(),
-        label: z.string(),
-        bg: z.string(),
-        fg: z.string(),
-        accent: z.string(),
-      }),
-    )
-    .min(1),
-  carouselGuidance: z.string(),
   newsletterGuidance: z.string(),
-  carouselStateDir: z.string().optional(),
+  ctaPolicy: z
+    .object({ channels: z.array(z.string()), allowed: z.array(z.string()), banned: z.array(z.string()) })
+    .optional(),
+  carouselStudio: z
+    .object({
+      baseUrl: z.string().url(),
+      brandId: z.string().min(1),
+      projectIdPrefix: z.string().min(1),
+      schemeName: z.string().optional(),
+      clientIdEnv: z.string().min(1),
+      clientSecretEnv: z.string().min(1),
+      timeoutMs: z.number().int().positive().optional(),
+    })
+    .optional(),
+  newsletter: z
+    .object({ sendHour: z.number().int().min(0).max(23).optional(), floorHours: z.number().nonnegative().optional() })
+    .optional(),
 });
 
 const mediaConfig = z.object({

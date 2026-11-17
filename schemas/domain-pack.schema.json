@@ -1262,53 +1262,98 @@
         "systemPreamble": {
           "type": "string"
         },
-        "carouselSchemes": {
-          "minItems": 1,
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "label": {
-                "type": "string"
-              },
-              "bg": {
-                "type": "string"
-              },
-              "fg": {
-                "type": "string"
-              },
-              "accent": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "id",
-              "label",
-              "bg",
-              "fg",
-              "accent"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "carouselGuidance": {
-          "type": "string"
-        },
         "newsletterGuidance": {
           "type": "string"
         },
-        "carouselStateDir": {
-          "type": "string"
+        "ctaPolicy": {
+          "type": "object",
+          "properties": {
+            "channels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "allowed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "banned": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "channels",
+            "allowed",
+            "banned"
+          ],
+          "additionalProperties": false
+        },
+        "carouselStudio": {
+          "type": "object",
+          "properties": {
+            "baseUrl": {
+              "type": "string",
+              "format": "uri"
+            },
+            "brandId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "projectIdPrefix": {
+              "type": "string",
+              "minLength": 1
+            },
+            "schemeName": {
+              "type": "string"
+            },
+            "clientIdEnv": {
+              "type": "string",
+              "minLength": 1
+            },
+            "clientSecretEnv": {
+              "type": "string",
+              "minLength": 1
+            },
+            "timeoutMs": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "baseUrl",
+            "brandId",
+            "projectIdPrefix",
+            "clientIdEnv",
+            "clientSecretEnv"
+          ],
+          "additionalProperties": false
+        },
+        "newsletter": {
+          "type": "object",
+          "properties": {
+            "sendHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 23
+            },
+            "floorHours": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
         }
       },
       "required": [
         "channels",
         "systemPreamble",
-        "carouselSchemes",
-        "carouselGuidance",
         "newsletterGuidance"
       ],
       "additionalProperties": false
