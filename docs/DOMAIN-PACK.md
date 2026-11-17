@@ -73,6 +73,26 @@ queries audited), `engines` (`perplexity` | `anthropic` | `google-aio` |
 text), `defaultModel`, `utilityModel`, `effort` (per-purpose
 `low`/`medium`/`high`/`max`, with a `default`), `maxTokens` per mode (thinking
 counts toward these, so leave headroom), `draftFloor`, `wordCountTarget`.
+Optional `autonomous` (`source`, `maxDraftsPerRun`, `digestDays`,
+`relevance { topics, requireTopic, requirePriorityKeyword }`, `category`,
+`coverageTitleChars`, `promptTemplate`): absent means the autonomous runner
+reports `not_configured`. Optional `backlinks` (`chunkSize` default 8,
+`internalPathPrefix`, `maxTokens`, `minAnchorChars`).
+
+### `ideation` (optional)
+`transcriptMiner` (`maxChars` 200 000, `minChars` 400, `publishedSourceNoun`,
+`listenCalloutLabel`, `maxProposals`, `privateSourceGuidance`,
+`publishedSourceGuidance`, `anchorEverySeconds`, `maxTokens`, `model`) and
+`backlog.path`. Gated by `capabilities.ideation`.
+
+### `listening` (optional)
+`reddit`: `geoSubreddits`, `conditionSubreddits`, `brandTerms`,
+`genericPhraseExclusions` (falls back to `aeo.brandMentionExclusions`),
+`serviceKeywords`, `targetSearches`, `retentionDays`, `maxItems`,
+`archivedAfterDays` (175), `staleAfterDays`, `stalePenalty`, `recency` bands,
+`competitorMinNameLength`, `maxTargets`, `userAgent`, request pacing. Competitor
+names come from `competitors.roster`. Read-only: nothing in the engine posts.
+Gated by `capabilities.listening`.
 
 ### `analytics` (optional)
 `refererChannelMap` rules match the referer **hostname**, never a substring:
@@ -99,7 +119,7 @@ here, never in the engine.**
 
 ### `capabilities`
 Booleans gating growth surfaces: `drafting`, `amplify`, `audio`, `heroImages`,
-`competitiveIntel`, `engagementAnalytics`, `entityPresence`. Turn on only what
+`competitiveIntel`, `engagementAnalytics`, `entityPresence`, `ideation`, `listening`. Turn on only what
 you use; disabled surfaces are absent from the build.
 
 ### `services`

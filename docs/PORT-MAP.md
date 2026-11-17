@@ -81,11 +81,11 @@ Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 7a Transcript miner (URL or paste; private-source prompt; conditional timestamp) | missing | new `@jeldon/ideation` | M | `ideation.transcriptMiner { maxChars, privateSourceGuidance }` |
-| 7b Reddit listening → briefs | missing | ideation (+ 2b) | M–L | `listening.reddit { subreddits, brandTerms, genericPhraseExclusions, recency, archivedAfterDays }` |
-| 7c Autonomous drafting from a research digest | missing | drafting runner + verify digest adapter + template cron | M | `drafting.autonomous { source, maxDraftsPerRun, relevance }` |
-| 7d Backlink finder | missing | drafting (`backlinks.ts`) | M | `drafting.backlinks { chunkSize, internalPathPrefix }` |
-| 7e Backlog whitelist lesson | missing (no backlog) | ideation: one Zod `TopicEntry` schema for reader and writer | S | — |
+| 7a Transcript miner (URL or paste; private-source prompt; conditional timestamp) | done (`@jeldon/ideation`) | new `@jeldon/ideation` | M | `ideation.transcriptMiner { maxChars, privateSourceGuidance }` |
+| 7b Reddit listening → briefs | done (`@jeldon/ideation`) | ideation (+ 2b) | M–L | `listening.reddit { subreddits, brandTerms, genericPhraseExclusions, recency, archivedAfterDays }` |
+| 7c Autonomous drafting from a research digest | done (`@jeldon/drafting` runner, `@jeldon/verify` digest adapter; template cron not added) | drafting runner + verify digest adapter + template cron | M | `drafting.autonomous { source, maxDraftsPerRun, relevance }` |
+| 7d Backlink finder | done (`@jeldon/drafting`) | drafting (`backlinks.ts`) | M | `drafting.backlinks { chunkSize, internalPathPrefix }` |
+| 7e Backlog whitelist lesson | done (`@jeldon/ideation`) | ideation: one Zod `TopicEntry` schema for reader and writer | S | — |
 
 ## 8. Amplify
 

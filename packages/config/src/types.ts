@@ -438,6 +438,12 @@ export interface DraftingConfig {
    *  voice default verbatim. Lets a domain hand-author a prompt if the
    *  voice-derived default isn't enough. */
   promptOverrides?: Record<string, string>;
+  /** Unattended drafting from a research digest (`runAutonomousDrafts`).
+   *  Absent = the runner reports `not_configured` and drafts nothing. */
+  autonomous?: AutonomousDraftingConfig;
+  /** Backlink finder knobs (`proposeBacklinks`). Default:
+   *  `defaultBacklinksConfig`. */
+  backlinks?: BacklinksConfig;
 }
 
 // ---------------------------------------------------------------------------
@@ -739,6 +745,15 @@ export interface DomainPack {
    *  `defaultEntityPresenceConfig`. Gated by `capabilities.entityPresence`. */
   entityPresence?: EntityPresenceConfig;
 
+  /** Transcript miner + topic backlog (@jeldon/ideation). Optional — engine
+   *  falls back to `defaultIdeationConfig`. Gated by `capabilities.ideation`. */
+  ideation?: IdeationConfig;
+
+  /** Read-only community listening (@jeldon/ideation's Reddit radar). Optional;
+   *  absent = the radar reports `not_configured`. Gated by
+   *  `capabilities.listening`. Nothing in the engine posts anywhere. */
+  listening?: ListeningConfig;
+
   schema: {
     orgType: string[];
     org: OrgProfile;
@@ -770,6 +785,10 @@ export interface DomainPack {
     competitiveIntel?: boolean;
     engagementAnalytics?: boolean;
     entityPresence?: boolean;
+    /** Topic ideation: transcript miner + topic backlog (@jeldon/ideation). */
+    ideation?: boolean;
+    /** Read-only community listening (Reddit radar → briefs, @jeldon/ideation). */
+    listening?: boolean;
   };
 
   /** Required services + env. `jeldon doctor` verifies these. */
@@ -782,4 +801,161 @@ export interface DomainPack {
     analytics?: 'cloudflare' | 'none';
     requiredEnv: string[];
   };
+}
+
+// ---------------------------------------------------------------------------
+// Ideation, listening, autonomous drafting, backlinks
+// (consumed by @jeldon/ideation and @jeldon/drafting)
+// ---------------------------------------------------------------------------
+
+/**
+ * Transcript miner (BoH `topics/episode.ts`). Mines spoken material for
+ * article proposals. Two source shapes: a published recording with a public
+ * URL (articles cross-promote it) and a private recording (nothing to link;
+ * off-the-cuff statements are not citations).
+ */
+export interface TranscriptMinerConfig {
+  /** Reject a pasted transcript longer than this. BoH: 200 000. */
+  maxChars: number;
+  /** Reject a pasted transcript shorter than this. BoH: 400. */
+  minChars: number;
+  /** What a published source is called in prompts ("episode", "talk"). */
+  publishedSourceNoun: string;
+  /** Label of the callout an article uses to point at a published source. */
+  listenCalloutLabel: string;
+  /** Proposal ceiling stated in the prompt, per source shape. */
+  maxProposals: { published: number; private: number };
+  /** Extra guidance appended to the private-recording SOURCE MATERIAL block. */
+  privateSourceGuidance?: string;
+  /** Extra guidance appended to the published-source CROSS-PROMOTION block. */
+  publishedSourceGuidance?: string;
+  /** Seconds between `[m:ss]` anchors when formatting a fetched transcript. BoH: 60. */
+  anchorEverySeconds: number;
+  /** Max output tokens for the mining call (thinking counts). BoH: 8000. */
+  maxTokens: number;
+  /** Model alias (key into `drafting.models`). Default: `drafting.defaultModel`. */
+  model?: string;
+}
+
+/** Topic backlog persistence (BoH `src/data/topic-backlog.json`). */
+export interface TopicBacklogConfig {
+  /** Repo-relative path of the backlog JSON data file. */
+  path: string;
+}
+
+export interface IdeationConfig {
+  transcriptMiner: TranscriptMinerConfig;
+  backlog: TopicBacklogConfig;
+}
+
+/** One recency band for Reddit target scoring: threads at most `maxDays` old get `bonus`. */
+export interface RecencyBand {
+  maxDays: number;
+  bonus: number;
+  label: string;
+}
+
+/** An all-time-top search inside one subreddit (BoH `targetSearches`). */
+export interface RedditTargetSearch {
+  sub: string;
+  query: string;
+}
+
+/**
+ * Reddit radar (BoH `fetch-reddit-radar.mjs` + `command/reddit.ts`). READ
+ * ONLY: the engine reads public listing/search endpoints and never posts.
+ * Competitor names come from `competitors.roster`, not from here.
+ */
+export interface RedditListeningConfig {
+  /** Local/geo subreddits whose new posts are filtered by brand/competitor/service terms. */
+  geoSubreddits: string[];
+  /** Topic subreddits whose weekly top questions feed ideation. */
+  conditionSubreddits: string[];
+  /** Brand/name terms. Word-boundary matched (`mentionsTerm`). */
+  brandTerms: string[];
+  /** Generic phrasings that contain a brand term but are not a mention, keyed
+   *  by term (regex sources). Falls back to `aeo.brandMentionExclusions`. */
+  genericPhraseExclusions?: Record<string, string[]>;
+  /** Service terms that make a geo-sub post a local opportunity. */
+  serviceKeywords: string[];
+  /** All-time-top searches per sub for the money queries. */
+  targetSearches: RedditTargetSearch[];
+  /** Drop fresh-listening items older than this (evergreen exempt). BoH: 120. */
+  retentionDays: number;
+  /** Snapshot size cap. BoH: 500. */
+  maxItems: number;
+  /** A thread older than this is likely archived (no replies possible). BoH: 175. */
+  archivedAfterDays: number;
+  /** Past this age a thread is a topic source, not a reply target. BoH: 365. */
+  staleAfterDays: number;
+  /** Penalty applied past `staleAfterDays`. BoH: 35. */
+  stalePenalty: number;
+  /** Graded recency bonus, ascending `maxDays`. */
+  recency: RecencyBand[];
+  /** Competitor names shorter than this are skipped (too ambiguous). BoH: 6. */
+  competitorMinNameLength: number;
+  /** Ranked targets returned. BoH: 20. */
+  maxTargets: number;
+  /** Descriptive User-Agent sent to Reddit. `{siteUrl}` is replaced with `brand.siteUrl`. */
+  userAgent: string;
+  /** Delay between requests. BoH: 2000 ms. */
+  requestDelayMs: number;
+  /** RSS 429 backoff step (multiplied by attempt). BoH: 30 000 ms. */
+  rssRetryMs: number;
+  /** Total retry budget per run. BoH: 8 min. */
+  retryBudgetMs: number;
+  /** Max RSS retries per source. BoH: 3. */
+  maxRssRetries: number;
+  /** Model alias for the brief call. Default: `drafting.defaultModel`. */
+  model?: string;
+  /** Max output tokens for the brief call. BoH: 8000. */
+  maxTokens: number;
+}
+
+export interface ListeningConfig {
+  reddit?: RedditListeningConfig;
+}
+
+/**
+ * Autonomous drafting from a research digest (BoH `fetch-cite8-digest.mjs`).
+ * Drafts land as `draft: true` + `autonomous: true` for human review; the
+ * runner never publishes.
+ */
+export interface AutonomousDraftingConfig {
+  /** Digest adapter id (`cite8`, or a host-supplied one). `none` disables. */
+  source: 'none' | 'cite8' | (string & {});
+  /** Hard cap on drafts per run. BoH: 2. */
+  maxDraftsPerRun: number;
+  /** Digest window in days. BoH: 7. */
+  digestDays: number;
+  relevance: {
+    /** Service/topic terms a study must concern (BoH's service taxonomy). */
+    topics: string[];
+    /** Require a topic hit. BoH: true. */
+    requireTopic: boolean;
+    /** Require a competitor priority-keyword hit. BoH: true. */
+    requirePriorityKeyword: boolean;
+  };
+  /** Category the prompt asks for. Omit to let the model pick from `content.categories`. */
+  category?: string;
+  /** Leading title characters used for the existing-coverage check. BoH: 40. */
+  coverageTitleChars: number;
+  /** Full override of the per-document drafting prompt. Placeholders:
+   *  `{title}`, `{journal}`, `{year}`, `{identifiers}`, `{url}`, `{evidence}`,
+   *  `{brand}`, `{category}`. */
+  promptTemplate?: string;
+}
+
+/** Backlink finder (BoH `backlinks/[slug].ts`). */
+export interface BacklinksConfig {
+  /** Candidate articles per model call. BoH: 8 (one big call truncated). */
+  chunkSize: number;
+  /** Path prefix of an internal article link, e.g. `/articles/`. */
+  internalPathPrefix: string;
+  /** Max output tokens per chunk call. BoH: 8000. */
+  maxTokens: number;
+  /** Shortest anchor accepted. BoH: 2. */
+  minAnchorChars: number;
+  /** Model alias. Default: `drafting.defaultModel`. */
+  model?: string;
 }

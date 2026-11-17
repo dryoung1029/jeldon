@@ -129,6 +129,77 @@ const competitorsConfig = z.object({
     .optional(),
 });
 
+// --- Ideation, listening, autonomous drafting, backlinks ---------------------
+
+const autonomousDraftingConfig = z.object({
+  source: z.string(),
+  maxDraftsPerRun: z.number().int().min(0),
+  digestDays: z.number().int().positive(),
+  relevance: z.object({
+    topics: z.array(z.string()),
+    requireTopic: z.boolean(),
+    requirePriorityKeyword: z.boolean(),
+  }),
+  category: z.string().optional(),
+  coverageTitleChars: z.number().int().positive(),
+  promptTemplate: z.string().optional(),
+});
+
+const backlinksConfig = z.object({
+  chunkSize: z.number().int().positive(),
+  internalPathPrefix: z.string().min(1),
+  maxTokens: z.number().int().positive(),
+  minAnchorChars: z.number().int().positive(),
+  model: z.string().optional(),
+});
+
+const ideationConfig = z.object({
+  transcriptMiner: z.object({
+    maxChars: z.number().int().positive(),
+    minChars: z.number().int().min(0),
+    publishedSourceNoun: z.string().min(1),
+    listenCalloutLabel: z.string().min(1),
+    maxProposals: z.object({
+      published: z.number().int().positive(),
+      private: z.number().int().positive(),
+    }),
+    privateSourceGuidance: z.string().optional(),
+    publishedSourceGuidance: z.string().optional(),
+    anchorEverySeconds: z.number().int().positive(),
+    maxTokens: z.number().int().positive(),
+    model: z.string().optional(),
+  }),
+  backlog: z.object({ path: z.string().min(1) }),
+});
+
+const listeningConfig = z.object({
+  reddit: z
+    .object({
+      geoSubreddits: z.array(z.string()),
+      conditionSubreddits: z.array(z.string()),
+      brandTerms: z.array(z.string()),
+      genericPhraseExclusions: z.record(z.string(), z.array(z.string())).optional(),
+      serviceKeywords: z.array(z.string()),
+      targetSearches: z.array(z.object({ sub: z.string(), query: z.string() })),
+      retentionDays: z.number().int().positive(),
+      maxItems: z.number().int().positive(),
+      archivedAfterDays: z.number().int().positive(),
+      staleAfterDays: z.number().int().positive(),
+      stalePenalty: z.number(),
+      recency: z.array(z.object({ maxDays: z.number(), bonus: z.number(), label: z.string() })),
+      competitorMinNameLength: z.number().int().min(0),
+      maxTargets: z.number().int().positive(),
+      userAgent: z.string().min(1),
+      requestDelayMs: z.number().int().min(0),
+      rssRetryMs: z.number().int().min(0),
+      retryBudgetMs: z.number().int().min(0),
+      maxRssRetries: z.number().int().min(0),
+      model: z.string().optional(),
+      maxTokens: z.number().int().positive(),
+    })
+    .optional(),
+});
+
 const draftingConfig = z.object({
   models: z.record(z.string(), z.string()),
   defaultModel: z.string(),
@@ -149,6 +220,8 @@ const draftingConfig = z.object({
     chat: z.number().int().positive(),
   }),
   promptOverrides: z.record(z.string(), z.string()).optional(),
+  autonomous: autonomousDraftingConfig.optional(),
+  backlinks: backlinksConfig.optional(),
 });
 
 const amplifyConfig = z.object({
@@ -369,6 +442,8 @@ export const domainPackSchema = z
     media: mediaConfig.optional(),
     analytics: analyticsConfig.optional(),
     entityPresence: entityPresenceConfig.optional(),
+    ideation: ideationConfig.optional(),
+    listening: listeningConfig.optional(),
     schema: z.object({
       orgType: z.array(z.string()).min(1),
       org: orgProfile,
@@ -425,6 +500,8 @@ export const domainPackSchema = z
       competitiveIntel: z.boolean().optional(),
       engagementAnalytics: z.boolean().optional(),
       entityPresence: z.boolean().optional(),
+      ideation: z.boolean().optional(),
+      listening: z.boolean().optional(),
     }),
     services: z.object({
       store: z.enum(['github', 'fs']),

@@ -1,0 +1,34 @@
+{
+  "name": "@jeldon/ideation",
+  "version": "0.1.0",
+  "description": "Topic ideation: a transcript miner (published or private recordings, conditional timestamps), a read-only Reddit radar that turns engine-cited and archived threads into briefs, and a topic backlog defined by one Zod schema shared by reader and writer. Every prompt is built from the Domain Pack. Ported from Body of Health topics/episode.ts, topics/backlog.ts, topics/reddit.ts, command/reddit.ts and fetch-reddit-radar.mjs.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/aeo-audit": "workspace:*",
+    "@jeldon/config": "workspace:*",
+    "@jeldon/drafting": "workspace:*",
+    "@jeldon/store": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "tsup": "^9.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

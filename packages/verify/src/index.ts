@@ -38,3 +38,12 @@ export {
 } from './lint.js';
 
 export { defaultCitationConfig } from './defaults.js';
+
+export {
+  Cite8DigestSource,
+  NullDigestSource,
+  type Cite8DigestSourceOptions,
+  type DigestDocument,
+  type DigestFetchResult,
+  type ResearchDigestSource,
+} from './digest.js';

@@ -8,6 +8,10 @@ import type {
   ScoringConfig,
   SeoConfig,
   StrategyConfig,
+  AutonomousDraftingConfig,
+  BacklinksConfig,
+  IdeationConfig,
+  RedditListeningConfig,
 } from './types.js';
 
 /**
@@ -739,4 +743,69 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
   },
   windowDays: 30,
   maxDailySnapshots: 365,
+};
+
+// ---------------------------------------------------------------------------
+// Ideation, listening, autonomous drafting, backlinks. Mechanics only: every
+// list a domain fills (subreddits, brand terms, topics) defaults to empty.
+// ---------------------------------------------------------------------------
+
+/** Transcript miner + backlog defaults (BoH `topics/episode.ts`, `topics/backlog.ts`). */
+export const defaultIdeationConfig: IdeationConfig = {
+  transcriptMiner: {
+    maxChars: 200_000,
+    minChars: 400,
+    publishedSourceNoun: 'episode',
+    listenCalloutLabel: 'Listen to the full conversation',
+    maxProposals: { published: 8, private: 6 },
+    anchorEverySeconds: 60,
+    maxTokens: 8000,
+  },
+  backlog: { path: 'src/data/topic-backlog.json' },
+};
+
+/** Reddit radar mechanics (BoH `fetch-reddit-radar.mjs`, `command/reddit.ts`). */
+export const defaultRedditListeningConfig: RedditListeningConfig = {
+  geoSubreddits: [],
+  conditionSubreddits: [],
+  brandTerms: [],
+  serviceKeywords: [],
+  targetSearches: [],
+  retentionDays: 120,
+  maxItems: 500,
+  archivedAfterDays: 175,
+  staleAfterDays: 365,
+  stalePenalty: 35,
+  recency: [
+    { maxDays: 2, bonus: 45, label: 'posted in the last 48h — answer today' },
+    { maxDays: 14, bonus: 35, label: 'posted this fortnight' },
+    { maxDays: 90, bonus: 22, label: 'under 3 months old' },
+    { maxDays: 365, bonus: 10, label: 'under a year old' },
+  ],
+  competitorMinNameLength: 6,
+  maxTargets: 20,
+  userAgent: 'jeldon-listening/0.1 (read-only site-owner listening tool for {siteUrl})',
+  requestDelayMs: 2000,
+  rssRetryMs: 30_000,
+  retryBudgetMs: 8 * 60_000,
+  maxRssRetries: 3,
+  maxTokens: 8000,
+};
+
+/** Autonomous drafting defaults (BoH `fetch-cite8-digest.mjs`). Source `none`
+ *  and no topics: a pack must opt in. */
+export const defaultAutonomousDraftingConfig: AutonomousDraftingConfig = {
+  source: 'none',
+  maxDraftsPerRun: 2,
+  digestDays: 7,
+  relevance: { topics: [], requireTopic: true, requirePriorityKeyword: true },
+  coverageTitleChars: 40,
+};
+
+/** Backlink finder defaults (BoH `backlinks/[slug].ts`). */
+export const defaultBacklinksConfig: BacklinksConfig = {
+  chunkSize: 8,
+  internalPathPrefix: '/articles/',
+  maxTokens: 8000,
+  minAnchorChars: 2,
 };

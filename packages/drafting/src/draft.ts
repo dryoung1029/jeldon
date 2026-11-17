@@ -384,6 +384,7 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
       scoresSeries: scoreSeries,
       fixPassFired,
       fixPassesSeries,
+      verification: cite8Report,
       model: res.model,
       stopReason: res.stopReason,
       usage: res.usage,
