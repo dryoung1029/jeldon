@@ -69,6 +69,8 @@ new code.
 | `@jeldon/media` | ✅ | `narration.ts`, audio/image routes, `podcast.xml.ts`, R2 proxies | `audio`, `heroImages` |
 | `@jeldon/competitive-intel` | ✅ | `competitor-scanner.ts`, `audit-competitors.mjs`, `competitor-gap-report.ts`, `keyword-ranks.ts` | `competitiveIntel` |
 | `@jeldon/crawler-analytics` | ✅ | `ai-crawlers.ts`, `fetch-cf-analytics.mjs`, `article-analytics.ts`, `api/track.ts` | `engagementAnalytics` |
+| `@jeldon/leads` | ✅ | `request-context.ts`, BaseLayout first-touch block, `api/contact.ts` sanitising, `api/admin/leads.ts`, `lead-trends.ts`, `reach/conversion-map.ts`, `leads/import-bookings.ts` + the leads page hashing | `leads`, `conversionMap` |
+| `@jeldon/google` | ✅ | `google-auth.ts`, `gmail.ts` (send half) | — |
 | `@jeldon/entity-presence` | ✅ (scaffold) | NEW — off-site brand-mention + per-engine citation-pattern signals | `entityPresence` |
 | `@jeldon/search-console` | ✅ | `fetch-search-console.mjs`, `api/admin/command/search.ts`, `api/admin/snippets*.ts` | `searchConsole` |
 
@@ -111,6 +113,35 @@ through `Store`, logs the SC numbers at change time (capped), and
 setup failures (empty secret, API not enabled, SA not a user, property-string
 mismatch); anything else is `unattestable`. Backs `jeldon doctor [--online]`
 and `jeldon fetch-search-console` (template cron `fetch-search-console.yml`).
+
+### `@jeldon/leads` — ✅ built
+Pure lead maths. `sanitizeAttribution` (path-only landing, hostname-only
+referrer, whitelisted UTMs, clamped phone taps) + `attributionSnippet(cfg)` for
+the layout; `leadChannel` via `classifyReferer`; `buildTrends` (date basis
+`lead|booking`, buckets in the business timezone, Monday weeks, `maturing` from
+the median lead→booking lag, `maturity: 'unknown'` when nothing has booked);
+`buildConversionMap` (views → leads → booked per page and channel, `lowSample`
+under `conversion.minLeads`); booking import (`normEmail`, `normPhone`,
+`hashId`, `hashBookingRow` for the browser, `sanitizeHashedRows` +
+`matchBookings` for the server, `automapColumns` over preset DATA);
+`requestContextFor`; `leadsOptionsFromPack`. Template request-sheet /
+sticky-actions / end-cap / open-now components are not built yet.
+
+**`@jeldon/leads/compliance` — compliance-pack material.** Mailbox response
+tracking (`createMailboxTracker`): reply timing with the system's own
+notification excluded, keyword outcome rules reduced to codes (text never
+returned), decline reasons only after a decline, `reachedVia` (booked > email
+> phone tap > worked). Throws `MailboxComplianceError` unless
+`compliance.pack` is set and `compliance.mailbox.enabled` is true.
+
+### `@jeldon/google` — ✅ built
+`parseServiceAccount` (raw or base64 JSON), `getAccessToken({ sa, scopes, sub,
+fetch, cache })` — WebCrypto RS256 JWT-bearer grant with domain-wide delegation,
+token cache, named `unauthorized_client` / `invalid_grant` errors.
+`buildRawEmail` / `buildMimeMessage` — every header value flattened (CR/LF
+stripped), RFC 2047 for non-ASCII, headers and body joined by exactly one
+blank line; `sendRawEmail` with an injected fetch. Mailbox reading is not
+ported (it belongs with the compliance module's caller).
 
 Before extending a package or finishing a `TODO(port)`, read
 `docs/DECOUPLING-NOTES.md` first — it names the exact coupling each module breaks

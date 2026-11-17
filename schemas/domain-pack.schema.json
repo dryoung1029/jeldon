@@ -2249,6 +2249,235 @@
       ],
       "additionalProperties": false
     },
+    "leads": {
+      "type": "object",
+      "properties": {
+        "attribution": {
+          "type": "object",
+          "properties": {
+            "storagePrefix": {
+              "type": "string",
+              "minLength": 1
+            },
+            "utmKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "maxLandingChars": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxReferrerChars": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxUtmChars": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            "capturePhoneTaps": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "storagePrefix",
+            "utmKeys",
+            "maxLandingChars",
+            "maxReferrerChars",
+            "maxUtmChars"
+          ],
+          "additionalProperties": false
+        },
+        "unknownChannelLabel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requestVia": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "bookingImport": {
+          "type": "object",
+          "properties": {
+            "presets": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "columns": {
+                    "type": "object",
+                    "properties": {
+                      "email": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "phone": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "date": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "email",
+                      "phone",
+                      "date"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "columns"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "defaultPreset": {
+              "type": "string",
+              "minLength": 1
+            },
+            "phoneDigits": {
+              "type": "integer",
+              "minimum": 7,
+              "maximum": 15
+            },
+            "maxRows": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "presets",
+            "defaultPreset",
+            "phoneDigits",
+            "maxRows"
+          ],
+          "additionalProperties": false
+        },
+        "trends": {
+          "type": "object",
+          "properties": {
+            "defaultBucket": {
+              "type": "string",
+              "enum": [
+                "week",
+                "month"
+              ]
+            }
+          },
+          "required": [
+            "defaultBucket"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "attribution",
+        "unknownChannelLabel",
+        "requestVia",
+        "bookingImport",
+        "trends"
+      ],
+      "additionalProperties": false
+    },
+    "conversion": {
+      "type": "object",
+      "properties": {
+        "minLeads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "requestContexts": {
+          "type": "object",
+          "properties": {
+            "default": {
+              "type": "object",
+              "properties": {
+                "topic": {
+                  "type": "string"
+                },
+                "visitType": {
+                  "type": "string"
+                },
+                "headline": {
+                  "type": "string"
+                },
+                "sub": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "topic",
+                "visitType",
+                "headline",
+                "sub"
+              ],
+              "additionalProperties": false
+            },
+            "byCluster": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "topic": {
+                    "type": "string"
+                  },
+                  "visitType": {
+                    "type": "string"
+                  },
+                  "headline": {
+                    "type": "string"
+                  },
+                  "sub": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "default",
+            "byCluster"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "minLeads"
+      ],
+      "additionalProperties": false
+    },
     "schema": {
       "type": "object",
       "properties": {
@@ -2424,6 +2653,174 @@
           "items": {
             "type": "string"
           }
+        },
+        "mailbox": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "address": {
+              "type": "string"
+            },
+            "notificationWindowMinutes": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "autoReplyUnderMinutes": {
+              "type": "number",
+              "minimum": 0
+            },
+            "rules": {
+              "type": "object",
+              "properties": {
+                "phoneFromUs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "pattern": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "pattern"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "phoneFromThem": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "pattern": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "pattern"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "decline": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "pattern": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "pattern"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "declineReasons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "rules": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "pattern": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "pattern"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "label",
+                      "rules"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "unspecifiedLabel": {
+                  "type": "string"
+                },
+                "bookedInThread": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "pattern": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "pattern"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "phoneFromUs",
+                "phoneFromThem",
+                "decline",
+                "declineReasons",
+                "unspecifiedLabel",
+                "bookedInThread"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "enabled",
+            "notificationWindowMinutes",
+            "autoReplyUnderMinutes"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -2459,6 +2856,12 @@
           "type": "boolean"
         },
         "searchConsole": {
+          "type": "boolean"
+        },
+        "leads": {
+          "type": "boolean"
+        },
+        "conversionMap": {
           "type": "boolean"
         }
       },

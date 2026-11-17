@@ -85,3 +85,15 @@ export type {
   OpsLink,
 } from './types.js';
 export { defaultOpsConfig, defaultOpsDispatchTiming } from './defaults.js';
+export type {
+  LeadsConfig,
+  LeadAttributionConfig,
+  BookingImportConfig,
+  BookingImportPreset,
+  ConversionConfig,
+  RequestContext,
+  MailboxComplianceConfig,
+  MailboxOutcomeRules,
+  MailboxRule,
+} from './types.js';
+export { defaultLeadsConfig, defaultConversionConfig, defaultMailboxOutcomeRules } from './defaults.js';

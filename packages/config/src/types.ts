@@ -787,6 +787,16 @@ export interface DomainPack {
    *  `jeldon doctor` skips its checks. Gated by `capabilities.searchConsole`.
    *  Start from `defaultSearchConsoleConfig` and override. */
   searchConsole?: SearchConsoleConfig;
+  /** First-touch attribution, lead channels, lead trends and the booking
+   *  import (@jeldon/leads). Optional — engine falls back to
+   *  `defaultLeadsConfig`. Gated by `capabilities.leads`. Trends bucket in
+   *  `content.timezone` (the business timezone). */
+  leads?: LeadsConfig;
+
+  /** Conversion map + per-topic request copy (@jeldon/leads). Optional —
+   *  engine falls back to `defaultConversionConfig`. Gated by
+   *  `capabilities.conversionMap`. */
+  conversion?: ConversionConfig;
 
   schema: {
     orgType: string[];
@@ -808,6 +818,11 @@ export interface DomainPack {
     pack: 'none' | 'hipaa' | 'legal' | 'finance' | (string & {});
     reviewResponseRules?: string[];
     requireHumanReviewTags?: string[];
+    /** Mailbox response tracking (@jeldon/leads/compliance). COMPLIANCE-PACK
+     *  MATERIAL: refuses to run unless `pack` is not `none` AND
+     *  `mailbox.enabled` is true. Message text is reduced to rule codes inside
+     *  the function and never returned or stored. */
+    mailbox?: MailboxComplianceConfig;
   };
 
   /** Which growth surfaces exist for this project. */
@@ -823,6 +838,10 @@ export interface DomainPack {
     ops?: boolean;
     /** Search Console snapshot, striking-distance / low-CTR tables, snippet lab. */
     searchConsole?: boolean;
+    /** First-touch attribution, lead channels, trends, booking import. */
+    leads?: boolean;
+    /** Views → leads → booked per page and channel. */
+    conversionMap?: boolean;
   };
 
   /** Required services + env. `jeldon doctor` verifies these. */
@@ -992,4 +1011,132 @@ export interface SearchConsoleConfig {
   /** Inline title/excerpt edits logged with the SC numbers at change time.
    *  Title/excerpt limits come from `scoring.seo`, not from here. */
   snippetLab?: SnippetLabConfig;
+}
+
+// ---------------------------------------------------------------------------
+// Leads + conversion (consumed by @jeldon/leads)
+// ---------------------------------------------------------------------------
+
+/** What the first-touch snippet captures and how the server clamps it. The
+ *  server keeps a PATH-only landing page (no query, no hash) and a
+ *  HOSTNAME-only referrer, so a lead record never carries a full URL that
+ *  might hold an email address or a search term. */
+export interface LeadAttributionConfig {
+  /** sessionStorage key prefix the browser snippet writes under, e.g. "site:". */
+  storagePrefix: string;
+  /** UTM query keys captured and kept. Anything else is dropped. */
+  utmKeys: string[];
+  /** Max characters kept for the landing path. BoH: 200. */
+  maxLandingChars: number;
+  /** Max characters kept for the referrer hostname. BoH: 120. */
+  maxReferrerChars: number;
+  /** Max characters kept per UTM value (after stripping to `[\w.-]`). BoH: 60. */
+  maxUtmChars: number;
+  /** Record taps on `tel:` links in the session, so a lead who phoned is not
+   *  later counted as "nobody reached them". Default true. */
+  capturePhoneTaps?: boolean;
+}
+
+/** Column-header patterns for one booking-system export. DATA only: a preset
+ *  names no behaviour, just which headers hold the email, phone and first-visit
+ *  date. Each list is regex sources tried in order (case-insensitive); the
+ *  first header matching the first pattern wins. */
+export interface BookingImportPreset {
+  id: string;
+  label: string;
+  columns: {
+    email: string[];
+    phone: string[];
+    date: string[];
+  };
+}
+
+export interface BookingImportConfig {
+  presets: BookingImportPreset[];
+  /** Preset id used when the caller names none. */
+  defaultPreset: string;
+  /** Phone numbers are matched on their last N digits. BoH: 10. */
+  phoneDigits: number;
+  /** Max rows accepted per import. BoH: 5000. */
+  maxRows: number;
+}
+
+export interface LeadsConfig {
+  attribution: LeadAttributionConfig;
+  /** Channel label for a lead with no attribution at all (pre-capture leads).
+   *  Distinct from the analytics direct label: "no data" is not "direct". */
+  unknownChannelLabel: string;
+  /** Which control opened the form (`page`, `sheet`, `sticky`, ...). Values
+   *  outside this list are dropped. */
+  requestVia: string[];
+  bookingImport: BookingImportConfig;
+  trends: {
+    /** Default bucket for `buildTrends`. */
+    defaultBucket: 'week' | 'month';
+  };
+}
+
+/** What the request sheet / article end-cap says for a topic. */
+export interface RequestContext {
+  /** Phrase after the request CTA ("for back pain"). Empty = plain. */
+  topic: string;
+  /** Pre-selected option in the request form. Must match an option exactly. */
+  visitType: string;
+  /** End-cap headline. */
+  headline: string;
+  /** End-cap sub-line. */
+  sub: string;
+}
+
+export interface ConversionConfig {
+  /** Rates over fewer leads than this are flagged `lowSample` (shown dimmed,
+   *  never hidden, never zeroed). BoH: 3. */
+  minLeads: number;
+  /** Topic/cluster id → request copy. First cluster id with an entry wins;
+   *  `default` fills the rest. */
+  requestContexts?: {
+    default: RequestContext;
+    byCluster: Record<string, Partial<RequestContext>>;
+  };
+}
+
+/** One keyword rule: a stable code and a regex source (case-insensitive,
+ *  wrapped in a leading word boundary by the engine). */
+export interface MailboxRule {
+  id: string;
+  pattern: string;
+}
+
+/** Deterministic rules that reduce message text to codes. Keyword rules both
+ *  miss and mis-fire; every result is a starting point to check. */
+export interface MailboxOutcomeRules {
+  /** We said we would phone them. */
+  phoneFromUs: MailboxRule[];
+  /** They asked us to phone them. */
+  phoneFromThem: MailboxRule[];
+  /** They declined. Only their messages are checked. */
+  decline: MailboxRule[];
+  /** Reasons, consulted ONLY after a decline is detected. */
+  declineReasons: Array<{ reason: string; label: string; rules: MailboxRule[] }>;
+  /** Label for a decline with no matching reason (code `unspecified`). */
+  unspecifiedLabel: string;
+  /** We confirmed a booking in the thread. Only our messages are checked. */
+  bookedInThread: MailboxRule[];
+}
+
+/** COMPLIANCE-PACK MATERIAL. Mailbox response tracking reads message text.
+ *  Run it only where the mailbox provider is covered by whatever agreement
+ *  the compliance pack requires. Read-through: nothing fetched is stored. */
+export interface MailboxComplianceConfig {
+  /** Must be true, together with a `compliance.pack` other than `none`. */
+  enabled: boolean;
+  /** The mailbox the system sends its own notifications from. */
+  address?: string;
+  /** How far from the lead's own timestamp a message from us can be and still
+   *  be its notification (not a reply). BoH: 10. */
+  notificationWindowMinutes: number;
+  /** Replies faster than this are flagged as likely autoresponders. BoH: 2. */
+  autoReplyUnderMinutes: number;
+  /** Classification rules. Defaults to `defaultMailboxOutcomeRules`. */
+  rules?: MailboxOutcomeRules;
 }

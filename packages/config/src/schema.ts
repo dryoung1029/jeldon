@@ -418,6 +418,68 @@ const searchConsoleConfig = z.object({
     .optional(),
 });
 
+// --- Leads + conversion (@jeldon/leads) -------------------------------------
+const mailboxRule = z.object({ id: z.string().min(1), pattern: z.string().min(1) });
+const leadsConfig = z.object({
+  attribution: z.object({
+    storagePrefix: z.string().min(1),
+    utmKeys: z.array(z.string()),
+    maxLandingChars: z.number().int().positive(),
+    maxReferrerChars: z.number().int().positive(),
+    maxUtmChars: z.number().int().positive(),
+    capturePhoneTaps: z.boolean().optional(),
+  }),
+  unknownChannelLabel: z.string().min(1),
+  requestVia: z.array(z.string()),
+  bookingImport: z.object({
+    presets: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          label: z.string(),
+          columns: z.object({
+            email: z.array(z.string()),
+            phone: z.array(z.string()),
+            date: z.array(z.string()),
+          }),
+        }),
+      )
+      .min(1),
+    defaultPreset: z.string().min(1),
+    phoneDigits: z.number().int().min(7).max(15),
+    maxRows: z.number().int().positive(),
+  }),
+  trends: z.object({ defaultBucket: z.enum(['week', 'month']) }),
+});
+const requestContext = z.object({
+  topic: z.string(),
+  visitType: z.string(),
+  headline: z.string(),
+  sub: z.string(),
+});
+const conversionConfig = z.object({
+  minLeads: z.number().int().min(1),
+  requestContexts: z
+    .object({ default: requestContext, byCluster: z.record(z.string(), requestContext.partial()) })
+    .optional(),
+});
+const mailboxComplianceConfig = z.object({
+  enabled: z.boolean(),
+  address: z.string().optional(),
+  notificationWindowMinutes: z.number().positive(),
+  autoReplyUnderMinutes: z.number().min(0),
+  rules: z
+    .object({
+      phoneFromUs: z.array(mailboxRule),
+      phoneFromThem: z.array(mailboxRule),
+      decline: z.array(mailboxRule),
+      declineReasons: z.array(z.object({ reason: z.string().min(1), label: z.string(), rules: z.array(mailboxRule) })),
+      unspecifiedLabel: z.string(),
+      bookedInThread: z.array(mailboxRule),
+    })
+    .optional(),
+});
+
 export const domainPackSchema = z
   .object({
     brand: z.object({
@@ -479,6 +541,8 @@ export const domainPackSchema = z
     entityPresence: entityPresenceConfig.optional(),
     ops: opsConfig.optional(),
     searchConsole: searchConsoleConfig.optional(),
+    leads: leadsConfig.optional(),
+    conversion: conversionConfig.optional(),
     schema: z.object({
       orgType: z.array(z.string()).min(1),
       org: orgProfile,
@@ -525,6 +589,7 @@ export const domainPackSchema = z
         pack: z.string(),
         reviewResponseRules: z.array(z.string()).optional(),
         requireHumanReviewTags: z.array(z.string()).optional(),
+        mailbox: mailboxComplianceConfig.optional(),
       })
       .optional(),
     capabilities: z.object({
@@ -537,6 +602,8 @@ export const domainPackSchema = z
       entityPresence: z.boolean().optional(),
       ops: z.boolean().optional(),
       searchConsole: z.boolean().optional(),
+      leads: z.boolean().optional(),
+      conversionMap: z.boolean().optional(),
     }),
     services: z.object({
       store: z.enum(['github', 'fs']),
