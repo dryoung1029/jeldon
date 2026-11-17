@@ -19,31 +19,31 @@ Section 4 below is therefore all **missing**.
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 1a One source of model IDs + picker labels | partial: pack map exists (`config/defaults.ts:202`) but holds 4.x IDs; private copies in `amplify/llm.ts:12` and `aeo-audit/engines.ts:57` bypass it | config, amplify, aeo-audit | S | `drafting.modelLabels`; amplify + aeo resolve through `drafting.models` |
-| 1b No forced `tool_choice` (5.5 returns 400) | missing; 10 call sites send `{type:'tool'}` (drafting draft/score-verify/hero, amplify llm, competitive-intel gap-report/positioning) | drafting, amplify, competitive-intel | M | — |
-| 1c Explicit `output_config.effort`; headroom for thinking | missing; five calls at ≤1500 `max_tokens` | config, all LLM callers | S–M | `drafting.effort` per mode; raised `maxTokens` defaults |
-| 1d Replay `thinking`/`redacted_thinking` with signature | missing; `StreamBlock` drops them (`drafting/provider.ts:139`, `chat.ts:117`) | drafting | S | — |
-| 1e `web_search_20260209` | missing (`aeo-audit/engines.ts:59`) | aeo-audit | S | — (engine constant) |
+| 1a One source of model IDs + picker labels | **done** | config, amplify, aeo-audit | S | `drafting.modelLabels`; amplify + aeo resolve through `drafting.models` |
+| 1b No forced `tool_choice` (5.5 returns 400) | **done** | drafting, amplify, competitive-intel | M | — |
+| 1c Explicit `output_config.effort`; headroom for thinking | **done** | config, all LLM callers | S–M | `drafting.effort` per mode; raised `maxTokens` defaults |
+| 1d Replay `thinking`/`redacted_thinking` with signature | **done** | drafting | S | — |
+| 1e `web_search_20260209` | **done** | aeo-audit | S | — (engine constant) |
 
 ## 2. AEO audit
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 2a Word-boundary brand match + generic-phrase exclusion | missing; bare `includes()` at `aeo-audit/run.ts:35`; URL match also substring (`run.ts:29`) | aeo-audit | S | `aeo.brandMentionExclusions` |
-| 2b Per-engine `redditCitations` | missing | aeo-audit | S | `aeo.trackedCitationHosts` (default `['reddit.com']`) |
-| 2c `citations[]` classified who-was-cited | missing; not on BoH `main` (e09c9a7 on `claude/moot-5ql5q9`) | aeo-audit (+ competitive-intel roster) | M | `aeo.citations { topN, directoryHosts, listUrlPattern, listUrlExclusions }` |
-| 2d Extraction-first playbook (answer in 1–3, literal nouns in title/H1, liftable block) | partial: "lead with a direct answer" copy only (`aeo-audit/aggregate.ts:179`) | docs/AEO-PLAYBOOK, drafting prompts, aeo-audit action copy | S | `strategy.briefChecklist` (optional) |
+| 2a Word-boundary brand match + generic-phrase exclusion | **done** (`@jeldon/config` match + aeo-audit) | aeo-audit | S | `aeo.brandMentionExclusions` |
+| 2b Per-engine `redditCitations` | **done** (aeo-audit) | aeo-audit | S | `aeo.trackedCitationHosts` (default `['reddit.com']`) |
+| 2c `citations[]` classified who-was-cited | **done** (aeo-audit; source e09c9a7 still unmerged in BoH) | aeo-audit (+ competitive-intel roster) | M | `aeo.citations { topN, directoryHosts, listUrlPattern, listUrlExclusions }` |
+| 2d Extraction-first playbook (answer in 1–3, literal nouns in title/H1, liftable block) | **done** (docs, drafting prompts, aeo-audit copy) | docs/AEO-PLAYBOOK, drafting prompts, aeo-audit action copy | S | `strategy.briefChecklist` (optional) |
 
 ## 3. Analytics correctness
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 3a Hostname-anchored referrers; Reddit/ChatGPT/Claude/Copilot/Pinterest/Nextdoor | missing; `t.co` substring bug is live (`crawler-analytics/referer.ts:28`, `config/defaults.ts:677`), also `fb`/`ig`/`email` needles | config, crawler-analytics, strategy (`sumWhere`) | S–M | `RefererChannelRule` → `{ hosts, hostPatterns?, utmSources? }` replacing `needles` (breaking; ship a migrate step) |
-| 3b Anchored bot tokens | missing; bare `pinterest`/`duckduck` in `botUaPattern` | config (default value) | S | — |
-| 3c Per-route traffic + shared `normalizeSitePath()` | missing | crawler-analytics | M | `analytics.sitePath { excludePrefixes, excludeFilePattern, maxLength }` |
-| 3d Path-keyed engagement beacon | partial: `cta` type exists, slug-only parser (`engagement.ts:117`), no template component | crawler-analytics, template | S–M | `analytics.engagement.pathPattern` |
+| 3a Hostname-anchored referrers; Reddit/ChatGPT/Claude/Copilot/Pinterest/Nextdoor | **done** (config + crawler-analytics + strategy) | config, crawler-analytics, strategy (`sumWhere`) | S–M | `RefererChannelRule` → `{ hosts, hostPatterns?, utmSources? }` replacing `needles` (breaking; ship a migrate step) |
+| 3b Anchored bot tokens | **done** | config (default value) | S | — |
+| 3c Per-route traffic + shared `normalizeSitePath()` | **done** (crawler-analytics) | crawler-analytics | M | `analytics.sitePath { excludePrefixes, excludeFilePattern, maxLength }` |
+| 3d Path-keyed engagement beacon | **done** (crawler-analytics + template) | crawler-analytics, template | S–M | `analytics.engagement.pathPattern` |
 | 3e Coverage counts live content only | skip for now: no coverage surface exists; rule recorded for when one does | — | — | — |
-| 3f Web Vitals diagnostics | missing (`TODO(port)` at `provider.ts:124`) | crawler-analytics | M | `analytics.webVitals { rumTypeName, days }` |
+| 3f Web Vitals diagnostics | **done** (crawler-analytics) | crawler-analytics | M | `analytics.webVitals { rumTypeName, days }` |
 
 Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same bug class. Fix it alongside 3a.
 
@@ -64,18 +64,18 @@ Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same
 | 5c Push retry ×3 with `pull --rebase` | done (`template/.github/actions/commit-and-push`) | template composite action | S | — |
 | 5d Attention feed + cadence alerts | done (`@jeldon/ops`) | ops | M | `ops.cadence { articleDays, newsletterDays?, newsletterStuckDays? }`, `ops.links` |
 | 5e Dispatch pipeline from dashboard | done (`@jeldon/ops` + static doctor check; no admin route in template) | ops (Actions client) + doctor permission check | M | `ops.dispatch { allowlist, pollSeconds, timeoutMinutes, createdAtSlackSeconds }` |
-| 5f `getArticlesBulk` (6 lanes, transient-only retry, partial results) | missing | store (interface + both adapters) | S | `store.bulk { concurrency, attempts }` (optional) |
+| 5f `getArticlesBulk` (6 lanes, transient-only retry, partial results) | **done** (store) | store (interface + both adapters) | S | `store.bulk { concurrency, attempts }` (optional) |
 | 5g Monthly accuracy-audit prompt | done (`template/docs/accuracy-audit-prompt.md`) | template/docs | S | — |
 
 ## 6. Content model, SEO, schema
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 6a Topic clusters (CollectionPage + ItemList, hyphen-boundary hints, ≥2 live, back-links) | missing | content-model (matcher), schema-graph (`collectionPageGraph`), template route | M | `content.topicClusters { pathPrefix, minLiveArticles, clusters[] }` |
-| 6b `autonomous` provenance; retire `docReviewed` | missing; `docReviewed` still in lifecycle (dormant behind a flag) | content-model, cli, template | S | frontmatter `autonomous`; deprecate `docReviewed`/`docNotes` (still parsed) |
-| 6c Meta-length gate for hand-coded pages | partial: thresholds already match (`config/defaults.ts:87`) but only score articles | cli `check-meta-length` + template workflow | S | `scoring.seo.staticPages { roots, exclude }` |
-| 6d VideoObject (uploadDate required), YouTube facade, `parseYouTubeUrl` | missing | content-model, schema-graph, template component | S–M | frontmatter `videoUrl`/`videoTitle`/`videoUploadDate` |
-| 6e Validate hero image paths on save | missing in both repos (BoH only queued it) | content-model validate + frontmatter guard | S | `content.heroImagePathPrefix` |
+| 6a Topic clusters (CollectionPage + ItemList, hyphen-boundary hints, ≥2 live, back-links) | **done** (content-model + schema-graph + template) | content-model (matcher), schema-graph (`collectionPageGraph`), template route | M | `content.topicClusters { pathPrefix, minLiveArticles, clusters[] }` |
+| 6b `autonomous` provenance; retire `docReviewed` | **done** (docReviewed deprecated, still parsed) | content-model, cli, template | S | frontmatter `autonomous`; deprecate `docReviewed`/`docNotes` (still parsed) |
+| 6c Meta-length gate for hand-coded pages | **done** (cli `check-meta-length` + template workflow) | cli `check-meta-length` + template workflow | S | `scoring.seo.staticPages { roots, exclude }` |
+| 6d VideoObject (uploadDate required), YouTube facade, `parseYouTubeUrl` | **done** | content-model, schema-graph, template component | S–M | frontmatter `videoUrl`/`videoTitle`/`videoUploadDate` |
+| 6e Validate hero image paths on save | **done** | content-model validate + frontmatter guard | S | `content.heroImagePathPrefix` |
 
 ## 7. Drafting and ideation
 
@@ -91,9 +91,9 @@ Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 8a Reel-script channel | partial: channels are data, no `reelScript` default, token budgets too low | amplify + config defaults | S | `AmplifyChannel.wordRange`, `hookOptions`, `spokenOnly`; `amplify.ctaPolicy` |
-| 8b Retire in-page carousel → Carousel Studio handoff | Jeldon still ships the retired builder | amplify (deprecate, add `importToCarouselStudio`) | M | `amplify.carouselHandoff { endpoint, brandId, projectIdPrefix, serviceTokenEnv }`; deprecate `carouselSchemes`/`carouselGuidance`/`carouselStateDir` |
-| 8c "Queue in Brevo" | partial: Brevo client + `nextSendSlot` exist, no orchestration | amplify `scheduleArticleNewsletter()` | M | `amplify.newsletter { sendHour, floorHours }` |
+| 8a Reel-script channel | **done** | amplify + config defaults | S | `AmplifyChannel.wordRange`, `hookOptions`, `spokenOnly`; `amplify.ctaPolicy` |
+| 8b Retire in-page carousel → Carousel Studio handoff | **done** (builder removed) | amplify (deprecate, add `importToCarouselStudio`) | M | `amplify.carouselHandoff { endpoint, brandId, projectIdPrefix, serviceTokenEnv }`; deprecate `carouselSchemes`/`carouselGuidance`/`carouselStateDir` |
+| 8c "Queue in Brevo" | **done** | amplify `scheduleArticleNewsletter()` | M | `amplify.newsletter { sendHour, floorHours }` |
 
 ## 9. Talking-head video editor
 

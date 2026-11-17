@@ -175,6 +175,19 @@ export interface AeoConfig {
   /** Model alias (key into `drafting.models`) or raw id for the Anthropic
    *  engine. Default: `drafting.defaultModel`. */
   model?: string;
+  /** How cited links are classified (who was cited instead of us). Default
+   *  `defaultAeoCitationConfig`. Competitor hosts come from `competitors.roster`. */
+  citations?: AeoCitationConfig;
+}
+
+export interface AeoCitationConfig {
+  /** Links kept per answer. Default 10. */
+  topN: number;
+  /** Review / listing / directory domains (exact or parent domain). */
+  directoryHosts: string[];
+  /** Regex source tested against the lowercased URL path to flag "best of" /
+   *  numbered-list pages. */
+  listUrlPattern: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -334,6 +347,35 @@ export interface AmplifyChannel {
   /** When true this channel is excluded from the full-kit tool's required list
    *  and never URL-tagged (e.g. a subject line). Default false. */
   noUrl?: boolean;
+}
+
+/** One curated topic cluster. Membership: any matching tag, a listed series,
+ *  or a slug hint matched on whole hyphen-delimited segments ("hip" does not
+ *  match "c-hip-ractic"). */
+export interface TopicCluster {
+  /** URL segment and stable key, e.g. "low-back-spine". */
+  id: string;
+  /** Short label for chips and breadcrumbs. */
+  label: string;
+  /** Page <title>. Keep inside `scoring.seo.title`; doctor checks it because
+   *  the static-page meta gate cannot see dynamic routes. */
+  title: string;
+  /** Meta description. Keep inside `scoring.seo.excerpt`. */
+  description: string;
+  /** Short lead paragraph for the cluster page, in voice. */
+  lead?: string;
+  tags: string[];
+  series?: string[];
+  slugHints?: string[];
+}
+
+export interface TopicClustersConfig {
+  /** Route prefix for cluster pages. Default "/articles/topic/". */
+  pathPrefix?: string;
+  /** A cluster page only exists with at least this many live members (a
+   *  one-article cluster is thin content). Default 2. */
+  minLiveArticles?: number;
+  clusters: TopicCluster[];
 }
 
 /** Rules for a call to action that must stay educational (reel scripts,
@@ -741,6 +783,10 @@ export interface DomainPack {
      *  validation rejects any other path (a model once invented a plausible
      *  `/images/...` path that never existed). Omit to allow any path. */
     heroImagePathPrefixes?: string[];
+    /** Curated topic clusters. Each becomes an indexable page listing its
+     *  live members, and member articles link back to it (that internal
+     *  linking is what makes a cluster rank). Omit for no cluster pages. */
+    topicClusters?: TopicClustersConfig;
   };
 
   scoring: ScoringConfig;

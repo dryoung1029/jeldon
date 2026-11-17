@@ -276,3 +276,28 @@ describe('2026-11 catch-up: provenance, video, hero paths', () => {
     expect(missing.errors[0]?.path).toBe('heroImage');
   });
 });
+
+describe('topic clusters', () => {
+  const clusters = [
+    { id: 'hip', label: 'Hip', title: 't', description: 'd', tags: ['Hip Pain'], slugHints: ['hip', 'it-band'] },
+    { id: 'va', label: 'VA', title: 't', description: 'd', tags: [], slugHints: ['va'], series: ['veterans'] },
+  ];
+  it('matches slug hints on whole hyphen segments only', async () => {
+    const { articleClusterIds } = await import('../src/index.js');
+    expect(articleClusterIds({ slug: 'what-is-chiropractic', tags: [] }, clusters)).toEqual([]);
+    expect(articleClusterIds({ slug: 'whiplash-recovery', tags: [] }, clusters)).toEqual([]);
+    expect(articleClusterIds({ slug: 'willamette-valley-care', tags: [] }, clusters)).toEqual([]);
+    expect(articleClusterIds({ slug: 'hip-flexor-stretch', tags: [] }, clusters)).toEqual(['hip']);
+    expect(articleClusterIds({ slug: 'runners-it-band-pain', tags: [] }, clusters)).toEqual(['hip']);
+    expect(articleClusterIds({ slug: 'x', tags: ['hip pain'] }, clusters)).toEqual(['hip']);
+    expect(articleClusterIds({ slug: 'x', tags: [], series: 'veterans' }, clusters)).toEqual(['va']);
+  });
+  it('only generates pages for clusters with enough live members', async () => {
+    const { clusterPages, liveClusterIds, clusterPath } = await import('../src/index.js');
+    const arts = [{ slug: 'hip-a', tags: [] }, { slug: 'hip-b', tags: [] }, { slug: 'va-claims', tags: [] }];
+    expect(clusterPages(arts, { clusters }).map((p) => p.cluster.id)).toEqual(['hip']);
+    expect([...liveClusterIds(arts, { clusters })]).toEqual(['hip']);
+    expect([...liveClusterIds(arts, { clusters, minLiveArticles: 1 })].sort()).toEqual(['hip', 'va']);
+    expect(clusterPath('hip', {})).toBe('/articles/topic/hip/');
+  });
+});

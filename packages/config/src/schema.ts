@@ -79,6 +79,9 @@ const aeoConfig = z.object({
   maxSnapshots: z.number().int().positive().optional(),
   brandMentionExclusions: z.record(z.string(), z.array(z.string())).optional(),
   model: z.string().optional(),
+  citations: z
+    .object({ topN: z.number().int().positive(), directoryHosts: z.array(z.string()), listUrlPattern: z.string().min(1) })
+    .optional(),
 });
 
 const strategyConfig = z.object({
@@ -528,6 +531,32 @@ export const domainPackSchema = z
       timezone: z.string(),
       lifecycle: z.object({ docReviewed: z.boolean().optional() }).optional(),
       heroImagePathPrefixes: z.array(z.string().min(1)).optional(),
+      topicClusters: z
+        .object({
+          pathPrefix: z.string().optional(),
+          minLiveArticles: z.number().int().positive().optional(),
+          clusters: z
+            .array(
+              z.object({
+                id: z.string().regex(/^[a-z0-9-]+$/, 'cluster id must be lowercase letters, digits and hyphens'),
+                label: z.string().min(1),
+                title: z.string().min(1),
+                description: z.string().min(1),
+                lead: z.string().optional(),
+                tags: z.array(z.string()),
+                series: z.array(z.string()).optional(),
+                slugHints: z.array(z.string()).optional(),
+              }),
+            )
+            .superRefine((cs, ctx) => {
+              const seen = new Set<string>();
+              cs.forEach((c, i) => {
+                if (seen.has(c.id)) ctx.addIssue({ code: 'custom', path: [i, 'id'], message: `duplicate cluster id "${c.id}"` });
+                seen.add(c.id);
+              });
+            }),
+        })
+        .optional(),
     }),
     scoring: z.object({ geo: geoConfig, seo: seoConfig }),
     citation: citationConfig,

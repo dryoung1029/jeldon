@@ -1,4 +1,5 @@
 import type {
+  AeoCitationConfig,
   AmplifyConfig,
   AnalyticsConfig,
   DraftingConfig,
@@ -953,4 +954,22 @@ export const defaultMailboxOutcomeRules: MailboxOutcomeRules = {
     mrule('booked.got-you-in', `(?:got|have) you (?:in|scheduled|booked|down) (?:for|on|at)`),
     mrule('booked.looking-forward', `look(?:ing)? forward to (?:seeing|meeting) you`),
   ],
+};
+
+/**
+ * Citation classification defaults for the AEO audit (BoH e09c9a7). Directory
+ * hosts are general-purpose review and listing sites; a vertical adds its own
+ * (e.g. a health pack adds healthgrades.com, zocdoc.com). The list pattern
+ * flags "best"/"top" path segments and numbered-list slugs, excluding "best
+ * practices".
+ */
+export const defaultAeoCitationConfig: AeoCitationConfig = {
+  topN: 10,
+  directoryHosts: [
+    'yelp.com', 'yellowpages.com', 'bbb.org', 'mapquest.com', 'nextdoor.com', 'facebook.com',
+    'expertise.com', 'threebestrated.com', 'birdeye.com', 'superpages.com', 'manta.com', 'angi.com',
+    'google.com', 'maps.google.com', 'apple.com', 'linkedin.com', 'instagram.com', 'trustpilot.com',
+  ],
+  listUrlPattern:
+    '(^|[\\/_-])(best|top)(?![-_]?practices?\\b)([\\/_-]|\\d|$)|(^|[\\/_-])\\d{1,2}[_-](best|top|ways|reasons|signs|tips|things|myths|questions|mistakes)\\b',
 };

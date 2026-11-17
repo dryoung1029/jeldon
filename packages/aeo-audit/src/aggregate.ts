@@ -1,3 +1,4 @@
+import { citedInstead } from './citations.js';
 import type {
   ActionItem,
   AggregateResult,
@@ -173,6 +174,7 @@ export function buildActionItems(
     if (cited.length === 0) {
       items.push({
         priority: highPriority ? 'high' : 'medium',
+        citedInstead: citedInstead(row.engines),
         action: `Win the query "${row.query}" — no engine cites you yet.`,
         why: mentionedOnly.length
           ? `You're mentioned but not linked on ${mentionedOnly.length} engine(s). Publish or strengthen a dedicated page with quotable, citation-backed claims so engines link it.`

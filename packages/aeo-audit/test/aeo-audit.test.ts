@@ -252,3 +252,40 @@ describe('anchored brand matching (BoH 2026-09 regressions)', () => {
     ]);
   });
 });
+
+describe('classified citations (BoH e09c9a7)', () => {
+  it('classifies us / competitor / directory / reddit / other and flags list URLs', async () => {
+    const { classifyCitations, competitorHostsFromRoster, citedInstead } = await import('../src/index.js');
+    const rivals = competitorHostsFromRoster([
+      { id: 'r', name: 'Rival Clinic', url: 'https://www.rival.example/' },
+      { id: 'r-doc', name: 'Dr Rival', url: 'https://rival.example/team/doc' },
+    ]);
+    const urls = [
+      'https://acme.example/articles/x',
+      'https://blog.rival.example/post',
+      'https://www.yelp.com/biz/acme',
+      'https://www.reddit.com/r/x/comments/1',
+      'https://national.example/health/best-ways-to-sleep',
+      'https://national.example/10-signs-of-x',
+      'https://national.example/best-practices-for-x',
+      'https://notrival.example/',
+      ...Array.from({ length: 5 }, (_, i) => `https://x${i}.example/`),
+    ];
+    const cs = classifyCitations(urls, 'acme.example', rivals);
+    expect(cs).toHaveLength(10);
+    expect(cs.map((c) => c.kind).slice(0, 4)).toEqual(['us', 'competitor', 'directory', 'reddit']);
+    expect(cs[1]!.who).toBe('Rival Clinic');
+    expect(cs[4]!.list).toBe(true);
+    expect(cs[5]!.list).toBe(true);
+    expect(cs[6]!.list).toBeUndefined(); // "best practices" is not a list page
+    expect(cs[7]!.kind).toBe('other'); // notrival.example is not rival.example
+
+    const merged = citedInstead({
+      perplexity: { citations: cs },
+      anthropic: { citations: classifyCitations(['https://www.yelp.com/biz/acme'], 'acme.example', rivals) },
+    });
+    expect(merged !== 'not-recorded' && merged[0]).toMatchObject({ host: 'yelp.com', engines: 2, bestRank: 1 });
+    expect(Array.isArray(merged) && merged.some((m) => m.kind === ('us' as never))).toBe(false);
+    expect(citedInstead({ perplexity: { cited: false } as never })).toBe('not-recorded');
+  });
+});

@@ -45,6 +45,16 @@ export {
 // Validation
 export { validateArticle, type ValidateArticleResult, type ValidateArticleOptions } from './validate.js';
 
+// Topic clusters
+export {
+  articleClusterIds,
+  liveClusterIds,
+  clusterMembers,
+  clusterPages,
+  clusterPath,
+  type ClusterMemberInput,
+} from './clusters.js';
+
 // YouTube URLs (video attachments)
 export { parseYouTubeUrl, youtubeThumbnail, type ParsedYouTube } from './youtube.js';
 

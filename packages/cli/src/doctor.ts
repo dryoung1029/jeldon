@@ -75,6 +75,18 @@ export async function runDoctor(
     add('warn', 'capabilities.drafting is on but no LLM API key is listed in services.requiredEnv');
   }
 
+  // Topic-cluster titles/descriptions render on dynamic routes the static-page
+  // meta-length gate cannot see, so check them against the same bands here.
+  for (const c of pack.content.topicClusters?.clusters ?? []) {
+    const seo = pack.scoring.seo;
+    const t = c.title.length;
+    const d = c.description.length;
+    if (t < 1 || t > seo.title.mehMax) add('error', `topic cluster "${c.id}" title is ${t} chars (ceiling ${seo.title.mehMax})`);
+    else if (t < seo.title.good[0] || t > seo.title.good[1]) add('warn', `topic cluster "${c.id}" title is ${t} chars (target ${seo.title.good[0]}-${seo.title.good[1]})`);
+    if (d < seo.excerpt.meh[0] || d > seo.excerpt.meh[1]) add('error', `topic cluster "${c.id}" description is ${d} chars (allowed ${seo.excerpt.meh[0]}-${seo.excerpt.meh[1]})`);
+    else if (d < seo.excerpt.good[0] || d > seo.excerpt.good[1]) add('warn', `topic cluster "${c.id}" description is ${d} chars (target ${seo.excerpt.good[0]}-${seo.excerpt.good[1]})`);
+  }
+
   // Ops (@jeldon/ops): pipeline/allowlist consistency, allowlisted workflow
   // files exist, and the Actions permission the dispatch token needs.
   if (pack.capabilities.ops) {

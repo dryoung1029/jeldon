@@ -1,4 +1,5 @@
-import { hostIs, hostOf, mentionsTerm } from '@jeldon/config';
+import { defaultAeoCitationConfig, hostIs, hostOf, mentionsTerm, type AeoCitationConfig } from '@jeldon/config';
+import { classifyCitations } from './citations.js';
 import type {
   AeoQuery,
   BrandMatch,
@@ -81,7 +82,8 @@ export function dateKey(d: Date = new Date(), timezone = 'UTC'): string {
 }
 
 /** Run all engines (parallel) against one query and parse citations. */
-async function runQuery(query: AeoQuery, engines: Engine[], brand: BrandMatch): Promise<QueryResult> {
+async function runQuery(query: AeoQuery, engines: Engine[], opts: RunAuditOptions): Promise<QueryResult> {
+  const brand = opts.brand;
   const result: QueryResult = { queryId: query.id, engines: {} };
   await Promise.all(
     engines.map(async (eng) => {
@@ -100,6 +102,7 @@ async function runQuery(query: AeoQuery, engines: Engine[], brand: BrandMatch): 
           responseHash: await sha256(raw.text ?? ''),
           urlsCount: urls.length,
           ...(redditCitations.length ? { redditCitations } : {}),
+          citations: classifyCitations(urls, brand.url, opts.competitorHosts ?? new Map(), opts.citations ?? defaultAeoCitationConfig),
           // Distinguishes "AIO present but didn't cite us" (cited:false,
           // noAiOverview:false) from "no AIO surfaced at all".
           ...(raw.noAiOverview ? { noAiOverview: true } : {}),
@@ -114,6 +117,11 @@ async function runQuery(query: AeoQuery, engines: Engine[], brand: BrandMatch): 
 
 export interface RunAuditOptions {
   brand: BrandMatch;
+  /** Competitor host → name, from `competitorHostsFromRoster(pack.competitors.roster)`.
+   *  Missing = no competitor tagging, not a failed audit. */
+  competitorHosts?: Map<string, string>;
+  /** Citation classification. Default `pack.aeo.citations ?? defaultAeoCitationConfig`. */
+  citations?: AeoCitationConfig;
   timezone?: string;
   /** Hook for progress logging; defaults to a no-op. */
   onProgress?: (queryId: string) => void;
@@ -134,7 +142,7 @@ export async function runAudit(
   const results: QueryResult[] = [];
   for (const q of querySet) {
     opts.onProgress?.(q.id);
-    results.push(await runQuery(q, engines, opts.brand));
+    results.push(await runQuery(q, engines, opts));
   }
   return {
     date: dateKey(opts.now, opts.timezone),

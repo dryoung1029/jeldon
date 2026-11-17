@@ -1,4 +1,5 @@
 import type { AeoQuery } from '@jeldon/config';
+import type { CitedInstead, ClassifiedCitation } from './citations.js';
 
 export type { AeoQuery };
 
@@ -53,6 +54,10 @@ export interface EngineResult {
   urlsCount?: number;
   /** reddit.com threads this engine cited for the query. Absent when none. */
   redditCitations?: RankedCitation[];
+  /** The answer's top cited links, classified (who was cited instead of us).
+   *  Absent on snapshots recorded before this field existed: read that as
+   *  "not recorded", never as "cited nobody". */
+  citations?: ClassifiedCitation[];
   noAiOverview?: boolean;
   error?: string;
 }
@@ -115,6 +120,9 @@ export interface ActionItem {
   priority: 'high' | 'medium' | 'low';
   action: string;
   why: string;
+  /** For "win the query" items: who the engines cited instead (or
+   *  'not-recorded' on snapshots without citation data). */
+  citedInstead?: CitedInstead[] | 'not-recorded';
 }
 
 export interface AggregateResult {

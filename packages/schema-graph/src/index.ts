@@ -22,6 +22,8 @@ export type { ArticleGraphOptions } from './article.js';
 export { breadcrumbList } from './breadcrumb.js';
 
 export { videoObjectGraph } from './video.js';
+export { collectionPageGraph } from './collection.js';
+export type { CollectionPageInput } from './collection.js';
 export type { VideoObjectInput } from './video.js';
 
 export { extractFaqs, faqPage } from './faqs.js';

@@ -12,6 +12,7 @@ export type {
   CitationConfig,
   AeoConfig,
   AeoQuery,
+  AeoCitationConfig,
   CompetitorsConfig,
   CompetitorEntry,
   StrategyConfig,
@@ -22,6 +23,8 @@ export type {
   AmplifyConfig,
   AmplifyChannel,
   CtaPolicy,
+  TopicCluster,
+  TopicClustersConfig,
   CarouselStudioConfig,
   MediaConfig,
   NarrationConfig,
@@ -56,6 +59,7 @@ export {
   defaultAnalyticsConfig,
   defaultEntityPresenceConfig,
   defaultSearchConsoleConfig,
+  defaultAeoCitationConfig,
 } from './defaults.js';
 export {
   loadDomainPack,

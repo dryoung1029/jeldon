@@ -1,0 +1,54 @@
+---
+// One indexable page per topic cluster with enough live members
+// (`content.topicClusters.minLiveArticles`, default 2). Clusters are curated
+// in jeldon.config.ts; membership and the threshold come from the engine, so
+// the article page's "More on" links only ever point at pages that exist.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { breadcrumbList, collectionPageGraph } from '@jeldon/schema-graph';
+import { clusterPages, clusterPath } from '@jeldon/content-model';
+import { pack } from '../../../lib/pack';
+import { getPublishedArticles } from '../../../lib/articles';
+
+export async function getStaticPaths() {
+  const cfg = pack.content.topicClusters;
+  if (!cfg) return [];
+  const live = await getPublishedArticles();
+  const inputs = live.map((a) => ({ slug: a.slug, tags: a.data.tags, series: a.data.series, entry: a }));
+  return clusterPages(inputs, cfg).map(({ cluster, members }) => ({
+    params: { cluster: cluster.id },
+    props: { cluster, members: members.map((m) => m.entry) },
+  }));
+}
+
+const { cluster, members } = Astro.props;
+const cfg = pack.content.topicClusters!;
+const path = clusterPath(cluster.id, cfg);
+
+const jsonLd = [
+  collectionPageGraph({
+    name: cluster.label,
+    description: cluster.description,
+    path,
+    siteUrl: pack.brand.siteUrl,
+    partOf: { name: `${pack.brand.name} articles`, path: '/articles/' },
+    items: members.map((a) => ({ name: a.data.title, path: `/articles/${a.slug}/` })),
+  }),
+  breadcrumbList(
+    [
+      { name: 'Home', url: '/' },
+      { name: 'Articles', url: '/articles/' },
+      { name: cluster.label, url: path },
+    ],
+    pack.brand.siteUrl,
+  ),
+];
+---
+<BaseLayout title={cluster.title} description={cluster.description} jsonLd={jsonLd}>
+  <h1>{cluster.label}</h1>
+  {cluster.lead && <p>{cluster.lead}</p>}
+  <ul>
+    {members.map((a) => (
+      <li><a href={`/articles/${a.slug}/`}>{a.data.title}</a> — {a.data.excerpt}</li>
+    ))}
+  </ul>
+</BaseLayout>

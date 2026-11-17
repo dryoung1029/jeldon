@@ -12,6 +12,14 @@
  */
 
 export { runAudit, parseCitations, citationsOnHost, dateKey, type RunAuditOptions } from './run.js';
+export {
+  classifyCitations,
+  competitorHostsFromRoster,
+  citedInstead,
+  type CitedInstead,
+  type ClassifiedCitation,
+  type CitationKind,
+} from './citations.js';
 export { aggregate, buildActionItems, type AggregateOptions } from './aggregate.js';
 export {
   buildEngines,
