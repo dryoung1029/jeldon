@@ -229,3 +229,50 @@ Body stays untouched.`,
     expect(result.today).toBe('2026-06-28');
   });
 });
+
+describe('2026-11 catch-up: provenance, video, hero paths', () => {
+  const base = {
+    title: 'T',
+    excerpt: 'E',
+    publishDate: '2026-11-01',
+    category: 'guide',
+  };
+
+  it('parses autonomous and still accepts the deprecated docReviewed keys', async () => {
+    const { validateArticle, isAutonomousDraft, articleStatus } = await import('../src/index.js');
+    const r = validateArticle({ frontmatter: { ...base, draft: true, autonomous: true, docReviewed: true, docNotes: 'x' } }, devPack);
+    expect(r.ok).toBe(true);
+    expect(r.data?.autonomous).toBe(true);
+    expect(isAutonomousDraft({ draft: true, autonomous: true })).toBe(true);
+    expect(isAutonomousDraft({ draft: false, autonomous: true })).toBe(false);
+    // Provenance does not change lifecycle.
+    expect(articleStatus({ draft: true, ready: true })).toBe('ready');
+  });
+
+  it('parses every YouTube URL form and rejects non-YouTube video URLs', async () => {
+    const { parseYouTubeUrl, validateArticle } = await import('../src/index.js');
+    const id = 'dQw4w9WgXcQ';
+    expect(parseYouTubeUrl(`https://www.youtube.com/watch?v=${id}&t=1m30s`)).toMatchObject({ videoId: id, startSeconds: 90 });
+    expect(parseYouTubeUrl(`https://youtube.com/shorts/${id}`)).toMatchObject({ videoId: id, isShort: true });
+    expect(parseYouTubeUrl(`https://youtu.be/${id}?t=42`)).toMatchObject({ videoId: id, startSeconds: 42 });
+    expect(parseYouTubeUrl(`https://www.youtube-nocookie.com/embed/${id}?start=5`)).toMatchObject({ startSeconds: 5 });
+    expect(parseYouTubeUrl(`https://www.youtube.com/live/${id}`)?.videoId).toBe(id);
+    expect(parseYouTubeUrl(`https://m.youtube.com/watch?v=${id}`)?.watchUrl).toBe(`https://www.youtube.com/watch?v=${id}`);
+    expect(parseYouTubeUrl('https://vimeo.com/123')).toBeNull();
+    expect(parseYouTubeUrl('https://www.youtube.com/watch?v=short')).toBeNull();
+    expect(validateArticle({ frontmatter: { ...base, videoUrl: 'https://vimeo.com/1' } }, devPack).ok).toBe(false);
+    expect(validateArticle({ frontmatter: { ...base, videoUrl: `https://youtu.be/${id}`, videoUploadDate: '2026-10-01' } }, devPack).ok).toBe(true);
+  });
+
+  it('rejects hero paths outside the configured prefixes and paths that do not exist', async () => {
+    const { validateArticle } = await import('../src/index.js');
+    const pack = { ...devPack, content: { ...devPack.content, heroImagePathPrefixes: ['/img/'] } } as DomainPack;
+    expect(validateArticle({ frontmatter: { ...base, heroImage: '/images/invented.png' } }, pack).ok).toBe(false);
+    expect(validateArticle({ frontmatter: { ...base, heroImage: '/img/x/hero.png' } }, pack).ok).toBe(true);
+    const missing = validateArticle({ frontmatter: { ...base, heroImage: '/img/x/gone.png' } }, pack, {
+      heroImageExists: () => false,
+    });
+    expect(missing.ok).toBe(false);
+    expect(missing.errors[0]?.path).toBe('heroImage');
+  });
+});

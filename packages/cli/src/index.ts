@@ -2,6 +2,7 @@
 import { resolveConfigPath, validateDomainPack, loadDomainPack } from '@jeldon/config';
 import { runDoctor, type DoctorCheck } from './doctor.js';
 import { runCheckGeoFloor } from './check-geo-floor.js';
+import { runCheckMetaLength } from './check-meta-length.js';
 
 const ICON: Record<string, string> = { ok: '✔', warn: '⚠', error: '✖' };
 
@@ -75,6 +76,31 @@ async function main(): Promise<void> {
       return;
     }
 
+    case 'check-meta-length': {
+      try {
+        const report = await runCheckMetaLength({ files: rest.filter((a) => !a.startsWith('--')) });
+        if (json) {
+          console.log(JSON.stringify(report, null, 2));
+        } else {
+          for (const w of report.warnings) {
+            console.warn(`${ICON.warn} ${w.file}: ${w.message}`);
+            if (process.env.GITHUB_ACTIONS) console.warn(`::warning file=${w.file}::${w.message}`);
+          }
+          for (const e of report.errors) {
+            console.error(`${ICON.error} ${e.file}: ${e.message}`);
+            if (process.env.GITHUB_ACTIONS) console.error(`::error file=${e.file}::${e.message}`);
+          }
+          console.log(
+            `\n${report.ok ? ICON.ok : ICON.error} check-meta-length: ${report.errors.length} error(s), ${report.warnings.length} warning(s) across ${report.files} page(s)`,
+          );
+        }
+        if (!report.ok) process.exitCode = 1;
+      } catch (err) {
+        fail(err instanceof Error ? err.message : String(err), json);
+      }
+      return;
+    }
+
     case 'init': {
       console.log(
         [
@@ -100,6 +126,7 @@ async function main(): Promise<void> {
           '  validate                 Validate jeldon.config.ts against the Domain Pack schema',
           '  doctor [--pre]           Run the "wired correctly?" health check (--json for machines)',
           '  check-geo-floor [file…]  Score articles; fail if any are below their category target',
+          '  check-meta-length [file…]  Check title/description length on hand-coded .astro pages',
           '  init                     Scaffold a new project (see docs/IMPLEMENTATION.md)',
           '',
           'Flags: --json  machine-readable output',

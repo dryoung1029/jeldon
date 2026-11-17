@@ -19,10 +19,17 @@ export interface ValidateArticleResult {
  * markdown string (frontmatter is parsed via the shared codec) or an already
  * separated `{ frontmatter, body }`.
  */
+export interface ValidateArticleOptions extends BuildArticleSchemaOptions {
+  /** Check that `heroImage` exists (e.g. under `public/`). A path that fails
+   *  this check is an error: a model once invented a plausible hero path that
+   *  never existed, and the article shipped with a broken image. */
+  heroImageExists?: (path: string) => boolean;
+}
+
 export function validateArticle(
   input: string | { frontmatter: Record<string, unknown>; body?: string },
   pack: DomainPack,
-  opts: BuildArticleSchemaOptions = {},
+  opts: ValidateArticleOptions = {},
 ): ValidateArticleResult {
   const { frontmatter, body } =
     typeof input === 'string'
@@ -32,6 +39,10 @@ export function validateArticle(
   const schema = buildArticleSchema(pack, opts);
   const parsed = schema.safeParse(frontmatter);
   if (parsed.success) {
+    const hero = parsed.data.heroImage;
+    if (hero && opts.heroImageExists && !/^https?:\/\//.test(hero) && !opts.heroImageExists(hero)) {
+      return { ok: false, body, errors: [{ path: 'heroImage', message: `heroImage "${hero}" does not exist` }] };
+    }
     return { ok: true, data: parsed.data, body, errors: [] };
   }
   return {

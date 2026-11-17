@@ -231,7 +231,9 @@ ${geoPlaybook}
 You are in DRAFT mode. Use the entire conversation so far as your brief. Write the full article and call the create_draft tool. ${wordTargetLine(
       pack,
     )} Include:
-- A compelling lede that doesn't bury the point
+- A lede that answers the core question in the first 1–3 sentences (answer engines extract from the opening; story and context can follow)
+- A title that uses the reader's literal search nouns
+- Where the topic involves a decision or comparison, one structured block (a table or numbered list) built only from facts already in the article
 - 3–6 H2 sections with descriptive headings (no "Introduction" / "Conclusion" labels)
 - Internal links to relevant site pages where natural
 - A short "Bottom line" or similar wrap-up section
@@ -270,7 +272,9 @@ ${geoPlaybook}
 You are in DRAFT-SERIES-ARTICLE mode. The user proposed a multi-article series outline; you are writing ONE specific article from it. The full sibling outline is in the user message so you can cross-link cleanly without overlap.
 
 Write the full article and call the create_draft tool. ${wordTargetLine(pack)} Include:
-- A compelling lede that doesn't bury the point
+- A lede that answers the core question in the first 1–3 sentences (answer engines extract from the opening; story and context can follow)
+- A title that uses the reader's literal search nouns
+- Where the topic involves a decision or comparison, one structured block (a table or numbered list) built only from facts already in the article
 - 3–6 H2 sections with descriptive headings
 - Cross-links to sibling articles using /articles/<sibling-slug> where they fit
 - Internal links to relevant site pages where natural

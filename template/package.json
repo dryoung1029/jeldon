@@ -18,7 +18,8 @@
     "doctor": "jeldon doctor",
     "check:geo": "node scripts/check-geo-floor.mjs",
     "check:citations": "node scripts/lint-citations.mjs",
-    "check:frontmatter": "node scripts/check-frontmatter.mjs"
+    "check:frontmatter": "node scripts/check-frontmatter.mjs",
+    "check:meta": "jeldon check-meta-length"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.0.0",

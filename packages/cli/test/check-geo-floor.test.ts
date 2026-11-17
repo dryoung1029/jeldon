@@ -88,3 +88,21 @@ describe('evaluateGeoFloor', () => {
     expect(lenient.ok).toBe(true);
   });
 });
+
+describe('check-meta-length', () => {
+  it('flags long descriptions, short titles and HTML entities with the article bands', async () => {
+    const { checkMetaLiterals } = await import('../src/check-meta-length.js');
+    const seo = { title: { good: [40, 60] as [number, number], mehMax: 70 }, excerpt: { good: [120, 160] as [number, number], meh: [80, 200] as [number, number] } };
+    const long = `---\nconst title = 'A perfectly reasonable page title for this test';\nconst description = '${'x'.repeat(349)}';\n---`;
+    const issues = checkMetaLiterals('src/pages/team.astro', long, seo);
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ field: 'description', level: 'error' });
+
+    const entity = `const title = "Care &amp; Treatment options for your recovery plan";`;
+    expect(checkMetaLiterals('p.astro', entity, seo).some((i) => i.level === 'error' && i.message.includes('entity'))).toBe(true);
+
+    const meh = `const title = "Short but fine";`;
+    expect(checkMetaLiterals('p.astro', meh, seo)[0]?.level).toBe('warning');
+    expect(checkMetaLiterals('p.astro', 'no constants here', seo)).toEqual([]);
+  });
+});

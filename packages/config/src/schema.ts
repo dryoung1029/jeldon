@@ -55,6 +55,7 @@ const seoConfig = z.object({
   referenceSectionNames: z.array(z.string()).min(1),
   evidenceTriggers: z.array(z.string()),
   badFilenameRe: z.string(),
+  staticPages: z.object({ roots: z.array(z.string()).optional(), exclude: z.array(z.string()).optional() }).optional(),
 });
 
 const citationConfig = z.object({
@@ -362,6 +363,7 @@ export const domainPackSchema = z
       defaultAuthorSlug: z.string(),
       timezone: z.string(),
       lifecycle: z.object({ docReviewed: z.boolean().optional() }).optional(),
+      heroImagePathPrefixes: z.array(z.string().min(1)).optional(),
     }),
     scoring: z.object({ geo: geoConfig, seo: seoConfig }),
     citation: citationConfig,

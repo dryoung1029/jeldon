@@ -121,6 +121,10 @@ export interface SeoConfig {
   evidenceTriggers: string[];
   /** Regex source flagging camera-dump style image filenames. */
   badFilenameRe: string;
+  /** Hand-coded pages checked by `jeldon check-meta-length` against the
+   *  `title` / `excerpt` bands above. Default roots `["src/pages"]`, excluding
+   *  directories named `admin`, `api`, `preview`. */
+  staticPages?: { roots?: string[]; exclude?: string[] };
 }
 
 export interface ScoringConfig {
@@ -721,7 +725,14 @@ export interface DomainPack {
     tags?: string[];
     defaultAuthorSlug: string;
     timezone: string;
+    /** @deprecated `docReviewed` was retired in BoH (2026-07-10) in favor of
+     *  the `autonomous` provenance flag. Still honored when set; will be
+     *  removed in a later minor. */
     lifecycle?: { docReviewed?: boolean };
+    /** Allowed prefixes for `heroImage` paths, e.g. ["/img/"]. When set,
+     *  validation rejects any other path (a model once invented a plausible
+     *  `/images/...` path that never existed). Omit to allow any path. */
+    heroImagePathPrefixes?: string[];
   };
 
   scoring: ScoringConfig;

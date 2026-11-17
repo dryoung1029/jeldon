@@ -238,3 +238,17 @@ describe('emitLlmsTxt gating (uses a typed pack slice)', () => {
     expect(res.contents).toBe('');
   });
 });
+
+describe('videoObjectGraph', () => {
+  it('emits only when the upload date is known', async () => {
+    const { videoObjectGraph } = await import('../src/index.js');
+    const base = { videoId: 'dQw4w9WgXcQ', watchUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', name: 'N', description: 'D', siteUrl: 'https://acme.example/' };
+    expect(videoObjectGraph(base)).toBeNull();
+    expect(videoObjectGraph({ ...base, uploadDate: 'not a date' })).toBeNull();
+    const node = videoObjectGraph({ ...base, uploadDate: '2026-10-01' })!;
+    expect(node['@type']).toBe('VideoObject');
+    expect(node.uploadDate).toBe('2026-10-01');
+    expect(node.embedUrl).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+    expect(node.publisher).toEqual({ '@id': 'https://acme.example/#org' });
+  });
+});

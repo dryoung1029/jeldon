@@ -176,7 +176,7 @@ export function buildActionItems(
         action: `Win the query "${row.query}" — no engine cites you yet.`,
         why: mentionedOnly.length
           ? `You're mentioned but not linked on ${mentionedOnly.length} engine(s). Publish or strengthen a dedicated page with quotable, citation-backed claims so engines link it.`
-          : `Publish a focused article or strengthen the closest existing page. Lead with a direct, extractable answer + a References section.`,
+          : `Publish a focused article or strengthen the closest existing page. If that page already scores well, more evidence will not help; check extraction instead: the answer in sentences 1–3, the query's literal nouns in the title/H1, and a structured block (table or list) an engine can lift.`,
       });
     } else {
       const ranks = cited.map(([, e]) => e.citationRank ?? 99).filter((r) => r > 0);
@@ -185,7 +185,7 @@ export function buildActionItems(
         items.push({
           priority: 'medium',
           action: `Climb on "${row.query}" — cited but only at rank #${best}.`,
-          why: `Add authoritative citations, tighten the lead answer, and earn internal links to the target page so engines rank it higher among sources.`,
+          why: `Put the direct answer in the first 1–3 sentences, use the query's literal nouns in the title/H1, add a liftable table or list, and earn internal links to the target page so engines rank it higher among sources.`,
         });
       }
     }

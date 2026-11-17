@@ -21,6 +21,9 @@ export type { ArticleGraphOptions } from './article.js';
 
 export { breadcrumbList } from './breadcrumb.js';
 
+export { videoObjectGraph } from './video.js';
+export type { VideoObjectInput } from './video.js';
+
 export { extractFaqs, faqPage } from './faqs.js';
 
 export { emitLlmsTxt, renderLlmsTxt, NullWriter, fsWriter } from './llms-txt.js';

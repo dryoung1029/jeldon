@@ -251,6 +251,13 @@
             }
           },
           "additionalProperties": false
+        },
+        "heroImagePathPrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       },
       "required": [
@@ -621,6 +628,24 @@
             },
             "badFilenameRe": {
               "type": "string"
+            },
+            "staticPages": {
+              "type": "object",
+              "properties": {
+                "roots": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "exclude": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
             }
           },
           "required": [

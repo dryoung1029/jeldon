@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { DomainPack } from '@jeldon/config';
+import { parseYouTubeUrl } from './youtube.js';
 
 /**
  * The article frontmatter schema, built from the Domain Pack.
@@ -20,6 +21,17 @@ export interface BuildArticleSchemaOptions {
   defaultAuthorName?: string;
   /** Override the default author slug. Defaults to `content.defaultAuthorSlug`. */
   defaultAuthorSlug?: string;
+}
+
+/** `heroImage`: any string, or one of the allowed prefixes when the pack sets them. */
+function heroImageField(prefixes: string[] | undefined) {
+  if (!prefixes?.length) return z.string().optional();
+  return z
+    .string()
+    .refine((p) => prefixes.some((pre) => p.startsWith(pre)), {
+      message: `heroImage must start with ${prefixes.map((p) => `"${p}"`).join(' or ')}`,
+    })
+    .optional();
 }
 
 export function buildArticleSchema(pack: DomainPack, opts: BuildArticleSchemaOptions = {}) {
@@ -47,10 +59,15 @@ export function buildArticleSchema(pack: DomainPack, opts: BuildArticleSchemaOpt
     author: z.string().default(defaultAuthor),
     authorSlug: z.string().default(defaultAuthorSlug),
     readTime: z.string().optional(),
-    heroImage: z.string().optional(),
+    heroImage: heroImageField(pack.content.heroImagePathPrefixes),
     heroImageAlt: z.string().optional(),
     draft: z.boolean().default(false),
-    // Editorial-handoff state (Doc's review pass). Still a draft for publishing.
+    // Provenance, not lifecycle: true when an unattended pipeline wrote the
+    // draft with no human session behind it. Orthogonal to draft/ready/
+    // scheduled; surfaces "drafts nobody has looked at yet".
+    autonomous: z.boolean().default(false),
+    // @deprecated — retired in BoH 2026-07-10 (superseded by `autonomous` and
+    // the editor's improve loop). Still parsed so older files validate.
     docReviewed: z.boolean().default(false),
     docNotes: z.string().optional(),
     ready: z.boolean().default(false),
@@ -66,6 +83,15 @@ export function buildArticleSchema(pack: DomainPack, opts: BuildArticleSchemaOpt
     audioFileSize: z.number().optional(),
     audioGeneratedAt: z.coerce.date().optional(),
     sourceEpisode: z.url().optional(),
+    // Attached video (YouTube watch / Shorts / youtu.be / embed / live URL).
+    // VideoObject JSON-LD is emitted only when videoUploadDate is set: Google
+    // requires uploadDate for video rich results.
+    videoUrl: z
+      .url()
+      .refine((u) => parseYouTubeUrl(u) !== null, 'videoUrl must be a YouTube watch, Shorts, youtu.be, embed or live URL')
+      .optional(),
+    videoTitle: z.string().optional(),
+    videoUploadDate: z.coerce.date().optional(),
     // Newsletter automation state — written by the auto-newsletter cron. Brevo
     // returns numeric campaign IDs the cron sometimes writes unquoted, so coerce
     // to string rather than fail the schema and abort the build.

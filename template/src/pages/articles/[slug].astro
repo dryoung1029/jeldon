@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { articleGraph, breadcrumbList, extractFaqs, faqPage } from '@jeldon/schema-graph';
+import { articleGraph, breadcrumbList, extractFaqs, faqPage, videoObjectGraph } from '@jeldon/schema-graph';
+import { parseYouTubeUrl } from '@jeldon/content-model';
+import LazyYouTube from '../../components/LazyYouTube.astro';
 import { pack, authorEntries, categoryLabel } from '../../lib/pack';
 import { getPublishedArticles, getStubArticles, formatPublishDate, estimateReadTime } from '../../lib/articles';
 
@@ -64,6 +66,20 @@ if (!isStub) {
   const faqs = extractFaqs(article.body);
   if (faqs.length >= 2) jsonLd.push(faqPage(faqs));
 }
+
+// Attached video: the facade always renders; VideoObject only with an upload date.
+const video = !isStub && data.videoUrl ? parseYouTubeUrl(data.videoUrl) : null;
+if (video) {
+  const node = videoObjectGraph({
+    videoId: video.videoId,
+    watchUrl: video.watchUrl,
+    name: data.videoTitle ?? data.title,
+    description: data.excerpt,
+    uploadDate: data.videoUploadDate,
+    siteUrl: pack.brand.siteUrl,
+  });
+  if (node) jsonLd.push(node);
+}
 ---
 
 <BaseLayout
@@ -91,6 +107,14 @@ if (!isStub) {
         By {data.author} · {categoryLabel(data.category)} ·{' '}
         {formatPublishDate(data.publishDate)} · {data.readTime ?? estimateReadTime(article.body)}
       </small>
+      {video && (
+        <LazyYouTube
+          videoId={video.videoId}
+          title={data.videoTitle ?? data.title}
+          startSeconds={video.startSeconds}
+          vertical={video.isShort}
+        />
+      )}
       <Content />
     </article>
   )}

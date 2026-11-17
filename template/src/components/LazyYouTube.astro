@@ -1,0 +1,50 @@
+---
+// Click-to-load YouTube facade. A plain <iframe> pulls ~1 MB of player JS on
+// page load; this renders a thumbnail + play button and injects the real
+// iframe on click. Uses youtube-nocookie.com so no tracking cookies land
+// before the reader opts in by pressing play.
+import { youtubeThumbnail } from '@jeldon/content-model';
+
+interface Props {
+  videoId: string;
+  title: string;
+  startSeconds?: number;
+  /** Vertical 9:16 framing for Shorts. */
+  vertical?: boolean;
+}
+const { videoId, title, startSeconds = 0, vertical = false } = Astro.props;
+---
+<div class={`yt-facade${vertical ? ' yt-facade--vertical' : ''}`} data-video-id={videoId} data-start={startSeconds}>
+  <button type="button" class="yt-facade__btn" aria-label={`Play video: ${title}`}>
+    <img src={youtubeThumbnail(videoId)} alt="" loading="lazy" decoding="async" />
+    <span class="yt-facade__play" aria-hidden="true">▶</span>
+  </button>
+</div>
+
+<style>
+  .yt-facade { position: relative; aspect-ratio: 16 / 9; width: 100%; overflow: hidden; background: #111; }
+  .yt-facade--vertical { aspect-ratio: 9 / 16; max-width: 340px; margin-inline: auto; }
+  .yt-facade__btn { display: block; width: 100%; height: 100%; padding: 0; border: 0; cursor: pointer; background: none; }
+  .yt-facade__btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .yt-facade__play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #fff; pointer-events: none; }
+  /* The iframe is built at runtime, so a scoped selector would never match it. */
+  .yt-facade :global(iframe) { width: 100%; height: 100%; border: 0; display: block; }
+</style>
+
+<script>
+  // One delegated listener serves every facade on the page.
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement | null)?.closest('.yt-facade__btn');
+    if (!btn) return;
+    const wrap = btn.closest('.yt-facade') as HTMLElement | null;
+    const id = wrap?.dataset.videoId;
+    if (!wrap || !id) return;
+    const start = parseInt(wrap.dataset.start || '0', 10);
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0${start > 0 ? `&start=${start}` : ''}`;
+    iframe.title = btn.getAttribute('aria-label') || 'YouTube video';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+    wrap.replaceChildren(iframe);
+  });
+</script>
