@@ -5,6 +5,7 @@ import type {
   EntityPresenceConfig,
   GeoConfig,
   MediaConfig,
+  OpsConfig,
   ScoringConfig,
   SeoConfig,
   StrategyConfig,
@@ -745,3 +746,28 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
     days: 7,
   },
 };
+
+// ---------------------------------------------------------------------------
+// Ops observability (@jeldon/ops)
+// ---------------------------------------------------------------------------
+
+/**
+ * Generic ops defaults. Grading multipliers (ok ≤ 1.5× cadence, late ≤ 3×,
+ * else stale), the 14-day article cadence, the 2-day stuck-newsletter window
+ * and the dispatch poll/timeout/slack values are the source system's tuned
+ * numbers. No pipelines and no dispatchable workflows by default — a project
+ * lists its own crons. No newsletter cadence by default (not every project
+ * has a newsletter); set `cadence.newsletterDays` to turn that alert on.
+ */
+export const defaultOpsConfig: OpsConfig = {
+  pipelines: [],
+  grading: { lateMultiplier: 1.5, staleMultiplier: 3 },
+  cadence: { articleDays: 14, newsletterStuckDays: 2 },
+};
+
+/** Dispatch defaults used when `ops.dispatch` is set without the timing keys. */
+export const defaultOpsDispatchTiming = {
+  pollSeconds: 8,
+  timeoutMinutes: 20,
+  createdAtSlackSeconds: 90,
+} as const;

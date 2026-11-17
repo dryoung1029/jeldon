@@ -76,6 +76,29 @@ new code.
 > than backlinks — the biggest lever on-page-only optimization can't reach. See
 > `docs/AEO-PLAYBOOK.md`.
 
+### `@jeldon/ops` — ✅ built (capability `ops`)
+Ops observability. `pipelineStatus(entry, now, grading)` grades a cron-fed file
+ok / late / stale / never against its cadence (ok ≤ 1.5×, late ≤ 3×, from
+`ops.grading`), plus `unattestable` when a timestamp does not parse or a
+change-gated file has no `checkedAt`. Change-gated files are graded on the
+check stamp, which `gradePipelines(ops.pipelines, read)` always reads from the
+pipeline's own file (the proof must come from the step that owns it).
+`buildAttention(producers)` merges injected producers into one bad → warn →
+info list; a throwing producer becomes a `bad` item. Producers:
+`pipelineAttention`, `cadenceAttention` (+ `lastPublishedArticle`,
+`lastNewsletterSent`), `autonomousDraftAttention`, `missingHeroAttention` (live
+only), `stuckNewsletterAttention`, `readFailureAttention`.
+`createActionsClient` (injected `fetch`, allowlist enforced before any call,
+403/404 name the "Actions: Read and write" fix), `findRunAfter` (ignores the
+pre-read run and runs created before the click minus slack), `dispatchAndWait`.
+`skipWithWarning(name, missing)` prints a `::warning::` for crons that skip.
+`checkOpsConfig` backs the doctor check. Extracts `command-stats.ts`
+(pipelineStatus, attention, RUNNABLE_WORKFLOWS), `site-config.ts` (cadence),
+`github.ts` (dispatch), `api/admin/pipelines/run.ts`, the `/admin` polling
+loop, and the cron `::warning` pattern. Template ships
+`.github/actions/commit-and-push` (push retry ×3 with `git pull --rebase`) and
+`docs/accuracy-audit-prompt.md`.
+
 Before extending a package or finishing a `TODO(port)`, read
 `docs/DECOUPLING-NOTES.md` first — it names the exact coupling each module breaks
 and the adapter that replaces it.

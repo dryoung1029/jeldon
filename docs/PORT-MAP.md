@@ -59,13 +59,13 @@ Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 5a Pipeline freshness ok/late/stale/never + `checkedAt` | missing | new `@jeldon/ops` | S | `ops.pipelines[]`, `ops.grading` |
-| 5b `::warning` on secret-skip | missing (template has no crons) | ops helper + template | S | — |
-| 5c Push retry ×3 with `pull --rebase` | missing | template composite action | S | — |
-| 5d Attention feed + cadence alerts | missing | ops | M | `ops.cadence { articleDays, newsletterDays }` |
-| 5e Dispatch pipeline from dashboard | missing | ops (Actions client) + doctor permission check | M | `ops.dispatch.allowlist` |
+| 5a Pipeline freshness ok/late/stale/never + `checkedAt` | done (`@jeldon/ops`; adds `unattestable`) | new `@jeldon/ops` | S | `ops.pipelines[]`, `ops.grading` |
+| 5b `::warning` on secret-skip | done (`@jeldon/ops` `skipWithWarning`; template has no crons yet) | ops helper + template | S | — |
+| 5c Push retry ×3 with `pull --rebase` | done (`template/.github/actions/commit-and-push`) | template composite action | S | — |
+| 5d Attention feed + cadence alerts | done (`@jeldon/ops`) | ops | M | `ops.cadence { articleDays, newsletterDays?, newsletterStuckDays? }`, `ops.links` |
+| 5e Dispatch pipeline from dashboard | done (`@jeldon/ops` + static doctor check; no admin route in template) | ops (Actions client) + doctor permission check | M | `ops.dispatch { allowlist, pollSeconds, timeoutMinutes, createdAtSlackSeconds }` |
 | 5f `getArticlesBulk` (6 lanes, transient-only retry, partial results) | missing | store (interface + both adapters) | S | `store.bulk { concurrency, attempts }` (optional) |
-| 5g Monthly accuracy-audit prompt | missing | template/docs | S | — |
+| 5g Monthly accuracy-audit prompt | done (`template/docs/accuracy-audit-prompt.md`) | template/docs | S | — |
 
 ## 6. Content model, SEO, schema
 

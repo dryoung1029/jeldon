@@ -1,0 +1,81 @@
+name: Commit and push (rebase-protected)
+description: >
+  Commit the given paths if they changed, then push. A rejected push (the
+  branch moved during the run) is retried up to `attempts` times with
+  `git pull --rebase` between tries. Crons that write their own data files
+  rebase cleanly; a genuine conflict still fails the job loudly.
+  A bare `git push` loses this race whenever another cron commits during the
+  run, and fails the whole job (this is how a weekly snapshot was lost in the
+  source system).
+
+inputs:
+  paths:
+    description: Space- or newline-separated files/directories to commit. Paths that do not exist are skipped.
+    required: true
+  message:
+    description: Commit message.
+    required: true
+  branch:
+    description: Branch to push to. Defaults to the branch the workflow runs on.
+    required: false
+    default: ''
+  attempts:
+    description: Rebase-and-retry attempts after the first rejected push.
+    required: false
+    default: '3'
+  user-name:
+    description: Commit author name.
+    required: false
+    default: 'github-actions[bot]'
+  user-email:
+    description: Commit author email.
+    required: false
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
+
+outputs:
+  committed:
+    description: "'true' when a commit was made and pushed, 'false' when nothing changed."
+    value: ${{ steps.push.outputs.committed }}
+
+runs:
+  using: composite
+  steps:
+    - id: push
+      shell: bash
+      env:
+        # Inputs go through env, never interpolated into the script.
+        CP_PATHS: ${{ inputs.paths }}
+        CP_MESSAGE: ${{ inputs.message }}
+        CP_BRANCH: ${{ inputs.branch || github.ref_name }}
+        CP_ATTEMPTS: ${{ inputs.attempts }}
+        CP_USER_NAME: ${{ inputs.user-name }}
+        CP_USER_EMAIL: ${{ inputs.user-email }}
+      run: |
+        set -euo pipefail
+        set -f  # paths are literal; no shell globbing
+        for p in $CP_PATHS; do
+          if [ -e "$p" ] || git ls-files --error-unmatch -- "$p" >/dev/null 2>&1; then
+            git add -A -- "$p"
+          fi
+        done
+        if git diff --cached --quiet; then
+          echo "No changes in the listed paths; nothing to commit."
+          echo "committed=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        git config user.name "$CP_USER_NAME"
+        git config user.email "$CP_USER_EMAIL"
+        git commit -m "$CP_MESSAGE"
+        for attempt in $(seq 1 "$CP_ATTEMPTS"); do
+          if git push origin "HEAD:$CP_BRANCH"; then
+            echo "committed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "push rejected ($CP_BRANCH moved) — rebasing, attempt $attempt"
+          git pull --rebase origin "$CP_BRANCH" || { echo "::error::rebase conflict on $CP_BRANCH — failing"; exit 1; }
+          sleep $((attempt * 5))
+        done
+        # The loop rebases on its last iteration too, so make one final push;
+        # otherwise that rebased commit is never published.
+        git push origin "HEAD:$CP_BRANCH" || { echo "::error::push still failing after $CP_ATTEMPTS rebase attempts"; exit 1; }
+        echo "committed=true" >> "$GITHUB_OUTPUT"

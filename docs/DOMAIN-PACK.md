@@ -99,8 +99,21 @@ here, never in the engine.**
 
 ### `capabilities`
 Booleans gating growth surfaces: `drafting`, `amplify`, `audio`, `heroImages`,
-`competitiveIntel`, `engagementAnalytics`, `entityPresence`. Turn on only what
+`competitiveIntel`, `engagementAnalytics`, `entityPresence`, `ops`. Turn on only what
 you use; disabled surfaces are absent from the build.
+
+### `ops` (optional, `capabilities.ops`)
+`pipelines[]` — one entry per cron-fed data file: `id`, `name`, `file`,
+`source`, `cadenceDays`, `timestampField` (dot path), optional `changeGated
+{ checkedAtField = 'checkedAt', checkCadenceDays }` for files rewritten only on
+change (the writer must stamp `checkedAt` in the same file on every successful
+run), optional `run` (`workflow` | `endpoint` | `page`). `grading
+{ lateMultiplier: 1.5, staleMultiplier: 3 }`. `cadence { articleDays,
+newsletterDays?, newsletterStuckDays? }`: the newsletter alert exists only when
+`newsletterDays` is set. `dispatch { allowlist, pollSeconds = 8,
+timeoutMinutes = 20, createdAtSlackSeconds = 90 }`: data-refresh workflows
+only; the token needs "Actions: Read and write". Every `run.workflow` must be
+in the allowlist (schema-enforced). `links` maps attention kinds to admin links.
 
 ### `services`
 `store` (`github` | `fs`), `analytics` (`cloudflare` | `none`), and
