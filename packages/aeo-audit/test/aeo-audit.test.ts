@@ -206,3 +206,49 @@ describe('config-driven portability (no engine code changes)', () => {
     expect(healthOut.actionItems[0]?.priority).toBe('medium');
   });
 });
+
+describe('anchored brand matching (BoH 2026-09 regressions)', () => {
+  const brand = {
+    url: 'acmehealth.example',
+    mentions: ['acme health', 'dr. jane doe', 'dr doe'],
+    mentionExclusions: {
+      'acme health': ['\\b(?:growing|large)\\s+acme health\\b', '\\bacme health\\s+(?:research|literature)\\b'],
+    },
+  };
+
+  it('matches mentions as whole terms only', async () => {
+    const { parseCitations } = await import('../src/index.js');
+    expect(parseCitations([], 'Ask Dr. Doe about it', brand).brandMentioned).toBe(true);
+    expect(parseCitations([], 'Ask Dr Doe about it', brand).brandMentioned).toBe(true);
+    expect(parseCitations([], 'Dr. Doerr disagrees', brand).brandMentioned).toBe(false);
+  });
+
+  it('ignores generic phrasings listed in mentionExclusions', async () => {
+    const { parseCitations } = await import('../src/index.js');
+    expect(parseCitations([], 'A growing acme health research base says…', brand).brandMentioned).toBe(false);
+    expect(parseCitations([], 'Acme Health in Springfield offers this', brand).brandMentioned).toBe(true);
+    expect(
+      parseCitations([], 'A growing acme health literature, and Acme Health the clinic', brand).brandMentioned,
+    ).toBe(true);
+  });
+
+  it('matches citation URLs by hostname, not substring', async () => {
+    const { parseCitations } = await import('../src/index.js');
+    expect(parseCitations(['https://blog.acmehealth.example/x'], '', brand).citationRank).toBe(1);
+    expect(parseCitations(['https://notacmehealth.example/x'], '', brand).cited).toBe(false);
+    expect(parseCitations(['https://acmehealth.example.evil.net/'], '', brand).cited).toBe(false);
+  });
+
+  it('records reddit citations with rank', async () => {
+    const { citationsOnHost } = await import('../src/index.js');
+    expect(
+      citationsOnHost(
+        ['https://a.example', 'https://www.reddit.com/r/x/comments/1', 'https://notreddit.com/', 'https://old.reddit.com/r/y'],
+        'reddit.com',
+      ),
+    ).toEqual([
+      { url: 'https://www.reddit.com/r/x/comments/1', rank: 2 },
+      { url: 'https://old.reddit.com/r/y', rank: 4 },
+    ]);
+  });
+});

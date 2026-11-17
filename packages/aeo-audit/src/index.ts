@@ -11,7 +11,7 @@
  * Ported from Body of Health `scripts/aeo-audit.mjs` + `command/aeo.ts`.
  */
 
-export { runAudit, parseCitations, dateKey, type RunAuditOptions } from './run.js';
+export { runAudit, parseCitations, citationsOnHost, dateKey, type RunAuditOptions } from './run.js';
 export { aggregate, buildActionItems, type AggregateOptions } from './aggregate.js';
 export {
   buildEngines,
@@ -38,6 +38,7 @@ export type {
   EngineFn,
   Engine,
   BrandMatch,
+  RankedCitation,
   EngineResult,
   QueryResult,
   Snapshot,

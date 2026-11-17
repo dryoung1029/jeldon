@@ -761,6 +761,18 @@
           "exclusiveMinimum": 0,
           "maximum": 9007199254740991
         },
+        "brandMentionExclusions": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
         "model": {
           "type": "string"
         }
@@ -1571,7 +1583,25 @@
               "label": {
                 "type": "string"
               },
-              "needles": {
+              "hosts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "hostPatterns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "utmSources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "hostContains": {
                 "type": "array",
                 "items": {
                   "type": "string"
@@ -1579,12 +1609,16 @@
               },
               "drop": {
                 "type": "boolean"
-              }
+              },
+              "needles": {}
             },
-            "required": [
-              "needles"
-            ],
             "additionalProperties": false
+          }
+        },
+        "ownHosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
         "directLabel": {

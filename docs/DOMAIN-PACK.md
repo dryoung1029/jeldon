@@ -61,9 +61,26 @@ explicit per-domain choice that resolves the lint-vs-verifier contradiction),
 and `verifier` (`none` | `cite8` | `primary-source`).
 
 ### `aeo`
-`brandMentions` (prose-mention detection), optional `localSearchLocation` (omit
-for non-local verticals), `querySet` (the queries audited), `engines`
-(`perplexity` | `anthropic` | `google-aio` | `openai`), `highPriorityTags`.
+`brandMentions` (prose-mention detection, matched as whole terms), optional
+`brandMentionExclusions` (term → regex sources for generic phrasings that
+contain the term but aren't a mention, e.g. "a growing body of health research"),
+optional `localSearchLocation` (omit for non-local verticals), `querySet` (the
+queries audited), `engines` (`perplexity` | `anthropic` | `google-aio` |
+`openai`), `highPriorityTags`, optional `model` (alias into `drafting.models`).
+
+### `drafting` (optional)
+`models` (alias → model id; the one place IDs live), `modelLabels` (picker
+text), `defaultModel`, `utilityModel`, `effort` (per-purpose
+`low`/`medium`/`high`/`max`, with a `default`), `maxTokens` per mode (thinking
+counts toward these, so leave headroom), `draftFloor`, `wordCountTarget`.
+
+### `analytics` (optional)
+`refererChannelMap` rules match the referer **hostname**, never a substring:
+`hosts` (exact or parent domain), `hostPatterns` (anchored regex, e.g.
+`(^|\.)google\.`), `utmSources` (exact tokens, checked first), and
+`hostContains` as a last resort. `ownHosts` lists your own domains; the host of
+`brand.siteUrl` is added automatically by `analyticsConfigFromPack`.
+`botUaPattern` tokens must be bot-specific (`pinterestbot`, not `pinterest`).
 
 ### `competitors` (optional)
 `roster`, `targetKeywords`, our `ourPlaceId`/`ourName`/`localPackLocation`,

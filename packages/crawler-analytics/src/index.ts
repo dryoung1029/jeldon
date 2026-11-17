@@ -19,7 +19,7 @@
 export { detectAiCrawler, looksLikeBot, localDateKey, type DetectedCrawler } from './crawlers.js';
 
 // Referer / source classification
-export { classifyReferer, aggregateReferrers } from './referer.js';
+export { classifyReferer, aggregateReferrers, analyticsConfigFromPack } from './referer.js';
 
 // Edge-analytics provider
 export {

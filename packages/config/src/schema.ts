@@ -76,6 +76,7 @@ const aeoConfig = z.object({
   engines: z.array(z.enum(['perplexity', 'anthropic', 'google-aio', 'openai'])).min(1),
   highPriorityTags: z.array(z.string()),
   maxSnapshots: z.number().int().positive().optional(),
+  brandMentionExclusions: z.record(z.string(), z.array(z.string())).optional(),
   model: z.string().optional(),
 });
 
@@ -241,12 +242,31 @@ const analyticsConfig = z.object({
     )
     .min(1),
   refererChannelMap: z.array(
-    z.object({
-      label: z.string().optional(),
-      needles: z.array(z.string()),
-      drop: z.boolean().optional(),
-    }),
+    z
+      .object({
+        label: z.string().optional(),
+        hosts: z.array(z.string()).optional(),
+        hostPatterns: z.array(z.string()).optional(),
+        utmSources: z.array(z.string()).optional(),
+        hostContains: z.array(z.string()).optional(),
+        drop: z.boolean().optional(),
+        needles: z.unknown().optional(),
+      })
+      .superRefine((rule, ctx) => {
+        if (rule.needles !== undefined) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['needles'],
+            message:
+              'refererChannelMap `needles` (substring match) was removed: it misclassified hosts (`t.co` matched reddit.com). Use `hosts` (exact or subdomain), `hostPatterns` (anchored regex) or `utmSources` (exact tokens).',
+          });
+        }
+        if (!rule.hosts?.length && !rule.hostPatterns?.length && !rule.utmSources?.length && !rule.hostContains?.length) {
+          ctx.addIssue({ code: 'custom', message: 'A referer rule needs at least one of hosts, hostPatterns, utmSources or hostContains.' });
+        }
+      }),
   ),
+  ownHosts: z.array(z.string()).optional(),
   directLabel: z.string(),
   articlePathPattern: z.string(),
   assetPathPattern: z.string(),

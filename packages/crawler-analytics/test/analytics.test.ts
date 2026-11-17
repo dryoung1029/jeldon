@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { AiBot, AnalyticsConfig, RefererChannelRule } from '@jeldon/config';
+import { defaultAnalyticsConfig, type AiBot, type AnalyticsConfig, type RefererChannelRule } from '@jeldon/config';
 import {
   aggregateDayDetail,
+  analyticsConfigFromPack,
   classifyReferer,
   collectBeacon,
   detectAiCrawler,
@@ -44,9 +45,9 @@ describe('config-driven portability (no engine code changes)', () => {
     { match: 'AcmeResearchBot', bot: 'AcmeResearchBot', engine: 'acme', purpose: 'index' },
   ];
   const fintechReferers: RefererChannelRule[] = [
-    { needles: ['acme.example'], drop: true },
-    { label: 'Hacker News', needles: ['news.ycombinator', 'hn.algolia'] },
-    { label: 'GitHub', needles: ['github.com'] },
+    { hosts: ['acme.example'], drop: true },
+    { label: 'Hacker News', hosts: ['news.ycombinator.com', 'hn.algolia.com'] },
+    { label: 'GitHub', hosts: ['github.com'] },
   ];
 
   it('detects only the injected bot list', () => {
@@ -146,5 +147,53 @@ describe('article-traffic reader + writeback', () => {
     expect(t.bot).toBe(3);
     expect(t.total).toBe(11);
     expect(t.humanShare).toBeCloseTo(8 / 11);
+  });
+});
+
+describe('hostname-anchored referer classification (BoH 2026-09-06 regression)', () => {
+  it('does not report hosts ending in t.com as X', () => {
+    expect(classifyReferer('reddit.com')).toBe('Reddit');
+    expect(classifyReferer('www.reddit.com')).toBe('Reddit');
+    expect(classifyReferer('chatgpt.com')).toBe('ChatGPT');
+    expect(classifyReferer('pinterest.com')).toBe('Pinterest');
+    expect(classifyReferer('t.co')).toBe('X / Twitter');
+  });
+
+  it('classifies the new channels', () => {
+    expect(classifyReferer('claude.ai')).toBe('Claude');
+    expect(classifyReferer('copilot.microsoft.com')).toBe('Copilot');
+    expect(classifyReferer('nextdoor.com')).toBe('Nextdoor');
+    expect(classifyReferer('redd.it')).toBe('Reddit');
+  });
+
+  it('matches UTM tokens exactly and hosts by domain, never by substring', () => {
+    expect(classifyReferer('newsletter')).toBe('Newsletter');
+    expect(classifyReferer('fb')).toBe('Facebook');
+    expect(classifyReferer('ig')).toBe('Instagram');
+    expect(classifyReferer('gbp')).toBe('Google Business');
+    // `ig` / `fb` / `email` used to match any host containing them.
+    expect(classifyReferer('bigcommerce.com')).toBe('bigcommerce.com');
+    expect(classifyReferer('emailoctopus.com')).toBe('emailoctopus.com');
+    expect(classifyReferer('notreddit.com')).toBe('notreddit.com');
+    expect(classifyReferer('www.google.co.uk')).toBe('Google Search');
+    expect(classifyReferer('https://l.facebook.com/l.php?u=x')).toBe('Facebook');
+  });
+
+  it('drops own-domain navigation from ownHosts / brand.siteUrl', () => {
+    const cfg = analyticsConfigFromPack({ brand: { siteUrl: 'https://www.acme.example/' } } as never);
+    expect(cfg.ownHosts).toContain('acme.example');
+    expect(classifyReferer('blog.acme.example', cfg.refererChannelMap, cfg.directLabel, cfg.ownHosts)).toBeNull();
+    expect(classifyReferer('acme.example.evil.com', cfg.refererChannelMap, cfg.directLabel, cfg.ownHosts)).toBe('acme.example.evil.com');
+  });
+});
+
+describe('bot UA tokens are anchored', () => {
+  it('counts the Pinterest and DuckDuckGo browsers as humans, their bots as bots', () => {
+    const re = new RegExp(defaultAnalyticsConfig.botUaPattern, 'i');
+    expect(re.test('Mozilla/5.0 (iPhone) Pinterest for iOS/12.0')).toBe(false);
+    expect(re.test('Mozilla/5.0 (Linux; Android) DuckDuckGo/5')).toBe(false);
+    expect(re.test('Pinterestbot/1.0')).toBe(true);
+    expect(re.test('DuckDuckBot/1.1')).toBe(true);
+    expect(re.test('DuckAssistBot/1.0')).toBe(true);
   });
 });

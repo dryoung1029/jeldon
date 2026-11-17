@@ -1,4 +1,10 @@
-import { defaultEntityPresenceConfig, type EntityPresenceConfig } from '@jeldon/config';
+import {
+  defaultEntityPresenceConfig,
+  hostIs,
+  hostOf,
+  mentionsTerm,
+  type EntityPresenceConfig,
+} from '@jeldon/config';
 import type {
   BrandContract,
   FieldConsistency,
@@ -9,7 +15,7 @@ import type {
 
 /**
  * Cross-source brand-mention consistency. Classifies each discovered mention to
- * a configured source (by host substring), counts presence per source, and on
+ * a configured source (by hostname: exact or parent domain), counts presence per source, and on
  * listing-style surfaces (`napConsistencyChecked`) verifies the canonical
  * name + NAP strings appear verbatim. A drift — an old phone number on a stale
  * directory listing — is the consistency signal AI engines penalize.
@@ -29,7 +35,7 @@ export function checkMentionConsistency(
   const bySource = new Map<string, OffSiteMention[]>();
   for (const m of sources) {
     const host = hostOf(m.url);
-    const src = cfg.sources.find((s) => s.hostNeedles.some((n) => host.includes(n.toLowerCase())));
+    const src = cfg.sources.find((s) => hostIs(host, ...s.hostNeedles));
     if (!src) continue;
     const bucket = bySource.get(src.id) ?? [];
     bucket.push(m);
@@ -51,12 +57,13 @@ export function checkMentionConsistency(
         const offendingUrls: string[] = [];
         let sawAny = false;
         for (const m of mentions) {
-          const hay = (m.text ?? '').toLowerCase();
+          const hay = m.text ?? '';
           // Only mentions that carry text can be checked; a bare URL is
           // 'absent' evidence (we can't confirm consistency without the body).
           if (!hay) continue;
           sawAny = true;
-          if (!hay.includes(expected.toLowerCase())) offendingUrls.push(m.url);
+          // Whole-term match: "Acme" must not pass on "Acmeville".
+          if (!mentionsTerm(hay, expected)) offendingUrls.push(m.url);
         }
         const status: FieldConsistency['status'] = !sawAny
           ? 'absent'
@@ -83,13 +90,4 @@ export function checkMentionConsistency(
     .map((s) => ({ sourceId: s.id, label: s.label, weight: s.weight }));
 
   return { sources: sourceReports, missingSources, mismatchCount };
-}
-
-/** Lowercased host of a URL, www-stripped. Tolerant of bare hosts. */
-function hostOf(url: string): string {
-  try {
-    return new URL(url).host.toLowerCase().replace(/^www\./, '');
-  } catch {
-    return url.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0] ?? url;
-  }
 }

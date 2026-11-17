@@ -66,3 +66,4 @@ export {
   effortFor,
   singleToolRequest,
 } from './llm.js';
+export { hostOf, hostIs, termRegex, mentionsTerm } from './match.js';

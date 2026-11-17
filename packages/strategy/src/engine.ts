@@ -29,13 +29,14 @@ function compileRoutes(patterns: string[]): RegExp[] {
   return patterns.map((p) => new RegExp(p, 'i'));
 }
 
+/** Sum the requests whose channel label is one of `labels` (exact, case-insensitive). */
 const sumWhere = (
   refs: Array<{ source: string; requests: number }>,
-  needles: string[],
-): number =>
-  refs
-    .filter((r) => needles.some((n) => r.source.toLowerCase().includes(n)))
-    .reduce((a, r) => a + r.requests, 0);
+  labels: string[],
+): number => {
+  const want = new Set(labels.map((l) => l.toLowerCase()));
+  return refs.filter((r) => want.has(r.source.toLowerCase())).reduce((a, r) => a + r.requests, 0);
+};
 
 /** GEO target for a content category. Reuses `content.categoryTargets` from the
  *  pack (passed in by the host); falls back to 80 — the BoH default for an

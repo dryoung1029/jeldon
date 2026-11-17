@@ -142,8 +142,8 @@ export const defaultStrategyConfig: StrategyConfig = {
   ],
   articlePathPattern: '^/articles/([^/]+)$',
   refererGroups: {
-    social: ['facebook', 'instagram', 'x /', 'twitter', 'linkedin', 'youtube'],
-    search: ['google search', 'google'],
+    social: ['Facebook', 'Instagram', 'X / Twitter', 'LinkedIn', 'YouTube', 'Reddit', 'Pinterest', 'Nextdoor'],
+    search: ['Google Search', 'Bing', 'DuckDuckGo'],
   },
   liveCrawlPurpose: 'live',
   deepLinks: {
@@ -644,9 +644,12 @@ export const defaultEntityPresenceConfig: EntityPresenceConfig = {
  * - `refererChannelMap` consolidates the THREE referer/source classifiers
  *   (`fetch-cf-analytics.mjs::classifyReferer`, `traffic-sources.ts::classifySource`,
  *   the editor CTA logic). Rules are evaluated in order; first match wins. `drop`
- *   rules (internal nav, the CF Access auth redirect) suppress the source. The
- *   own-domain `yourbodyofhealth.com` needle is the one truly brand-specific
- *   value — a new domain re-points it.
+ *   rules (the CF Access auth redirect) suppress the source. Rules match the
+ *   hostname exactly or as a parent domain, never as a substring. Own-domain
+ *   navigation is dropped via `ownHosts` (filled from `brand.siteUrl`).
+ * - `botUaPattern` tokens are anchored to bot UAs (`pinterestbot`,
+ *   `duckduckbot|duckassist`): bare `pinterest` / `duckduck` matched the
+ *   Pinterest in-app browser and the DuckDuckGo browser, i.e. real people.
  * - The CF zone/account ids that were env-literals in BoH (`CF_ZONE_ID` /
  *   `CF_ACCOUNT_ID`) are config here; the secret token stays in env.
  *
@@ -677,31 +680,49 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
     { match: 'CCBot', bot: 'CCBot', engine: 'commoncrawl', purpose: 'train' },
     { match: 'cohere-ai', bot: 'cohere-ai', engine: 'cohere', purpose: 'train' },
   ],
+  // Hostname-anchored (BoH 2026-09-06: substring `t.co` reported reddit,
+  // chatgpt and pinterest traffic as X). UTM tokens match exactly and are
+  // checked first. Own-domain drops come from `ownHosts` / `brand.siteUrl`,
+  // not from this list.
   refererChannelMap: [
-    { needles: ['yourbodyofhealth.com'], drop: true }, // internal nav
-    { needles: ['cloudflareaccess.com'], drop: true }, // admin auth redirect
-    { label: 'Newsletter', needles: ['sendib', 'sendinblue', 'brevo', 'newsletter', 'email'] },
-    { label: 'Google Search', needles: ['google.'] },
-    { label: 'Google Business', needles: ['gbp', 'gmb', 'google-business'] },
-    { label: 'Bing', needles: ['bing.'] },
-    { label: 'DuckDuckGo', needles: ['duckduckgo'] },
-    { label: 'Facebook', needles: ['facebook.', 'l.facebook', 'fb.com', 'fb.me', 'fb'] },
-    { label: 'Instagram', needles: ['instagram', 'ig'] },
-    { label: 'X / Twitter', needles: ['t.co', 'twitter', 'x.com'] },
-    { label: 'LinkedIn', needles: ['linkedin', 'lnkd.in'] },
-    { label: 'YouTube', needles: ['youtube', 'youtu.be'] },
-    { label: 'Reddit', needles: ['reddit'] },
-    { label: 'Perplexity', needles: ['perplexity'] },
-    { label: 'ChatGPT', needles: ['chatgpt', 'openai'] },
-    { label: 'Yelp', needles: ['yelp'] },
-    { label: 'Healthgrades', needles: ['healthgrades'] },
+    { hosts: ['cloudflareaccess.com'], drop: true }, // admin auth redirect
+    {
+      label: 'Newsletter',
+      utmSources: ['newsletter', 'email', 'brevo', 'sendinblue'],
+      hosts: ['brevo.com', 'sendinblue.com'],
+      hostContains: ['sendib'],
+    },
+    { label: 'Google Business', utmSources: ['gbp', 'gmb', 'google-business'] },
+    { label: 'Google Search', hostPatterns: ['(^|\\.)google\\.'] },
+    { label: 'Bing', hostPatterns: ['(^|\\.)bing\\.'] },
+    { label: 'DuckDuckGo', hosts: ['duckduckgo.com'] },
+    {
+      label: 'Facebook',
+      utmSources: ['facebook', 'fb'],
+      hosts: ['fb.com', 'fb.me'],
+      hostPatterns: ['(^|\\.)facebook\\.'],
+    },
+    { label: 'Instagram', utmSources: ['instagram', 'ig'], hosts: ['instagram.com'] },
+    { label: 'ChatGPT', hosts: ['chatgpt.com', 'openai.com'] },
+    { label: 'Perplexity', hosts: ['perplexity.ai'] },
+    { label: 'Claude', hosts: ['claude.ai'] },
+    { label: 'Copilot', hosts: ['copilot.microsoft.com'] },
+    { label: 'Reddit', hosts: ['reddit.com', 'redd.it'] },
+    { label: 'X / Twitter', utmSources: ['twitter', 'x'], hosts: ['t.co', 'twitter.com', 'x.com'] },
+    { label: 'LinkedIn', utmSources: ['linkedin'], hosts: ['linkedin.com', 'lnkd.in'] },
+    { label: 'YouTube', hosts: ['youtube.com', 'youtu.be'] },
+    { label: 'Pinterest', hosts: ['pinterest.com'] },
+    { label: 'Nextdoor', hosts: ['nextdoor.com'] },
+    { label: 'Yelp', hosts: ['yelp.com'] },
+    { label: 'Healthgrades', hosts: ['healthgrades.com'] },
   ],
+  ownHosts: [],
   directLabel: 'Direct / none',
   articlePathPattern: '^/articles/([a-z0-9-]+)/?$',
   assetPathPattern:
     '^/(_astro|_image|images|img|audio|favicon|cdn-cgi|wp-cron|wp-admin|wp-login|xmlrpc|wp-content|wp-includes|.*\\.(?:css|js|png|jpe?g|webp|avif|svg|ico|mp3|xml|txt|php|woff2?))',
   botUaPattern:
-    'bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|whatsapp|telegram|slack|discord|headless|monitor|uptime|python-requests|curl|wget|go-http|libwww|okhttp|axios|node-fetch|java\\/|scrapy|ahrefs|semrush|mj12|dotbot|petalbot|dataforseo|bytespider|gptbot|claudebot|ccbot|perplexity|yandex|baidu|sogou|applebot|googlebot|bingbot|duckduck',
+    'bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterestbot|whatsapp|telegram|slack|discord|headless|monitor|uptime|python-requests|curl|wget|go-http|libwww|okhttp|axios|node-fetch|java\\/|scrapy|ahrefs|semrush|mj12|dotbot|petalbot|dataforseo|bytespider|gptbot|claudebot|ccbot|perplexity|yandex|baidu|sogou|applebot|googlebot|bingbot|duckduckbot|duckassist',
   // Mirrors BoH `fetch-cf-analytics.mjs::SITE_ROUTE_404` (and strategy.ts). A
   // 404 on one of these survives the top-25 truncation.
   siteRoute404Patterns: [

@@ -269,6 +269,8 @@ export class CloudflareAnalytics implements AnalyticsProvider {
           rows.map((r: any) => ({ host: r.dimensions.refererHost, count: r.count || 0 })),
           this.cfg.refererChannelMap,
           this.cfg.directLabel,
+          15,
+          this.cfg.ownHosts ?? [],
         );
         return { referrers, referrersDays: days };
       } catch {

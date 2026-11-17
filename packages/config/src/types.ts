@@ -164,6 +164,10 @@ export interface AeoConfig {
   /** Tags that bump an action item's priority. */
   highPriorityTags: string[];
   maxSnapshots?: number;
+  /** Generic phrasings that contain a brand mention but are not one, keyed by
+   *  the mention term. Values are regex sources; matches are removed before
+   *  the term is tested. e.g. `{ "body of health": ["\\bgrowing\\s+body of health\\b"] }`. */
+  brandMentionExclusions?: Record<string, string[]>;
   /** Model alias (key into `drafting.models`) or raw id for the Anthropic
    *  engine. Default: `drafting.defaultModel`. */
   model?: string;
@@ -187,8 +191,9 @@ export interface EntityPresenceSource {
   id: string;
   /** Human label surfaced in the report. */
   label: string;
-  /** Host substrings that identify a citation/mention as living on this source
-   *  (lowercased, matched as substrings against a URL host). e.g. ["reddit.com"]. */
+  /** Domains that identify a citation/mention as living on this source,
+   *  matched against the URL host exactly or as a parent domain (never as a
+   *  substring). e.g. ["reddit.com"]. */
   hostNeedles: string[];
   /** Relative importance of presence on this source (0-1). Tunable per domain. */
   weight: number;
@@ -271,8 +276,9 @@ export interface StrategyThresholds {
   maxRecommendations: number;
 }
 
-/** Referer-source needle groups, lowercased substring matches. Domain-agnostic
- *  — a non-social-media business overrides these. */
+/** Channel-label groups for the strategy rules. Each entry is an exact
+ *  channel label as `classifyReferer` emits it (case-insensitive equality, not
+ *  a substring: `google` would also count "Google Business"). */
 export interface StrategyRefererGroups {
   social: string[];
   search: string[];
@@ -568,16 +574,31 @@ export interface AiBot {
 
 /** One referer-channel rule. A single injected map kills the 3-file
  *  triplication (`classifyReferer`, `classifySource`, the editor CTA logic).
- *  `needles` are lowercased substrings; the first rule whose any-needle matches
- *  the (lowercased) host/source wins. `drop:true` suppresses the source
- *  entirely (e.g. internal nav, an auth redirect). */
+ *  Exact UTM tokens are checked first; then the hostname is matched against
+ *  each rule in order (exact or parent domain, anchored pattern, substring as a
+ *  last resort). First match wins. `drop:true` suppresses the source entirely
+ *  (e.g. an auth redirect). */
 export interface RefererChannelRule {
   /** Friendly channel label, e.g. "Google Search". Ignored when `drop` is set. */
   label?: string;
-  /** Lowercased substrings; any match selects this rule. */
-  needles: string[];
+  /** Domains matched against the referer hostname exactly or as a parent
+   *  domain (`reddit.com` matches `old.reddit.com`, never `notreddit.com`). */
+  hosts?: string[];
+  /** Regex sources tested against the hostname, for families like
+   *  `(^|\.)google\.` (every Google ccTLD). Anchor them yourself. */
+  hostPatterns?: string[];
+  /** Exact UTM source tokens (`newsletter`, `fb`). Checked against the raw
+   *  source value before any hostname rule, across all rules. */
+  utmSources?: string[];
+  /** Plain substrings of the hostname. Last resort for vendor tracking hosts
+   *  with no stable domain (e.g. `sendib`); prefer `hosts`. */
+  hostContains?: string[];
   /** When true, a matching host is excluded from the source breakdown. */
   drop?: boolean;
+  /** @deprecated Removed in 0.3: substring needles misclassified hosts (`t.co`
+   *  matched reddit.com). Validation rejects it; use `hosts` / `hostPatterns` /
+   *  `utmSources`. */
+  needles?: never;
 }
 
 /** Config for the crawler + edge-analytics surface (@jeldon/crawler-analytics).
@@ -591,6 +612,10 @@ export interface AnalyticsConfig {
   /** Referer/source → channel rules, evaluated in order. The label for a host
    *  matching no rule is the bare host. */
   refererChannelMap: RefererChannelRule[];
+  /** Our own domains. Referers on these (or their subdomains) are internal
+   *  navigation and are dropped. `analyticsConfigFromPack` adds the host of
+   *  `brand.siteUrl` automatically. */
+  ownHosts?: string[];
   /** Label returned for an empty/absent referer. BoH: "Direct / none". */
   directLabel: string;
   /** Regex source matching an article-detail path with the slug as group 1.

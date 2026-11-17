@@ -13,6 +13,7 @@ export function brandMatchFromPack(pack: Pick<DomainPack, 'brand' | 'aeo'>): Bra
   return {
     url: hostOf(pack.brand.siteUrl),
     mentions: pack.aeo.brandMentions,
+    ...(pack.aeo.brandMentionExclusions ? { mentionExclusions: pack.aeo.brandMentionExclusions } : {}),
   };
 }
 
