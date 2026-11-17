@@ -67,3 +67,21 @@ export {
   singleToolRequest,
 } from './llm.js';
 export { hostOf, hostIs, termRegex, mentionsTerm } from './match.js';
+
+// Site ops: site alert, admin access, business hours.
+export type {
+  BrandContact,
+  DayName,
+  HoursInterval,
+  DayHours,
+  SpecialHours,
+  HoursData,
+  BusinessHoursConfig,
+  PlacesServiceConfig,
+  SiteAlertLimits,
+  SiteAlertPreset,
+  SiteAlertConfig,
+  AccessPolicyConfig,
+  SecurityConfig,
+} from './types.js';
+export { defaultSiteAlertConfig, defaultSecurityConfig } from './defaults.js';

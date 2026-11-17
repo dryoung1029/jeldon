@@ -1,0 +1,32 @@
+{
+  "name": "@jeldon/business-info",
+  "version": "0.1.0",
+  "description": "Opening hours: Google Places refresh behind an injected fetch, special-hours merge (Google wins on a shared date, manual entries kept, past dates dropped, a failed fetch leaves stored hours untouched), and an isomorphic open-now helper in the pack timezone.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^9.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

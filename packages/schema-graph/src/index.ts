@@ -32,3 +32,4 @@ export type { ArticleStub } from './sitemap.js';
 export { absUrl, orgId, websiteId } from './url.js';
 
 export type { JsonLd, Crumb, Faq, ArticleInput, AuthorEntry, Writer } from './types.js';
+export { openingHoursSpecification, specialOpeningHoursSpecification } from './opening-hours.js';

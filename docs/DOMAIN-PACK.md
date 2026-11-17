@@ -107,6 +107,27 @@ you use; disabled surfaces are absent from the build.
 `requiredEnv` — the list `jeldon doctor` verifies. Include every secret the
 enabled capabilities need.
 
+### Site ops (optional)
+- `brand.contact` — `{ email, phoneDisplay? }`, the public contact details
+  (site alert "Email us" button, `{email}` / `{phone}` in presets).
+- `brand.hours` — `{ regular: DayHours[], special?, dataFile? }`, the weekly
+  schedule seed; `scripts/fetch-hours.mjs` refreshes `dataFile` (default
+  `src/data/hours.json`) from Places. Interpreted in `content.timezone`.
+- `services.places` — `{ apiKeyEnv, placeIdEnv }`, env-var NAMES for the
+  Places key and place ID (values stay secrets).
+- `siteAlert` — `{ limits: { label, title, message, maxDays },
+  pollTimeoutMinutes, presets?, pollIntervalSeconds?, messageHref?, labels?,
+  storageKeyPrefix?, dataFile? }`. Preset copy is yours (defaults ship none).
+  Alert times are wall clock in `content.timezone`.
+- `security` — `{ adminPrefixes, access?: { teamDomain, aud } }`. Without
+  `access`, protected routes answer 500 (fail closed). The Access application
+  must also cover every preview hostname (see `docs/IMPLEMENTATION.md`).
+- `capabilities.siteAlert`, `capabilities.businessHours`.
+
+One timezone (`content.timezone`) drives publishing, alerts and hours. A
+separate business timezone is not modelled: add one only if a pack's
+editorial calendar and its physical location are in different zones.
+
 ## Validation invariants (enforced by the schema, surfaced by doctor)
 
 - `scoring.geo.floor` ≤ `min(content.categoryTargets)`.

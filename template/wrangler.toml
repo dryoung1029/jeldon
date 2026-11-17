@@ -1,7 +1,12 @@
 # Cloudflare Workers config for a Jeldon-powered site.
 #
-# Astro's Cloudflare adapter (see astro.config.mjs) targets Workers. After
-# `astro build`, `wrangler deploy` ships `./dist`.
+# Astro's Cloudflare adapter (see astro.config.mjs) targets Workers, not
+# Pages. `astro build` writes the static pages + assets to `./dist` and the
+# on-demand worker (middleware, admin routes, APIs) to
+# `./dist/_worker.js/index.js`; `wrangler deploy` ships both. Static assets
+# are served straight from the asset store and never run the worker, which is
+# why protected pages must be on-demand (`export const prerender = false`) —
+# see docs/IMPLEMENTATION.md "Admin access".
 #
 # The adapter knobs (binding NAMES) are stable across projects; the binding
 # VALUES (bucket names, namespace/database IDs) are per-account and are filled
@@ -12,7 +17,17 @@
 name = "jeldon-site"               # rename to your project
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "./dist"
+main = "./dist/_worker.js/index.js"
+
+[assets]
+binding = "ASSETS"
+directory = "./dist"
+# public/.assetsignore keeps _worker.js and _routes.json out of the asset store.
+
+# Optional runtime overrides of pack.security.access (neither is a secret):
+# [vars]
+# CF_ACCESS_TEAM_DOMAIN = "yourteam.cloudflareaccess.com"
+# CF_ACCESS_AUD = "your-access-application-aud"
 
 # ---------------------------------------------------------------------------
 # R2 — ObjectStore adapter (hero images + narration audio).

@@ -64,6 +64,21 @@ export async function runDoctor(opts: { cwd?: string; pre?: boolean } = {}): Pro
     add('warn', 'capabilities.drafting is on but no LLM API key is listed in services.requiredEnv');
   }
 
+  // Site ops: admin access, site alert, business hours.
+  if (pack.security) {
+    if (pack.security.access?.teamDomain && pack.security.access.aud) {
+      add('ok', `admin access policy set for ${pack.security.adminPrefixes.join(', ') || '(no prefixes)'}`);
+    } else {
+      add('warn', 'security.access is not set — protected routes will answer 500 (fail closed) until teamDomain + aud are configured');
+    }
+  }
+  if (pack.capabilities.siteAlert && !pack.brand.contact?.email) {
+    add('warn', 'capabilities.siteAlert is on but brand.contact.email is not set — the alert email button stays hidden');
+  }
+  if (pack.capabilities.businessHours && !pack.brand.hours && !pack.services.places) {
+    add('warn', 'capabilities.businessHours is on but neither brand.hours nor services.places is set — open-now will read "unknown"');
+  }
+
   return finalize(checks);
 }
 

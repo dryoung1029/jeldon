@@ -6,7 +6,9 @@ import type {
   GeoConfig,
   MediaConfig,
   ScoringConfig,
+  SecurityConfig,
   SeoConfig,
+  SiteAlertConfig,
   StrategyConfig,
 } from './types.js';
 
@@ -739,4 +741,28 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
   },
   windowDays: 30,
   maxDailySnapshots: 365,
+};
+
+// ---------------------------------------------------------------------------
+// Site ops: site alert, admin access (@jeldon/site-alert, @jeldon/access)
+// ---------------------------------------------------------------------------
+
+/** Generic site-alert defaults. Limits match the proven source (label 40,
+ *  title 90, message 500, 90-day window); the 8-minute poll covers a typical
+ *  ~2 minute static rebuild with room for a queued one. No presets: their
+ *  wording is domain copy and belongs in the pack. */
+export const defaultSiteAlertConfig: SiteAlertConfig = {
+  limits: { label: 40, title: 90, message: 500, maxDays: 90 },
+  presets: {},
+  pollTimeoutMinutes: 8,
+  pollIntervalSeconds: 15,
+  dataFile: 'src/data/site-alert.json',
+  storageKeyPrefix: 'jeldon:alert',
+  labels: { message: 'Send us a message', email: 'Email us', dismiss: 'Got it', close: 'Close' },
+};
+
+/** Generic admin protection. `access` is deliberately absent: until the pack
+ *  names the Access application, every protected route fails closed. */
+export const defaultSecurityConfig: SecurityConfig = {
+  adminPrefixes: ['/admin', '/api/admin'],
 };
