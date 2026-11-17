@@ -1,3 +1,5 @@
+import type { LlmEffort } from '@jeldon/config';
+
 /**
  * @jeldon/amplify types.
  *
@@ -87,10 +89,12 @@ export interface LlmToolRequest {
   userMessage: string;
   maxTokens: number;
   tool: LlmTool;
+  /** Reasoning effort (`output_config.effort`). Default `medium`. */
+  effort?: LlmEffort;
 }
 
 export interface LlmToolResponse {
-  /** The forced tool's `input` object, or null when the model produced none. */
+  /** The requested tool's `input` object, or null when the model produced none. */
   input: Record<string, unknown> | null;
   stopReason: string;
   usage?: LlmUsage;
@@ -102,6 +106,6 @@ export interface LlmToolResponse {
  * keeps every fetch behind an `EngineFn` so the logic is host-free.
  */
 export interface LlmClient {
-  /** Run a single forced-tool-use call and return the tool input. */
+  /** Run a single structured tool call and return the tool input (null if the model skipped it). */
   callTool(req: LlmToolRequest): Promise<LlmToolResponse>;
 }

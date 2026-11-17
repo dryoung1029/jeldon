@@ -1,4 +1,4 @@
-import type { AmplifyConfig, DomainPack } from '@jeldon/config';
+import type { AmplifyConfig, DomainPack, LlmEffort } from '@jeldon/config';
 import { defaultAmplifyConfig } from '@jeldon/config';
 import { buildVoiceBlock } from './voice.js';
 import type { AmplifyArticle, LlmClient, LlmTool, NewsletterContent } from './types.js';
@@ -44,7 +44,10 @@ export function buildNewsletterSystem(pack: Pick<DomainPack, 'voice' | 'brand' |
 
 export interface GenerateNewsletterOptions {
   model?: string;
+  /** Output cap. Thinking counts toward it, so leave headroom. */
   maxTokens?: number;
+  /** Reasoning effort. Default `medium`. */
+  effort?: LlmEffort;
   /** Cap on article body chars passed into the prompt (BoH used 12000). */
   bodyCharLimit?: number;
 }
@@ -68,7 +71,8 @@ ${article.body.slice(0, limit)}
 
   const res = await llm.callTool({
     model: opts.model ?? 'sonnet',
-    maxTokens: opts.maxTokens ?? 1024,
+    maxTokens: opts.maxTokens ?? 4000,
+    effort: opts.effort,
     system: buildNewsletterSystem(pack),
     tool: NEWSLETTER_TOOL,
     userMessage: `Compose the newsletter for this article.\n\n${articleBlock}`,

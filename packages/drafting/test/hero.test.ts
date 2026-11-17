@@ -41,7 +41,8 @@ describe('LlmConceptProposer', () => {
     const proposer = new LlmConceptProposer({ provider: fakeProvider(captured) });
     const out = await proposer.propose({ system: 'art director', tool: { name: 'propose_image' } as never, userMessage: 'hi' });
 
-    expect(captured.req?.toolChoice).toEqual({ type: 'tool', name: 'propose_image' });
+    expect(captured.req?.toolName).toBe('propose_image');
+    expect(captured.req?.effort).toBe('low');
     expect(out.altText).toBe(FIELDS.altText);
     expect(out.topic).toBe(FIELDS.topic);
   });

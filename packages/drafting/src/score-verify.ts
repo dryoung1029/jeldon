@@ -13,6 +13,7 @@
 import { calculateGeo, calculateSeo } from '@jeldon/core-scoring';
 import type { ClaimVerifier, VerificationReport } from '@jeldon/verify';
 import { formatReport } from '@jeldon/verify';
+import { effortFor } from '@jeldon/config';
 import { resolveModel } from './provider.js';
 import { EXTRACT_CLAIMS_TOOL } from './tools.js';
 import type {
@@ -39,14 +40,15 @@ export async function extractResearchClaims(
   const models = pack.drafting?.models ?? {};
   const utility = pack.drafting?.utilityModel ?? 'haiku';
   const model = resolveModel(models, utility, utility);
-  const maxTokens = pack.drafting?.maxTokens.extractClaims ?? 1500;
+  const maxTokens = pack.drafting?.maxTokens.extractClaims ?? 4000;
   try {
     const res = await provider.complete({
       model,
       maxTokens,
       system,
       tools: [EXTRACT_CLAIMS_TOOL],
-      toolChoice: { type: 'tool', name: 'extract_claims' },
+      toolName: 'extract_claims',
+      effort: effortFor(pack.drafting, 'extractClaims'),
       messages: [{ role: 'user', content: markdown }],
     });
     for (const block of res.blocks) {

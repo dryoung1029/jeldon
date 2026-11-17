@@ -76,6 +76,7 @@ const aeoConfig = z.object({
   engines: z.array(z.enum(['perplexity', 'anthropic', 'google-aio', 'openai'])).min(1),
   highPriorityTags: z.array(z.string()),
   maxSnapshots: z.number().int().positive().optional(),
+  model: z.string().optional(),
 });
 
 const strategyConfig = z.object({
@@ -130,6 +131,8 @@ const competitorsConfig = z.object({
 const draftingConfig = z.object({
   models: z.record(z.string(), z.string()),
   defaultModel: z.string(),
+  modelLabels: z.record(z.string(), z.string()).optional(),
+  effort: z.record(z.string(), z.enum(['low', 'medium', 'high', 'max'])).optional(),
   utilityModel: z.string(),
   draftFloor: z.object({ seo: z.number(), geo: z.number() }),
   wordCountTarget: tuple2,

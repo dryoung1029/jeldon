@@ -16,7 +16,7 @@
  *      the whole pipeline by editing `pack.voice`.
  */
 
-import type { DomainPack, DraftingConfig } from '@jeldon/config';
+import type { DomainPack, DraftingConfig, LlmEffort } from '@jeldon/config';
 
 // ---------------------------------------------------------------------------
 // LLM provider — the injectable boundary (replaces BoH's hardwired Anthropic
@@ -46,8 +46,15 @@ export interface LlmRequest {
   messages: LlmMessage[];
   maxTokens: number;
   tools?: ToolDef[];
-  /** Force a specific tool (`{ type: 'tool', name }`) or leave the model free. */
-  toolChoice?: { type: 'tool'; name: string };
+  /**
+   * The one tool this call expects back. Claude 5.5 rejects forced tool use,
+   * so the provider sends `tool_choice: auto` (parallel calls off) and appends
+   * a use-this-tool instruction to the system prompt. The caller must still
+   * check that the tool call came back.
+   */
+  toolName?: string;
+  /** Reasoning effort (`output_config.effort`). The provider defaults to `medium`. */
+  effort?: LlmEffort;
 }
 
 /** One returned content block — text or a tool call. */
@@ -65,13 +72,21 @@ export interface LlmResponse {
 /**
  * A streamed block as it accumulates. `jsonAcc` is the partial tool-input JSON
  * (parse it once the stream ends). Mirrors BoH `chat.ts::StreamBlock`.
+ *
+ * `thinking` / `redacted_thinking` blocks are kept so a multi-turn tool loop
+ * can replay them unmodified: a 5.5 continuation without them is rejected.
+ * For `thinking`, `text` holds the thinking text (empty under the default
+ * omitted display) and `signature` is accumulated from `signature_delta`.
+ * For `redacted_thinking`, `data` holds the opaque payload.
  */
 export interface StreamBlock {
-  type: 'text' | 'tool_use';
+  type: 'text' | 'tool_use' | 'thinking' | 'redacted_thinking';
   id?: string;
   name?: string;
   text: string;
   jsonAcc: string;
+  signature?: string;
+  data?: string;
 }
 
 export interface StreamTurn {

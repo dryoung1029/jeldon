@@ -164,6 +164,9 @@ export interface AeoConfig {
   /** Tags that bump an action item's priority. */
   highPriorityTags: string[];
   maxSnapshots?: number;
+  /** Model alias (key into `drafting.models`) or raw id for the Anthropic
+   *  engine. Default: `drafting.defaultModel`. */
+  model?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -388,11 +391,23 @@ export interface CompetitorsConfig {
  * built from `pack.voice` by @jeldon/drafting's PromptPack and can be overridden
  * field-by-field via `promptOverrides`.
  */
+/** Model reasoning effort (`output_config.effort`). `low` for mechanical
+ *  extraction, `medium` for writing. Sonnet 5.5 defaults to `high`, so the
+ *  engine always sends one explicitly. */
+export type LlmEffort = 'low' | 'medium' | 'high' | 'max';
+
 export interface DraftingConfig {
   /** Alias → provider model id. BoH: sonnet/opus/haiku. The default-draft model
    *  alias is `defaultModel`; the cheap claim-extraction model is `utilityModel`. */
   models: Record<string, string>;
   defaultModel: string;
+  /** Alias → picker label (e.g. `sonnet` → "Sonnet 5.5"). Admin UIs render
+   *  their model pickers from this so labels can't drift from the IDs. */
+  modelLabels?: Record<string, string>;
+  /** Per-purpose effort. `default` applies to any purpose not listed. Purposes:
+   *  the drafting modes, `fixPass`, `extractClaims`, `chat`, `heroConcept`,
+   *  `amplify`, `newsletter`, `gapReport`, `positioning`, `aeoAudit`. */
+  effort?: Record<string, LlmEffort>;
   /** Cheap model for research-claim extraction (BoH used Haiku). */
   utilityModel: string;
   /** SEO/GEO floor at draft time before a fix-pass fires. BoH: 70/70. */

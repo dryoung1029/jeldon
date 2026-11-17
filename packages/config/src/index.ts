@@ -18,6 +18,7 @@ export type {
   StrategyThresholds,
   StrategyRefererGroups,
   DraftingConfig,
+  LlmEffort,
   AmplifyConfig,
   AmplifyChannel,
   CarouselScheme,
@@ -57,3 +58,11 @@ export {
   defineDomainPack,
   type ValidateResult,
 } from './load.js';
+export {
+  TOOL_CHOICE_AUTO,
+  WEB_SEARCH_TOOL_TYPE,
+  useToolInstruction,
+  resolveModelId,
+  effortFor,
+  singleToolRequest,
+} from './llm.js';

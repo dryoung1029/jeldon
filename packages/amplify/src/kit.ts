@@ -1,4 +1,4 @@
-import type { AmplifyChannel, AmplifyConfig, DomainPack } from '@jeldon/config';
+import type { AmplifyChannel, AmplifyConfig, DomainPack, LlmEffort } from '@jeldon/config';
 import { defaultAmplifyConfig } from '@jeldon/config';
 import { buildVoiceBlock } from './voice.js';
 import type {
@@ -90,7 +90,10 @@ function tagUrl(text: string, url: string, utm: string | undefined, slug: string
 
 export interface GenerateKitOptions {
   model?: string;
+  /** Output cap. Thinking counts toward it, so leave headroom. */
   maxTokens?: number;
+  /** Reasoning effort. Default `medium`. */
+  effort?: LlmEffort;
 }
 
 /**
@@ -112,7 +115,8 @@ export async function generateKit(
 
   const res = await llm.callTool({
     model: opts.model ?? 'sonnet',
-    maxTokens: opts.maxTokens ?? 4000,
+    maxTokens: opts.maxTokens ?? 10000,
+    effort: opts.effort,
     system: buildKitSystem(pack),
     tool,
     userMessage: `${articleBlock(article, url)}\n\nGenerate the full amplification kit. Use the URL above wherever a channel needs it (skip for channels whose rules say "link in bio").`,
@@ -170,7 +174,8 @@ export async function regenerateChannel(
 
   const res = await llm.callTool({
     model: opts.model ?? 'sonnet',
-    maxTokens: opts.maxTokens ?? 1500,
+    maxTokens: opts.maxTokens ?? 6000,
+    effort: opts.effort,
     system: buildKitSystem(pack),
     tool: SINGLE_TOOL,
     userMessage: `${articleBlock(article, url)}${previousBlock}${refinementBlock}\n\nProduce ONLY the ${channel.label}. Call regenerate_channel with the new text. Follow all the rules for this channel from the system prompt.`,

@@ -1,5 +1,5 @@
 import type { DraftingConfig } from '@jeldon/config';
-import { defaultDraftingConfig } from '@jeldon/config';
+import { defaultDraftingConfig, effortFor, resolveModelId, singleToolRequest } from '@jeldon/config';
 import { buildGapReportSystem, type PromptBrand } from './prompts.js';
 import type { CompetitorAudit, GapReport } from './types.js';
 
@@ -166,10 +166,12 @@ export interface GapReportOptions {
   inventoryPathPrefix?: string;
 }
 
+const GAP_REPORT_MAX_TOKENS = 16000;
+
 export async function gapReport(opts: GapReportOptions): Promise<GapReport> {
   const drafting = opts.drafting ?? defaultDraftingConfig;
   const alias = opts.model ?? drafting.defaultModel;
-  const modelId = drafting.models[alias] ?? drafting.models[drafting.defaultModel] ?? alias;
+  const modelId = resolveModelId(drafting.models, drafting.defaultModel, alias);
   const pathPrefix = opts.inventoryPathPrefix ?? 'articles';
 
   const inventoryBlock = opts.articleInventory.length
@@ -206,11 +208,11 @@ Produce the gap report by calling gap_report.`;
     },
     body: JSON.stringify({
       model: modelId,
-      max_tokens: 8000,
+      // Thinking counts toward max_tokens on the 5.5 models.
+      max_tokens: GAP_REPORT_MAX_TOKENS,
       stream: true,
-      system: buildGapReportSystem(opts.pack),
-      tools: [buildTool(opts.pack.content.categories)],
-      tool_choice: { type: 'tool', name: 'gap_report' },
+      ...singleToolRequest(buildGapReportSystem(opts.pack), buildTool(opts.pack.content.categories)),
+      output_config: { effort: effortFor(drafting, 'gapReport') },
       messages: [{ role: 'user', content: userMessage }],
     }),
   });
@@ -260,7 +262,7 @@ Produce the gap report by calling gap_report.`;
   }
   if (stopReason === 'max_tokens') {
     throw new Error(
-      'Gap report truncated — model hit max_tokens (8000) before finishing. Try regenerating.',
+      `Gap report truncated — model hit max_tokens (${GAP_REPORT_MAX_TOKENS}) before finishing. Try regenerating.`,
     );
   }
 

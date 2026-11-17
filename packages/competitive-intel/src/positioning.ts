@@ -1,5 +1,5 @@
 import type { DraftingConfig } from '@jeldon/config';
-import { defaultDraftingConfig } from '@jeldon/config';
+import { defaultDraftingConfig, effortFor, resolveModelId, singleToolRequest } from '@jeldon/config';
 import { buildPositioningSystem, type PromptBrand } from './prompts.js';
 import type { Positioning, SampledPage } from './types.js';
 
@@ -76,7 +76,7 @@ export interface ExtractPositioningOptions {
 export async function extractPositioning(opts: ExtractPositioningOptions): Promise<Positioning> {
   const drafting = opts.drafting ?? defaultDraftingConfig;
   const alias = opts.model ?? drafting.defaultModel;
-  const modelId = drafting.models[alias] ?? drafting.models[drafting.defaultModel] ?? alias;
+  const modelId = resolveModelId(drafting.models, drafting.defaultModel, alias);
 
   const pageBlock = opts.pages.length
     ? opts.pages
@@ -103,10 +103,10 @@ Analyze this content and call extract_positioning.`;
 
   const reqBody = JSON.stringify({
     model: modelId,
-    max_tokens: 4000,
-    system: buildPositioningSystem(opts.pack),
-    tools: [TOOL],
-    tool_choice: { type: 'tool', name: 'extract_positioning' },
+    // Thinking counts toward max_tokens on the 5.5 models.
+    max_tokens: 8000,
+    ...singleToolRequest(buildPositioningSystem(opts.pack), TOOL),
+    output_config: { effort: effortFor(drafting, 'positioning') },
     messages: [{ role: 'user', content: userMessage }],
   });
 

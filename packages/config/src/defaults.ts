@@ -200,23 +200,36 @@ export const defaultStrategyConfig: StrategyConfig = {
  */
 export const defaultDraftingConfig: DraftingConfig = {
   models: {
-    sonnet: 'claude-sonnet-4-6',
-    opus: 'claude-opus-4-7',
-    haiku: 'claude-haiku-4-5',
+    sonnet: 'claude-sonnet-5-5',
+    opus: 'claude-opus-5-5',
+    haiku: 'claude-haiku-5-5',
   },
   defaultModel: 'sonnet',
+  modelLabels: {
+    sonnet: 'Sonnet 5.5',
+    opus: 'Opus 5.5',
+    haiku: 'Haiku 5.5',
+  },
+  // Thinking counts toward max_tokens, so short structured calls need headroom
+  // and an explicit effort. BoH 2026-10-27: low for mechanical extraction,
+  // medium everywhere else.
+  effort: {
+    default: 'medium',
+    extractClaims: 'low',
+    heroConcept: 'low',
+  },
   utilityModel: 'haiku',
   draftFloor: { seo: 70, geo: 70 },
   wordCountTarget: [800, 1500],
   bodyCharCeiling: 10000,
   maxTokens: {
-    brainstorm: 1500,
+    brainstorm: 4000,
     draft: 16000,
     outline: 4000,
     'draft-series': 64000,
     'draft-series-article': 12000,
     fixPass: 16000,
-    extractClaims: 1500,
+    extractClaims: 4000,
     chat: 32000,
   },
 };

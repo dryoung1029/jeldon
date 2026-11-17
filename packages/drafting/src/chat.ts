@@ -14,6 +14,7 @@
  * injected codec; the inline SYSTEM/TOOLS → the PromptPack + tools module.
  */
 
+import { effortFor } from '@jeldon/config';
 import type { ClaimVerifier, VerificationReport } from '@jeldon/verify';
 import { mergePreservingFrontmatter } from './frontmatter.js';
 import type { PromptPack } from './prompts.js';
@@ -95,7 +96,14 @@ export async function* chatEdit(ctx: ChatContext, deps: ChatDeps): AsyncGenerato
     yield { type: 'progress', pct, label: 'Reading the article and your request…' };
 
     while (true) {
-      const turn = await provider.stream({ model: modelId, system, messages: convo, maxTokens, tools });
+      const turn = await provider.stream({
+        model: modelId,
+        system,
+        messages: convo,
+        maxTokens,
+        tools,
+        effort: effortFor(pack.drafting, 'chat'),
+      });
       ordered = turn.ordered;
       stopReason = turn.stopReason;
       modelOut = turn.modelOut;
@@ -114,12 +122,18 @@ export async function* chatEdit(ctx: ChatContext, deps: ChatDeps): AsyncGenerato
           label: `Verifying ${verifyCalls.length} citation${verifyCalls.length > 1 ? 's' : ''}…`,
         };
 
-        // Echo the model's assistant turn back verbatim (text + every tool_use).
+        // Echo the model's assistant turn back verbatim: thinking blocks
+        // unmodified (5.5 rejects a continuation without them), then text and
+        // every tool_use, in stream order.
         const assistantContent: unknown[] = [];
         for (const b of ordered) {
-          if (b.type === 'text') {
+          if (b.type === 'thinking') {
+            assistantContent.push({ type: 'thinking', thinking: b.text, signature: b.signature ?? '' });
+          } else if (b.type === 'redacted_thinking') {
+            assistantContent.push({ type: 'redacted_thinking', data: b.data ?? '' });
+          } else if (b.type === 'text') {
             if (b.text) assistantContent.push({ type: 'text', text: b.text });
-          } else {
+          } else if (b.type === 'tool_use') {
             let input: unknown = {};
             try {
               input = b.jsonAcc ? JSON.parse(b.jsonAcc) : {};

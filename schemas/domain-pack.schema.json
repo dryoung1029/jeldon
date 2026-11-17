@@ -760,6 +760,9 @@
           "type": "integer",
           "exclusiveMinimum": 0,
           "maximum": 9007199254740991
+        },
+        "model": {
+          "type": "string"
         }
       },
       "required": [
@@ -1067,6 +1070,30 @@
         },
         "defaultModel": {
           "type": "string"
+        },
+        "modelLabels": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "effort": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "max"
+            ]
+          }
         },
         "utilityModel": {
           "type": "string"
