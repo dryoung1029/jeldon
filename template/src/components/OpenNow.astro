@@ -1,0 +1,67 @@
+---
+/**
+ * "Open now · until 5:30 pm" / "Closed · opens tomorrow at 8 am" chip
+ * (@jeldon/business-info). Computed in the BROWSER against
+ * `pack.content.timezone`, from src/data/hours.json when the Places refresh
+ * (`npm run fetch:hours`) has written it, else from `pack.brand.hours`.
+ * Server-renders `fallback` so no-JS readers and crawlers still see something
+ * true; the script only refines it. Renders nothing without hours.
+ */
+import { hoursFromPack, zonedDate, type HoursData } from '@jeldon/business-info';
+import { pack } from '../lib/pack';
+
+export interface Props {
+  class?: string;
+  /** Static text shown before (or without) the script. */
+  fallback?: string;
+}
+const { class: className = '', fallback = 'Opening hours' } = Astro.props;
+
+const files = import.meta.glob<HoursData>('../data/hours.json', { eager: true, import: 'default' });
+const fromFile = Object.values(files)[0];
+const hours: HoursData | null = fromFile ?? (pack.brand.hours ? hoursFromPack(pack.brand.hours) : null);
+const tz = pack.content.timezone;
+// Only dates from today on matter to the chip; the rest just bloat the attribute.
+const today = zonedDate(tz);
+const regular = hours?.regularHours ?? [];
+const special = (hours?.specialHours ?? []).filter((s) => s.date >= today).map((s) => ({ date: s.date, intervals: s.intervals }));
+const render = Boolean(pack.capabilities.businessHours) && regular.length + special.length > 0;
+---
+{render && (
+  <span
+    class:list={['open-now', className]}
+    data-open-now
+    data-tz={tz}
+    data-hours={JSON.stringify({ regularHours: regular, specialHours: special })}
+  >
+    <span class="open-now__dot" aria-hidden="true"></span><span class="open-now__text">{fallback}</span>
+  </span>
+)}
+
+{render && (
+  <script>
+    import { describeOpenStatus, isOpenNow } from '@jeldon/business-info';
+
+    document.querySelectorAll<HTMLElement>('[data-open-now]').forEach((el) => {
+      let hours;
+      try {
+        hours = JSON.parse(el.dataset.hours ?? '{}');
+      } catch {
+        return;
+      }
+      const status = isOpenNow(hours, new Date(), el.dataset.tz ?? 'UTC');
+      const text = describeOpenStatus(status);
+      if (!text) return; // unknown: keep the static fallback
+      el.classList.toggle('is-open', status.state === 'open');
+      const t = el.querySelector('.open-now__text');
+      if (t) t.textContent = text;
+    });
+  </script>
+)}
+
+<style is:global>
+  .open-now { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+  .open-now__dot { width: 7px; height: 7px; border-radius: 50%; background: #9aa0a6; flex-shrink: 0; }
+  .open-now.is-open { color: #2f7d4f; }
+  .open-now.is-open .open-now__dot { background: #2f9e5e; }
+</style>

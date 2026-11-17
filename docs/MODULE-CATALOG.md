@@ -143,6 +143,31 @@ stripped), RFC 2047 for non-ASCII, headers and body joined by exactly one
 blank line; `sendRawEmail` with an injected fetch. Mailbox reading is not
 ported (it belongs with the compliance module's caller).
 
+## Site ops
+
+### `@jeldon/site-alert` — ✅ built (`capabilities.siteAlert`)
+One admin-editable site-wide pop-up. Pure + isomorphic: `alertState(alert,
+nowInZone)` on wall-clock strings in `content.timezone` (checked in the
+browser, so schedules need no rebuild), `messageHtml` (escape all; link only
+`https://` + emails), per-revision `dismissalKey`, `normalizeAlert` with
+`siteAlert.limits`, `presetAlerts`, and `waitForLiveVersion` for the admin
+"poll until live" check. Template: `src/components/SiteAlert.astro` +
+`src/data/site-alert.json`. The admin page / save API are not ported yet.
+Extracts BoH `site-alert.ts`, `SiteAlert.astro`.
+
+### `@jeldon/access` — ✅ built (always on when the template has admin routes)
+`canonicalPath`, `isProtected(path, routePattern, prefixes)`,
+`verifyAccessJwt` (RS256 via WebCrypto, JWKS cache, refetch on unknown kid,
+iss/aud/exp/nbf), `createAccessMiddleware` — fails closed (500) without
+`security.access`. Template: `src/middleware.ts`. Extracts BoH `middleware.ts`.
+
+### `@jeldon/business-info` — ✅ built (`capabilities.businessHours`)
+`fetchPlaceHours` (injected fetch), `mergeSpecialHours`, `refreshHoursData`,
+`isOpenNow` / `describeOpenStatus` in `content.timezone`. JSON-LD lives in
+schema-graph (`openingHoursSpecification`, `specialOpeningHoursSpecification`).
+Template: `src/components/OpenNow.astro`, `scripts/fetch-hours.mjs`. Extracts
+BoH `fetch-hours.mjs`, `hours.ts`, `OpenNow.astro`.
+
 Before extending a package or finishing a `TODO(port)`, read
 `docs/DECOUPLING-NOTES.md` first — it names the exact coupling each module breaks
 and the adapter that replaces it.

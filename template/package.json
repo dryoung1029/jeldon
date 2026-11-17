@@ -5,7 +5,7 @@
   "type": "module",
   "description": "A Jeldon-powered content site. The engine lives in published @jeldon/* packages; you specialize it by editing jeldon.config.ts.",
   "engines": {
-    "node": ">=18.18"
+    "node": ">=22.18"
   },
   "scripts": {
     "dev": "astro dev",
@@ -19,23 +19,27 @@
     "check:geo": "node scripts/check-geo-floor.mjs",
     "check:citations": "node scripts/lint-citations.mjs",
     "check:frontmatter": "node scripts/check-frontmatter.mjs",
-    "check:meta": "jeldon check-meta-length"
+    "check:meta": "jeldon check-meta-length",
+    "fetch:hours": "node scripts/fetch-hours.mjs"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^12.0.0",
+    "@astrojs/cloudflare": "^12.6.13",
     "@astrojs/sitemap": "^3.2.0",
-    "@jeldon/cli": "^0.1.0",
-    "@jeldon/config": "^0.1.0",
-    "@jeldon/content-model": "^0.1.0",
+    "@jeldon/access": "^0.1.0",
+    "@jeldon/business-info": "^0.1.0",
+    "@jeldon/cli": "^0.3.0",
+    "@jeldon/config": "^0.3.0",
+    "@jeldon/content-model": "^0.2.0",
     "@jeldon/core-scoring": "^0.1.0",
-    "@jeldon/crawler-analytics": "^0.1.0",
-    "@jeldon/schema-graph": "^0.1.0",
+    "@jeldon/crawler-analytics": "^0.2.0",
+    "@jeldon/schema-graph": "^0.2.0",
+    "@jeldon/site-alert": "^0.1.0",
     "@jeldon/verify": "^0.1.0",
-    "astro": "^5.0.0"
+    "astro": "^5.18.0"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
     "typescript": "^5.6.3",
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.59.2"
   }
 }

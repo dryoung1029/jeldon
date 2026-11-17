@@ -111,6 +111,40 @@ project is correctly primed. Stop.
 
 ---
 
+## Admin access (when the project has admin routes)
+
+`template/src/middleware.ts` gates `security.adminPrefixes` with
+`@jeldon/access`. Three rules, each learned from a real exposure:
+
+1. **Cover every hostname the deployment answers on.** Every Workers preview /
+   version URL (`*.workers.dev`, and on Pages every `<id>.<project>.pages.dev`
+   and `<branch>.<project>.pages.dev`) serves the same admin routes as the
+   production domain. An Access application that covers only the custom
+   domain leaves those open. In the source system a deployment URL served
+   `/admin` and `/api/admin/drafts` to an unauthenticated curl, with the
+   production GitHub token behind them (2026-10-27). Add every such hostname
+   to the Access application, or turn the preview URLs off.
+2. **Set `security.access` (`teamDomain`, `aud`).** The middleware verifies the
+   Access JWT at the origin, so a hostname the policy misses still refuses.
+   Without these values protected routes answer 500; they never pass through.
+   Neither value is secret. `CF_ACCESS_TEAM_DOMAIN` / `CF_ACCESS_AUD` env vars
+   override them at runtime. Only `astro dev` skips the check.
+3. **Protected pages and endpoints must be on-demand**
+   (`export const prerender = false`). A prerendered page is a static asset,
+   served without running the worker or the middleware.
+
+**Acceptance:** against a built worker (`wrangler dev`), `/admin`,
+`//admin`, `/%61dmin` and `/ADMIN` answer 401 with no token and with a bogus
+token; public pages answer 200.
+
+**Deploy race.** The host serves the most recently *completed* production
+build, not the newest commit. Two pushes close together can leave the older
+build live (seen in the source system: the older commit's build finished four
+seconds later and won). If "main is merged but prod is stale", compare the two
+builds' finish times first; any new push clears it. This is why the site-alert
+admin flow polls the live homepage (`waitForLiveVersion` in
+`@jeldon/site-alert`) instead of trusting "saved".
+
 ## Updating the engine later
 
 Engine improvements reach a consumer project automatically:

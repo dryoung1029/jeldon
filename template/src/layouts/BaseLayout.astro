@@ -10,6 +10,7 @@
  * gets MedicalBusiness/MedicalWebPage purely by changing the config.
  */
 import { organizationGraph, websiteGraph } from '@jeldon/schema-graph';
+import SiteAlert from '../components/SiteAlert.astro';
 import { pack } from '../lib/pack';
 
 export interface Props {
@@ -70,5 +71,6 @@ const graph = [organizationGraph(pack), websiteGraph(pack), ...jsonLd];
     <footer>
       <p>&copy; {new Date().getFullYear()} {pack.brand.name}{pack.brand.tagline ? ` — ${pack.brand.tagline}` : ''}</p>
     </footer>
+    {pack.capabilities.siteAlert && <SiteAlert />}
   </body>
 </html>

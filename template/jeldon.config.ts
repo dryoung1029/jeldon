@@ -87,6 +87,18 @@ export default defineDomainPack({
 
   compliance: { pack: 'none' },
 
+  // Site ops (optional). Uncomment as you need them; see docs/DOMAIN-PACK.md.
+  // Admin routes FAIL CLOSED (500) until `security.access` names your
+  // Cloudflare Access application — and that application must cover every
+  // *.workers.dev / preview URL, not just your custom domain.
+  // security: {
+  //   adminPrefixes: ['/admin', '/api/admin'],
+  //   access: { teamDomain: 'TODO.cloudflareaccess.com', aud: 'TODO-access-app-aud' },
+  // },
+  // siteAlert: { limits: { label: 40, title: 90, message: 500, maxDays: 90 }, pollTimeoutMinutes: 8, messageHref: '/contact' },
+  // (brand.contact: { email } feeds the alert's "Email us" button;
+  //  brand.hours + services.places: { apiKeyEnv, placeIdEnv } feed OpenNow.)
+
   capabilities: {
     drafting: true,
     amplify: false,
@@ -95,6 +107,8 @@ export default defineDomainPack({
     competitiveIntel: false,
     engagementAnalytics: false,
     entityPresence: false,
+    siteAlert: false,
+    businessHours: false,
   },
 
   services: {

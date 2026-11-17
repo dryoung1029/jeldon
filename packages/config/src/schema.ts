@@ -483,6 +483,75 @@ const mailboxComplianceConfig = z.object({
     .optional(),
 });
 
+// --- Site ops: site alert, admin access, business hours -------------------
+
+const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'expected HH:MM (24-hour)');
+const hoursInterval = z.object({ opens: hhmm, closes: hhmm });
+const dayName = z.enum(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
+const specialHours = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD'),
+  intervals: z.array(hoursInterval),
+  label: z.string().optional(),
+  source: z.literal('google').optional(),
+});
+const brandContact = z.object({
+  email: z.email(),
+  phoneDisplay: z.string().optional(),
+});
+const businessHoursConfig = z.object({
+  regular: z.array(z.object({ day: dayName, intervals: z.array(hoursInterval) })),
+  special: z.array(specialHours).optional(),
+  dataFile: z.string().optional(),
+});
+const placesServiceConfig = z.object({
+  apiKeyEnv: z.string().min(1),
+  placeIdEnv: z.string().min(1),
+});
+const siteAlertConfig = z.object({
+  limits: z.object({
+    label: z.number().int().positive(),
+    title: z.number().int().positive(),
+    message: z.number().int().positive(),
+    maxDays: z.number().int().positive(),
+  }),
+  presets: z
+    .record(
+      z.string(),
+      z.object({
+        name: z.string().min(1),
+        title: z.string().min(1),
+        message: z.string(),
+        label: z.string().optional(),
+        messageButton: z.boolean().optional(),
+        emailButton: z.boolean().optional(),
+        phonesDown: z.boolean().optional(),
+      }),
+    )
+    .optional(),
+  pollTimeoutMinutes: z.number().positive(),
+  pollIntervalSeconds: z.number().positive().optional(),
+  dataFile: z.string().optional(),
+  storageKeyPrefix: z.string().min(1).optional(),
+  messageHref: z.string().optional(),
+  labels: z
+    .object({
+      message: z.string().optional(),
+      email: z.string().optional(),
+      dismiss: z.string().optional(),
+      close: z.string().optional(),
+    })
+    .optional(),
+});
+const securityConfig = z.object({
+  adminPrefixes: z.array(z.string().regex(/^\/[^\s]*$/, 'a path prefix starting with "/"')),
+  access: z
+    .object({
+      teamDomain: z.string().min(1),
+      aud: z.string().min(1),
+    })
+    .optional(),
+});
+
 export const domainPackSchema = z
   .object({
     brand: z.object({
@@ -502,6 +571,8 @@ export const domainPackSchema = z
         .optional(),
       logoUrl: z.string().optional(),
       brandColors: z.record(z.string(), z.string()).optional(),
+      contact: brandContact.optional(),
+      hours: businessHoursConfig.optional(),
     }),
     authors: z
       .array(
@@ -633,13 +704,18 @@ export const domainPackSchema = z
       searchConsole: z.boolean().optional(),
       leads: z.boolean().optional(),
       conversionMap: z.boolean().optional(),
+      siteAlert: z.boolean().optional(),
+      businessHours: z.boolean().optional(),
     }),
     services: z.object({
       store: z.enum(['github', 'fs']),
       contentDir: z.string().optional(),
       analytics: z.enum(['cloudflare', 'none']).optional(),
       requiredEnv: z.array(z.string()),
+      places: placesServiceConfig.optional(),
     }),
+    siteAlert: siteAlertConfig.optional(),
+    security: securityConfig.optional(),
   })
   .superRefine((pack, ctx) => {
     // Cross-field invariants the engine relies on. These are the same checks

@@ -740,6 +740,11 @@ export interface DomainPack {
     };
     logoUrl?: string;
     brandColors?: Record<string, string>;
+    /** Public contact details (site alert "Email us", etc.). */
+    contact?: BrandContact;
+    /** Opening hours (@jeldon/business-info). Interpreted in
+     *  `content.timezone`. */
+    hours?: BusinessHoursConfig;
   };
 
   authors: Array<{
@@ -888,6 +893,10 @@ export interface DomainPack {
     leads?: boolean;
     /** Views → leads → booked per page and channel. */
     conversionMap?: boolean;
+    /** Site-wide alert pop-up (@jeldon/site-alert). */
+    siteAlert?: boolean;
+    /** Opening hours + Places refresh + open-now chip (@jeldon/business-info). */
+    businessHours?: boolean;
   };
 
   /** Required services + env. `jeldon doctor` verifies these. */
@@ -899,7 +908,158 @@ export interface DomainPack {
     contentDir?: string;
     analytics?: 'cloudflare' | 'none';
     requiredEnv: string[];
+    /** Google Places credentials for the hours refresh (env-var names). */
+    places?: PlacesServiceConfig;
   };
+
+  /** One admin-editable pop-up on every public page (@jeldon/site-alert).
+   *  Optional — engine falls back to `defaultSiteAlertConfig`. Gated by
+   *  `capabilities.siteAlert`. Times are wall clock in `content.timezone`. */
+  siteAlert?: SiteAlertConfig;
+
+  /** Admin route protection (@jeldon/access). Optional — engine falls back to
+   *  `defaultSecurityConfig`. Protected routes FAIL CLOSED when `access` is
+   *  missing. */
+  security?: SecurityConfig;
+}
+
+// ---------------------------------------------------------------------------
+// Site ops: site alert, admin access, business hours
+// (@jeldon/site-alert, @jeldon/access, @jeldon/business-info)
+// ---------------------------------------------------------------------------
+
+/** Public contact details. Not schema identity (that is `brand.nap`); this is
+ *  what the site tells visitors to use, e.g. the "Email us" button on a site
+ *  alert. */
+export interface BrandContact {
+  /** The address visitors should write to. Shown as a `mailto:` link. */
+  email: string;
+  /** Phone number as it should be displayed, e.g. "(555) 010-0000". */
+  phoneDisplay?: string;
+}
+
+export type DayName =
+  | 'Sunday'
+  | 'Monday'
+  | 'Tuesday'
+  | 'Wednesday'
+  | 'Thursday'
+  | 'Friday'
+  | 'Saturday';
+
+/** One open interval, 24-hour local wall clock ("08:00" – "17:30"). */
+export interface HoursInterval {
+  opens: string;
+  closes: string;
+}
+
+/** One weekday. An empty `intervals` list (or an omitted day) means closed.
+ *  Several intervals model split shifts (e.g. a lunch closure). */
+export interface DayHours {
+  day: DayName;
+  intervals: HoursInterval[];
+}
+
+/** A date-specific override of the weekly schedule. Empty `intervals` = closed
+ *  that date. `source: 'google'` marks an entry copied from the Business
+ *  Profile (replaced on every refresh); absent = added by hand (kept until the
+ *  date passes, unless Google reports the same date). */
+export interface SpecialHours {
+  /** YYYY-MM-DD in the business timezone. */
+  date: string;
+  intervals: HoursInterval[];
+  label?: string;
+  source?: 'google';
+}
+
+/** The hours data file shape (`src/data/hours.json` in the template). */
+export interface HoursData {
+  /** When the hours DATA last changed. Null for a hand-written seed. */
+  fetchedAt: string | null;
+  /** When the refresh last successfully reached the provider. Distinguishes
+   *  "hours haven't changed" from "the refresh is silently skipping". */
+  checkedAt?: string | null;
+  /** 'pack' | 'google-places' | … */
+  source: string;
+  regularHours: DayHours[];
+  specialHours: SpecialHours[];
+}
+
+/** Opening hours. Interpreted in `content.timezone`. */
+export interface BusinessHoursConfig {
+  /** Weekly schedule used until a refresh writes the data file. */
+  regular: DayHours[];
+  /** Hand-entered date overrides (holiday closures, one-off openings). */
+  special?: SpecialHours[];
+  /** Repo-relative data file the Places refresh writes and the site reads.
+   *  Default `src/data/hours.json`. */
+  dataFile?: string;
+}
+
+/** Google Places (Place Details) credentials, by env-var NAME. The values are
+ *  secrets and never live in the pack. */
+export interface PlacesServiceConfig {
+  apiKeyEnv: string;
+  placeIdEnv: string;
+}
+
+export interface SiteAlertLimits {
+  label: number;
+  title: number;
+  message: number;
+  /** Longest window an alert may run, in days. */
+  maxDays: number;
+}
+
+/** A quick-start for the admin form. Fills today 00:00–23:59 in the business
+ *  timezone. `{email}` / `{phone}` in title or message are replaced from
+ *  `brand.contact`. */
+export interface SiteAlertPreset {
+  /** Button text on the admin page. */
+  name: string;
+  title: string;
+  message: string;
+  label?: string;
+  messageButton?: boolean;
+  emailButton?: boolean;
+  phonesDown?: boolean;
+}
+
+export interface SiteAlertConfig {
+  limits: SiteAlertLimits;
+  presets?: Record<string, SiteAlertPreset>;
+  /** How long the admin page polls the live homepage for the saved revision
+   *  before it says the deploy did not land. */
+  pollTimeoutMinutes: number;
+  /** Seconds between live checks. Default 15. */
+  pollIntervalSeconds?: number;
+  /** Repo-relative data file. Default `src/data/site-alert.json`. */
+  dataFile?: string;
+  /** Prefix for the per-revision dismissal key in localStorage. */
+  storageKeyPrefix?: string;
+  /** Where the "Send us a message" button points. The button is hidden when
+   *  unset. */
+  messageHref?: string;
+  /** Button copy. Generic English defaults. */
+  labels?: { message?: string; email?: string; dismiss?: string; close?: string };
+}
+
+/** Cloudflare Access application identifiers. Neither value is a secret (both
+ *  appear in the Access login redirect); runtime env vars may override them. */
+export interface AccessPolicyConfig {
+  /** e.g. `yourteam.cloudflareaccess.com`. */
+  teamDomain: string;
+  /** The Access application's AUD tag. */
+  aud: string;
+}
+
+export interface SecurityConfig {
+  /** Path prefixes that require a verified Access token, e.g.
+   *  `['/admin', '/api/admin']`. Compared lowercase against the canonicalised
+   *  path and the matched route pattern. */
+  adminPrefixes: string[];
+  /** Missing = every protected route answers 500 (fail closed). */
+  access?: AccessPolicyConfig;
 }
 
 // ---------------------------------------------------------------------------

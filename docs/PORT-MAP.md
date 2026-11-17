@@ -118,10 +118,10 @@ Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| 11a Site alert | missing | new `@jeldon/site-alert` + template component + admin page | M | `brand.contact.email` (new), `brand.timezone` (or reuse `content.timezone`), `siteAlert.limits` |
-| 11b Holiday hours merge | missing; Jeldon has no hours concept | schema-graph `openingHoursSpecification` + fetch/merge | M | `brand.hours`, `services.places` |
-| 11c Middleware hardening (fail-closed, canonical path, route pattern) | missing; template has no middleware | new `@jeldon/access` + template `middleware.ts` | S–M | `security { adminPrefixes, access { teamDomain, aud } }` |
-| 11d Astro findings | info: template is `astro ^5.0`, `@astrojs/cloudflare ^12.0`, Node `>=18.18` (root says `>=22.18`); `wrangler.toml` still has `pages_build_output_dir` | template | S | — |
+| 11a Site alert | **done** (`@jeldon/site-alert` + template `SiteAlert.astro`); admin page + save API still to port | new `@jeldon/site-alert` + template component + admin page | M | `brand.contact { email, phoneDisplay? }`, `siteAlert { limits, presets?, pollTimeoutMinutes, … }`; timezone = `content.timezone` |
+| 11b Holiday hours merge | **done** (`@jeldon/business-info`, schema-graph `openingHoursSpecification`, template `OpenNow.astro` + `scripts/fetch-hours.mjs`) | schema-graph `openingHoursSpecification` + fetch/merge | M | `brand.hours`, `services.places { apiKeyEnv, placeIdEnv }` |
+| 11c Middleware hardening (fail-closed, canonical path, route pattern) | **done** (`@jeldon/access` + template `src/middleware.ts`) | new `@jeldon/access` + template `middleware.ts` | S–M | `security { adminPrefixes, access { teamDomain, aud } }` |
+| 11d Astro findings | **done** (template astro `^5.18.0`, cloudflare `^12.6.13`, Node `>=22.18`, Workers `wrangler.toml`; Astro 6/7 notes in `docs/MIGRATION.md`) | template | S | — |
 
 ## Skip
 
