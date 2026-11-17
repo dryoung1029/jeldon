@@ -4,7 +4,7 @@ Per-package reference: what it does, what BoH source it extracts from, its publi
 API, the config it reads, and the capability flag it sits behind. Status legend:
 **✅ built** (compiles + typechecks + tests; a real port) · **🟡 partial** · **⬜ planned**.
 
-> All 22 packages build + typecheck + test green, integration-verified against
+> All 23 packages build + typecheck + test green, integration-verified against
 > the `jeldon-core` workspace. Remaining `TODO(port)` markers are intentional
 > gaps (named per package below), not unfinished scaffolding.
 

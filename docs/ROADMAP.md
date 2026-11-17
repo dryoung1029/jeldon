@@ -7,7 +7,7 @@ useful.
 
 ## Status snapshot
 
-All packages **build + typecheck + test green** (22/22 build and test as of
+All packages **build + typecheck + test green** (23/23 build and test as of
 the 2026-11 Body of Health catch-up; see `docs/PORT-MAP.md`), independently re-verified by an integration pass against the renamed
 `jeldon-core` workspace (with a negative-control type error to prove the
 typecheck exercises real source). `TODO(port)` markers below are the honest,
@@ -30,6 +30,7 @@ intentional gaps — not unfinished scaffolding.
 | `@jeldon/competitive-intel` | ✅ built | One bundled scanner core (kills TS/JS dup) + gap report + rank tracking. |
 | `@jeldon/crawler-analytics` | ✅ built | UA classifier (anchored bot tokens) + hostname-anchored referer rules + `AnalyticsProvider` (CF/null) + per-route traffic (`normalizeSitePath`) + path-keyed beacon + `fetchWebVitals` with diagnostics. |
 | `@jeldon/entity-presence` | ✅ built (scaffold) | NEW module. `NullMentionProvider` default; live SerpApi mention provider is `TODO(port)`. |
+| `@jeldon/ideation` | ✅ built | Transcript miner, read-only Reddit listening → briefs, one-schema topic backlog. Drafting gained the autonomous runner and backlink finder. |
 | `@jeldon/ops` | ✅ built | Pipeline freshness, attention feed, Actions dispatch, `skipWithWarning`. |
 | `@jeldon/search-console` | ✅ built | WebCrypto SA auth, striking distance / low CTR, snippet lab, setup-failure diagnosis. |
 | `@jeldon/leads` | ✅ built | First-touch attribution, channels, trends (date basis + maturing), conversion map, hashed booking import; mailbox tracking under `./compliance` (compliance pack only). |

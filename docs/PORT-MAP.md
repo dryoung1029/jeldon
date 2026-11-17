@@ -100,7 +100,7 @@ Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
 | Editor (~2,900 lines, mostly browser) | missing; **defer** | new `@jeldon/video` (pure filter/caption/split math + server proxies) | L | `video { transcription, fillers, pauseKeepMs }`, `capabilities.videoEditor`; persona from `voice` |
-| Lessons (afade per segment, `is:global`, iOS tap, WORKERFS, 2-min parts + NDJSON keepalive, fixed total gap) | record now | `docs/DECOUPLING-NOTES.md` | S | — |
+| Lessons (afade per segment, `is:global`, iOS tap, WORKERFS, 2-min parts + NDJSON keepalive, fixed total gap) | **done** | `docs/DECOUPLING-NOTES.md` | S | — |
 
 ## 10. Conversion and leads
 
