@@ -4,7 +4,7 @@ Per-package reference: what it does, what BoH source it extracts from, its publi
 API, the config it reads, and the capability flag it sits behind. Status legend:
 **✅ built** (compiles + typechecks + tests; a real port) · **🟡 partial** · **⬜ planned**.
 
-> All 15 packages build + typecheck + test green, integration-verified against
+> All 22 packages build + typecheck + test green, integration-verified against
 > the `jeldon-core` workspace. Remaining `TODO(port)` markers are intentional
 > gaps (named per package below), not unfinished scaffolding.
 
@@ -22,9 +22,11 @@ scorer-mirror drift. Extracts `seo.ts` + the inline editor mirror +
 `check-geo-floor.ts`.
 
 ### `@jeldon/content-model` — ✅ built
-Frontmatter codec, lifecycle state machine (draft→docReviewed→ready→
+Frontmatter codec, lifecycle state machine (draft→ready→
 scheduled→live), Zod article schema built from `content.categories`,
-`validateArticle`, `publishScheduled`. Extracts `frontmatter.ts`, `articles.ts`,
+`validateArticle` (hero-path checks), topic-cluster membership, `parseYouTubeUrl`,
+`publishScheduled`; `autonomous` is a provenance flag beside the lifecycle,
+and `docReviewed` is deprecated. Extracts `frontmatter.ts`, `articles.ts`,
 `content/config.ts`, `publish-scheduled.mjs`. Consolidates the triple-implemented
 parser.
 
@@ -55,9 +57,9 @@ reads `citation.forbiddenPatterns`. Extracts `cite8.ts`, `lint-citations.mjs`.
 Thresholds/copy/deep-links/category-targets externalized; audio/podcast/AEO
 rules opt-in. Extracts `strategy.ts`.
 
-### `@jeldon/cli` — ✅ built (validate + doctor; init/audit/migrate pending)
-`jeldon validate | doctor [--pre] [--online] [--json] | fetch-search-console`. `check-geo-floor`, `audit`,
-`migrate`, and Copier-backed `init` are 🟡. Extracts `check-geo-floor.ts` +
+### `@jeldon/cli` — ✅ built (validate, doctor, check-geo-floor, check-meta-length, fetch-search-console; init/migrate pending)
+`jeldon validate | doctor [--pre] [--online] [--json] | check-geo-floor | check-meta-length | fetch-search-console`.
+`audit`, `migrate` and Copier-backed `init` are 🟡. Extracts `check-geo-floor.ts` +
 new code.
 
 ## Growth modules (v2+)
