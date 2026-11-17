@@ -739,6 +739,11 @@ export interface DomainPack {
    *  `defaultEntityPresenceConfig`. Gated by `capabilities.entityPresence`. */
   entityPresence?: EntityPresenceConfig;
 
+  /** Ops observability: pipeline freshness, the needs-attention feed's
+   *  cadence alerts, and on-demand workflow dispatch (@jeldon/ops). Optional —
+   *  engine falls back to `defaultOpsConfig`. Gated by `capabilities.ops`. */
+  ops?: OpsConfig;
+
   schema: {
     orgType: string[];
     org: OrgProfile;
@@ -770,6 +775,8 @@ export interface DomainPack {
     competitiveIntel?: boolean;
     engagementAnalytics?: boolean;
     entityPresence?: boolean;
+    /** Pipeline freshness strip, attention feed, workflow dispatch (@jeldon/ops). */
+    ops?: boolean;
   };
 
   /** Required services + env. `jeldon doctor` verifies these. */
@@ -782,4 +789,102 @@ export interface DomainPack {
     analytics?: 'cloudflare' | 'none';
     requiredEnv: string[];
   };
+}
+
+// ---------------------------------------------------------------------------
+// Ops observability (@jeldon/ops)
+// ---------------------------------------------------------------------------
+
+/** How a dashboard can run a pipeline on demand. `workflow` dispatches a
+ *  GitHub Actions workflow (must also be in `ops.dispatch.allowlist`);
+ *  `endpoint` POSTs one of the project's own routes; `page` links to a page
+ *  that owns a deliberate manual run (e.g. one that burns a paid API quota). */
+export type OpsPipelineRun =
+  | { kind: 'workflow'; workflow: string }
+  | { kind: 'endpoint'; href: string }
+  | { kind: 'page'; href: string; label: string };
+
+/** One cron-fed data file and the cadence it is expected to refresh on. */
+export interface OpsPipeline {
+  /** Stable key (used for dashboard state). */
+  id: string;
+  /** Human label, e.g. "Search Console". */
+  name: string;
+  /** Repo-relative data file this entry verifies. */
+  file: string;
+  /** Who writes it, shown in alerts, e.g. "fetch-search-console.yml (daily)". */
+  source: string;
+  /** Expected refresh interval in days. */
+  cadenceDays: number;
+  /** Field in `file` holding the last-write ISO timestamp. Dot path allowed
+   *  (`meta.lastUpdated`). */
+  timestampField: string;
+  /** Set for files whose writer only rewrites the DATA on change. The data's
+   *  age then proves nothing about whether the cron ran, so the writer also
+   *  stamps a check timestamp on every successful run and liveness is graded
+   *  on THAT. The check field is read from the SAME file on purpose: the proof
+   *  must come from the step that owns the file. A stamp written by another
+   *  step (even in the same workflow, with its own credentials) would keep
+   *  reporting healthy while this step silently skipped. */
+  changeGated?: {
+    /** Field in `file` holding the "ran successfully" stamp. Default `checkedAt`. */
+    checkedAtField?: string;
+    /** How often that stamp should appear, in days. */
+    checkCadenceDays: number;
+  };
+  /** How to trigger it from the dashboard. Absent = not triggerable. */
+  run?: OpsPipelineRun;
+}
+
+/** Freshness grading multipliers, applied to a pipeline's cadence.
+ *  age <= cadence × lateMultiplier → ok; <= cadence × staleMultiplier → late;
+ *  otherwise stale. */
+export interface OpsGrading {
+  lateMultiplier: number;
+  staleMultiplier: number;
+}
+
+/** Publishing rhythm the attention feed holds the project to. */
+export interface OpsCadence {
+  /** Alert when no live article has been published in more than N days. */
+  articleDays: number;
+  /** Alert when no newsletter has been sent in more than N days. Omit when
+   *  the project has no newsletter; no newsletter alert is produced then. */
+  newsletterDays?: number;
+  /** A newsletter still "queued" more than this many days past its send slot
+   *  is stuck. Default 2. */
+  newsletterStuckDays?: number;
+}
+
+/** On-demand GitHub Actions dispatch from the dashboard. The token used must
+ *  be allowed to run workflows (fine-grained PAT: "Actions: Read and write").
+ *  Only list workflows that refresh DATA; nothing that publishes, sends or
+ *  deploys belongs here. */
+export interface OpsDispatch {
+  /** The only workflow files (e.g. `fetch-data.yml`) that may be dispatched. */
+  allowlist: string[];
+  /** Client poll interval after a dispatch. Default 8. */
+  pollSeconds?: number;
+  /** Give up polling after this long. Default 20. */
+  timeoutMinutes?: number;
+  /** A run created more than this long before the click is the PREVIOUS run,
+   *  not the one the click started (allows for clock skew). Default 90. */
+  createdAtSlackSeconds?: number;
+}
+
+/** Link shown next to an attention item. */
+export interface OpsLink {
+  href: string;
+  label: string;
+}
+
+export interface OpsConfig {
+  pipelines: OpsPipeline[];
+  grading: OpsGrading;
+  cadence: OpsCadence;
+  dispatch?: OpsDispatch;
+  /** Optional admin links per attention kind (`pipeline`, `cadence`,
+   *  `newsletter`, `autonomous`, `hero`, …). The engine has no admin routes of
+   *  its own, so items carry no link unless one is set here or by the caller. */
+  links?: Record<string, OpsLink>;
 }

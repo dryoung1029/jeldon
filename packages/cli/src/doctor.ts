@@ -1,4 +1,7 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadDomainPack } from '@jeldon/config';
+import { checkOpsConfig } from '@jeldon/ops';
 
 export type CheckStatus = 'ok' | 'warn' | 'error';
 export interface DoctorCheck {
@@ -62,6 +65,14 @@ export async function runDoctor(opts: { cwd?: string; pre?: boolean } = {}): Pro
   // Capability ↔ env sanity.
   if (pack.capabilities.drafting && !pack.services.requiredEnv.some((v) => /ANTHROPIC|OPENAI|API_KEY/.test(v))) {
     add('warn', 'capabilities.drafting is on but no LLM API key is listed in services.requiredEnv');
+  }
+
+  // Ops (@jeldon/ops): pipeline/allowlist consistency, allowlisted workflow
+  // files exist, and the Actions permission the dispatch token needs.
+  if (pack.capabilities.ops) {
+    for (const c of checkOpsConfig(pack.ops, {
+      workflowExists: (wf) => existsSync(join(cwd, '.github', 'workflows', wf)),
+    })) add(c.status, c.message);
   }
 
   return finalize(checks);

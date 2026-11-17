@@ -67,3 +67,15 @@ export {
   singleToolRequest,
 } from './llm.js';
 export { hostOf, hostIs, termRegex, mentionsTerm } from './match.js';
+
+// Ops observability (@jeldon/ops)
+export type {
+  OpsConfig,
+  OpsPipeline,
+  OpsPipelineRun,
+  OpsGrading,
+  OpsCadence,
+  OpsDispatch,
+  OpsLink,
+} from './types.js';
+export { defaultOpsConfig, defaultOpsDispatchTiming } from './defaults.js';

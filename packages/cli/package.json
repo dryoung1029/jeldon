@@ -22,7 +22,8 @@
   "dependencies": {
     "@jeldon/config": "workspace:*",
     "@jeldon/content-model": "workspace:*",
-    "@jeldon/core-scoring": "workspace:*"
+    "@jeldon/core-scoring": "workspace:*",
+    "@jeldon/ops": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",

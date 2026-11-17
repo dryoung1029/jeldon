@@ -49,6 +49,12 @@ pnpm run check:frontmatter # validate frontmatter vs the derived schema
 | `frontmatter-guard` | Frontmatter validates against the pack-derived Zod schema. |
 | `doctor` | `jeldon validate` + `jeldon doctor` are green. |
 
+Crons that commit data should end with the composite action
+`.github/actions/commit-and-push` (commits only on change; retries a rejected
+push 3× with `git pull --rebase`). Crons that skip on a missing secret print a
+`::warning::` (`skipWithWarning` in `@jeldon/ops`). A monthly accuracy-audit
+prompt for a scheduled agent is in `docs/accuracy-audit-prompt.md`.
+
 Engine updates arrive automatically: a `@jeldon/*` version bump opens a Renovate
 PR that **auto-merges on green CI** (`renovate.json`).
 

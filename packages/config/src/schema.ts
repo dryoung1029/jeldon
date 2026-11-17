@@ -311,6 +311,75 @@ const entityPresenceConfig = z.object({
   establishedThreshold: z.number().int().positive().optional(),
 });
 
+// Ops observability (@jeldon/ops)
+const opsConfig = z
+  .object({
+    pipelines: z.array(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+        file: z.string().min(1),
+        source: z.string(),
+        cadenceDays: z.number().positive(),
+        timestampField: z.string().min(1),
+        changeGated: z
+          .object({
+            checkedAtField: z.string().min(1).optional(),
+            checkCadenceDays: z.number().positive(),
+          })
+          .optional(),
+        run: z
+          .discriminatedUnion('kind', [
+            z.object({ kind: z.literal('workflow'), workflow: z.string().min(1) }),
+            z.object({ kind: z.literal('endpoint'), href: z.string().min(1) }),
+            z.object({ kind: z.literal('page'), href: z.string().min(1), label: z.string() }),
+          ])
+          .optional(),
+      }),
+    ),
+    grading: z.object({
+      lateMultiplier: z.number().positive(),
+      staleMultiplier: z.number().positive(),
+    }),
+    cadence: z.object({
+      articleDays: z.number().int().min(1).max(365),
+      newsletterDays: z.number().int().min(1).max(365).optional(),
+      newsletterStuckDays: z.number().min(0).optional(),
+    }),
+    dispatch: z
+      .object({
+        allowlist: z.array(z.string().regex(/^[\w.-]+\.ya?ml$/, 'workflow file name, e.g. fetch-data.yml')),
+        pollSeconds: z.number().positive().optional(),
+        timeoutMinutes: z.number().positive().optional(),
+        createdAtSlackSeconds: z.number().min(0).optional(),
+      })
+      .optional(),
+    links: z.record(z.string(), z.object({ href: z.string(), label: z.string() })).optional(),
+  })
+  .superRefine((ops, ctx) => {
+    if (ops.grading.staleMultiplier < ops.grading.lateMultiplier) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['grading', 'staleMultiplier'],
+        message: `staleMultiplier (${ops.grading.staleMultiplier}) must be >= lateMultiplier (${ops.grading.lateMultiplier}).`,
+      });
+    }
+    const seen = new Set<string>();
+    ops.pipelines.forEach((p, i) => {
+      if (seen.has(p.id)) {
+        ctx.addIssue({ code: 'custom', path: ['pipelines', i, 'id'], message: `duplicate pipeline id "${p.id}".` });
+      }
+      seen.add(p.id);
+      if (p.run?.kind === 'workflow' && !(ops.dispatch?.allowlist ?? []).includes(p.run.workflow)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['pipelines', i, 'run', 'workflow'],
+          message: `pipeline "${p.id}" runs "${p.run.workflow}", which is not in ops.dispatch.allowlist.`,
+        });
+      }
+    });
+  });
+
 export const domainPackSchema = z
   .object({
     brand: z.object({
@@ -369,6 +438,7 @@ export const domainPackSchema = z
     media: mediaConfig.optional(),
     analytics: analyticsConfig.optional(),
     entityPresence: entityPresenceConfig.optional(),
+    ops: opsConfig.optional(),
     schema: z.object({
       orgType: z.array(z.string()).min(1),
       org: orgProfile,
@@ -425,6 +495,7 @@ export const domainPackSchema = z
       competitiveIntel: z.boolean().optional(),
       engagementAnalytics: z.boolean().optional(),
       entityPresence: z.boolean().optional(),
+      ops: z.boolean().optional(),
     }),
     services: z.object({
       store: z.enum(['github', 'fs']),
