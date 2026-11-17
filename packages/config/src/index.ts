@@ -36,6 +36,10 @@ export type {
   EntityPresenceSource,
   EnginePresenceAffinity,
   MentionConsistencyTargets,
+  SearchConsoleConfig,
+  StrikingDistanceConfig,
+  LowCtrConfig,
+  SnippetLabConfig,
 } from './types.js';
 
 export { domainPackSchema, type DomainPackInput } from './schema.js';
@@ -49,6 +53,7 @@ export {
   defaultMediaConfig,
   defaultAnalyticsConfig,
   defaultEntityPresenceConfig,
+  defaultSearchConsoleConfig,
 } from './defaults.js';
 export {
   loadDomainPack,

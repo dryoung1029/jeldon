@@ -1,0 +1,71 @@
+export {
+  SEARCH_CONSOLE_SCOPE,
+  GOOGLE_TOKEN_URL,
+  parseServiceAccountKey,
+  importPrivateKey,
+  signJwt,
+  serviceAccountClaims,
+  getAccessToken,
+  SearchConsoleHttpError,
+  type FetchLike,
+  type ServiceAccountKey,
+  type KeyParseFailure,
+  type KeyParseResult,
+  type JwtClaims,
+} from './auth.js';
+export {
+  SEARCH_CONSOLE_API,
+  searchDateRange,
+  fetchSearchAnalytics,
+  listSites,
+  fetchSnapshot,
+  serializeSnapshot,
+  snapshotChanged,
+  type SearchDimension,
+  type DateRange,
+  type SearchAnalyticsRow,
+  type SearchConsoleClient,
+  type KeyedRow,
+  type SearchConsoleSnapshot,
+} from './client.js';
+export {
+  expectedCtr,
+  strikingDistance,
+  lowCtr,
+  searchSignals,
+  type MetricRow,
+  type LowCtrRow,
+  type SearchSignals,
+} from './analysis.js';
+export { checkPropertyFormat, propertyHost, type PropertyCheck } from './property.js';
+export {
+  diagnoseSearchConsoleError,
+  nearMissEnvNames,
+  type SearchConsoleDiagnosis,
+  type SearchConsoleDiagnosisKind,
+  type DiagnoseContext,
+} from './diagnose.js';
+export {
+  recordSnippetChange,
+  latestChangeFor,
+  compareSince,
+  validateSnippet,
+  readSnippetLog,
+  setFrontmatterLine,
+  applySnippetChange,
+  type SnippetField,
+  type SnippetBaseline,
+  type SnippetLogEntry,
+  type SnippetLog,
+  type SnippetComparison,
+  type SnippetLogRead,
+  type ApplySnippetResult,
+} from './snippet-lab.js';
+export {
+  checkSearchConsoleSetup,
+  probeSearchConsole,
+  type SetupCheck,
+  type SetupCheckStatus,
+  type ResolvedSetup,
+  type OnlineProbeResult,
+} from './setup.js';

@@ -1,9 +1,13 @@
 import { loadDomainPack } from '@jeldon/config';
+import type { FetchLike, SearchConsoleDiagnosis } from '@jeldon/search-console';
+import { searchConsoleChecks } from './search-console.js';
 
 export type CheckStatus = 'ok' | 'warn' | 'error';
 export interface DoctorCheck {
   status: CheckStatus;
   message: string;
+  /** Structured diagnosis for an `--online` Search Console failure. */
+  diagnosis?: SearchConsoleDiagnosis;
 }
 export interface DoctorReport {
   checks: DoctorCheck[];
@@ -16,8 +20,12 @@ export interface DoctorReport {
  * The deterministic "am I wired correctly?" gate. Run before AND after agent
  * work; the same checks back the `doctor.yml` CI gate so local-green and
  * CI-green agree. `pre: true` skips checks that require a fully-filled config.
+ * `online: true` adds checks that call third-party APIs (Search Console token
+ * exchange + 1-row query); never on by default.
  */
-export async function runDoctor(opts: { cwd?: string; pre?: boolean } = {}): Promise<DoctorReport> {
+export async function runDoctor(
+  opts: { cwd?: string; pre?: boolean; online?: boolean; env?: Record<string, string | undefined>; fetch?: FetchLike } = {},
+): Promise<DoctorReport> {
   const cwd = opts.cwd ?? process.cwd();
   const checks: DoctorCheck[] = [];
   const add = (status: CheckStatus, message: string) => checks.push({ status, message });
@@ -63,6 +71,9 @@ export async function runDoctor(opts: { cwd?: string; pre?: boolean } = {}): Pro
   if (pack.capabilities.drafting && !pack.services.requiredEnv.some((v) => /ANTHROPIC|OPENAI|API_KEY/.test(v))) {
     add('warn', 'capabilities.drafting is on but no LLM API key is listed in services.requiredEnv');
   }
+
+  // Search Console (offline; --online adds a live probe).
+  checks.push(...(await searchConsoleChecks(pack, { env: opts.env ?? process.env, pre: opts.pre, online: opts.online, fetch: opts.fetch })));
 
   return finalize(checks);
 }
