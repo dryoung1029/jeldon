@@ -28,6 +28,7 @@
     "@jeldon/config": "^0.1.0",
     "@jeldon/content-model": "^0.1.0",
     "@jeldon/core-scoring": "^0.1.0",
+    "@jeldon/crawler-analytics": "^0.1.0",
     "@jeldon/schema-graph": "^0.1.0",
     "@jeldon/verify": "^0.1.0",
     "astro": "^5.0.0"

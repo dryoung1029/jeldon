@@ -33,6 +33,9 @@ export {
   type DailyTrafficRow,
   type ReferrerSummary,
   type DayDetail,
+  type WebVitalsResult,
+  type WebVitalKey,
+  mapVitalField,
   type CrawlerSnapshot,
   type BotSnapshot,
 } from './provider.js';
@@ -62,6 +65,16 @@ export {
   getArticleTrafficFor,
   upsertArticleTrafficDay,
 } from './article-traffic.js';
+
+// Per-route traffic (the conversion denominator)
+export { normalizeSitePath } from './site-path.js';
+export {
+  type PageTrafficStore,
+  emptyPageTrafficStore,
+  upsertPageTrafficDay,
+  getPageTraffic,
+  pageTrafficDates,
+} from './page-traffic.js';
 
 // AI-crawler snapshot store
 export {

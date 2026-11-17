@@ -729,11 +729,19 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
     '^/team/[a-z0-9-]+/?$',
     '^/locations/[a-z0-9-]+/?$',
   ],
+  // Zone and account ids are per-project: set them in `pack.analytics.cloudflare`.
   cloudflare: {
-    zoneId: '3729601f65f74d2f9d88d61d165fa1ac',
-    accountId: '371ac4bfa6c0f9aa3b0de0228fb0952d',
     endpoint: 'https://api.cloudflare.com/client/v4/graphql',
   },
   windowDays: 30,
   maxDailySnapshots: 365,
+  sitePath: {
+    excludePrefixes: ['admin', 'api', '_astro', '_image', '_server-islands', 'cdn-cgi'],
+    maxLength: 200,
+  },
+  webVitals: {
+    typeName: 'AccountRumWebVitalsEventsAdaptiveGroups',
+    dataset: 'rumWebVitalsEventsAdaptiveGroups',
+    days: 7,
+  },
 };

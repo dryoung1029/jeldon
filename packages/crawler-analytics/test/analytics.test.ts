@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { defaultAnalyticsConfig, type AiBot, type AnalyticsConfig, type RefererChannelRule } from '@jeldon/config';
 import {
   aggregateDayDetail,
+  CloudflareAnalytics,
   analyticsConfigFromPack,
   classifyReferer,
   collectBeacon,
@@ -195,5 +196,72 @@ describe('bot UA tokens are anchored', () => {
     expect(re.test('Pinterestbot/1.0')).toBe(true);
     expect(re.test('DuckDuckBot/1.1')).toBe(true);
     expect(re.test('DuckAssistBot/1.0')).toBe(true);
+  });
+});
+
+describe('per-route traffic + path beacon (shared normalizeSitePath)', () => {
+  it('normalizes routes and refuses non-pages', async () => {
+    const { normalizeSitePath } = await import('../src/index.js');
+    expect(normalizeSitePath('/Care/Back-Pain?utm=x#h')).toBe('/care/back-pain/');
+    expect(normalizeSitePath('https://acme.example//team//jane')).toBe('/team/jane/');
+    expect(normalizeSitePath('')).toBeNull(); // no page is not the homepage
+    expect(normalizeSitePath(null)).toBeNull();
+    expect(normalizeSitePath('/admin/x')).toBeNull();
+    expect(normalizeSitePath('/api/track')).toBeNull();
+    expect(normalizeSitePath('/sitemap.xml')).toBeNull();
+    expect(normalizeSitePath('/' + 'a'.repeat(250))).toBeNull();
+  });
+
+  it('aggregateDayDetail emits pageHits for every successful route, human/bot split', async () => {
+    const { aggregateDayDetail } = await import('../src/index.js');
+    const d = aggregateDayDetail(
+      [
+        { path: '/care/back-pain', ua: 'Mozilla/5.0 Chrome', status: 200, count: 5 },
+        { path: '/care/back-pain/', ua: 'GPTBot/1.0', status: 200, count: 2 },
+        { path: '/missing', ua: 'Mozilla/5.0', status: 404, count: 9 },
+        { path: '/_astro/x.js', ua: 'Mozilla/5.0', status: 200, count: 40 },
+      ],
+      '2026-11-16',
+    );
+    expect(d.pageHits).toEqual({ '/care/back-pain/': { human: 5, bot: 2 } });
+  });
+
+  it('accepts a path beacon keyed the same way and rejects admin paths', async () => {
+    const { parseEngagementBeacon } = await import('../src/index.js');
+    expect(parseEngagementBeacon(JSON.stringify({ t: 'cta', path: '/Care/Back-Pain', kind: 'call' }))?.slug).toBe('/care/back-pain/');
+    expect(parseEngagementBeacon(JSON.stringify({ t: 'view', path: '/admin/x' }))).toBeNull();
+    expect(parseEngagementBeacon(JSON.stringify({ t: 'view', slug: 'an-article' }))?.slug).toBe('an-article');
+    expect(parseEngagementBeacon(JSON.stringify({ t: 'view' }))).toBeNull();
+  });
+});
+
+describe('fetchWebVitals diagnostics', () => {
+  function cf(responses: unknown[]) {
+    let i = 0;
+    const fetchImpl = (async () => new Response(JSON.stringify(responses[i++] ?? { data: null }))) as unknown as typeof fetch;
+    return new CloudflareAnalytics({ token: 't', accountId: 'acc', zoneId: 'z', fetchImpl });
+  }
+
+  it('lists the RUM types present when the guessed type is missing', async () => {
+    const r = await cf([{ data: { t: null } }, { data: { __schema: { types: [{ name: 'AccountRumPageloadEventsAdaptiveGroups' }, { name: 'Zone' }] } } }]).fetchWebVitals();
+    expect(r).toMatchObject({ status: 'unattestable', reason: 'type-not-found', rumTypesPresent: ['AccountRumPageloadEventsAdaptiveGroups'] });
+  });
+
+  it('says so when the query returns zero rows instead of reporting empty metrics', async () => {
+    const intro = { data: { t: { fields: [{ name: 'quantiles', type: { fields: [{ name: 'largestContentfulPaintP75' }] } }] } } };
+    const r = await cf([intro, { data: { viewer: { accounts: [{ rumWebVitalsEventsAdaptiveGroups: [] }] } } }]).fetchWebVitals();
+    expect(r.status).toBe('no-rows');
+  });
+
+  it('prefers p75 and maps metrics', async () => {
+    const intro = { data: { t: { fields: [{ name: 'quantiles', type: { fields: [{ name: 'largestContentfulPaintP50' }, { name: 'largestContentfulPaintP75' }, { name: 'cumulativeLayoutShiftP75' }] } }] } } };
+    const rows = { data: { viewer: { accounts: [{ rumWebVitalsEventsAdaptiveGroups: [{ count: 12, quantiles: { largestContentfulPaintP50: 1200, largestContentfulPaintP75: 2100, cumulativeLayoutShiftP75: 0.05 } }] }] } } };
+    const r = await cf([intro, rows]).fetchWebVitals();
+    expect(r).toMatchObject({ status: 'ok', sampleSize: 12, metrics: { LCP: { value: 2100, pct: 75 }, CLS: { value: 0.05, pct: 75 } } });
+  });
+
+  it('is unattestable without an account id', async () => {
+    const r = await new CloudflareAnalytics({ token: 't' }).fetchWebVitals();
+    expect(r).toMatchObject({ status: 'unattestable', reason: 'no-account' });
   });
 });

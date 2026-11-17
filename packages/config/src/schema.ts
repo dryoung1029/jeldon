@@ -286,6 +286,10 @@ const analyticsConfig = z.object({
     .optional(),
   windowDays: z.number().int().positive(),
   maxDailySnapshots: z.number().int().positive(),
+  sitePath: z.object({ excludePrefixes: z.array(z.string()), maxLength: z.number().int().positive() }).optional(),
+  webVitals: z
+    .object({ typeName: z.string().min(1), dataset: z.string().min(1), days: z.number().int().positive() })
+    .optional(),
 });
 
 const entityPresenceConfig = z.object({

@@ -165,7 +165,7 @@ describe('resolveBrevoConfig', () => {
 describe('BrevoClient.nextSendSlot', () => {
   it('honors the 4-hour floor and lands on the configured hour', () => {
     // 6am PT publish → 10am PT same day (floor fits).
-    const slot = BrevoClient.nextSendSlot(new Date('2026-06-29T13:00:00Z')); // 6am PDT
+    const slot = BrevoClient.nextSendSlot(new Date('2026-06-29T13:00:00Z'), 'America/Los_Angeles'); // 6am PDT
     const hourPT = new Intl.DateTimeFormat('en-US', {
       timeZone: 'America/Los_Angeles',
       hour: '2-digit',

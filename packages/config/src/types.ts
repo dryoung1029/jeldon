@@ -667,6 +667,14 @@ export interface AnalyticsConfig {
   windowDays: number;
   /** Max daily snapshots retained in the rolling stores. BoH: 365. */
   maxDailySnapshots: number;
+  /** How site routes are keyed in per-route traffic and the path-keyed
+   *  engagement beacon. Both sides use `normalizeSitePath`, so the keys join.
+   *  Default excludes admin/api/build-asset prefixes and caps at 200 chars. */
+  sitePath?: { excludePrefixes: string[]; maxLength: number };
+  /** Cloudflare Web Analytics (RUM) Web Vitals query. The dataset type name is
+   *  a guess that has changed before, so the engine reports which RUM types
+   *  the schema exposes when it is wrong. */
+  webVitals?: { typeName: string; dataset: string; days: number };
 }
 
 // ---------------------------------------------------------------------------

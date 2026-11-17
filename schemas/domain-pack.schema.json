@@ -1733,6 +1733,51 @@
           "type": "integer",
           "exclusiveMinimum": 0,
           "maximum": 9007199254740991
+        },
+        "sitePath": {
+          "type": "object",
+          "properties": {
+            "excludePrefixes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "maxLength": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "excludePrefixes",
+            "maxLength"
+          ],
+          "additionalProperties": false
+        },
+        "webVitals": {
+          "type": "object",
+          "properties": {
+            "typeName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dataset": {
+              "type": "string",
+              "minLength": 1
+            },
+            "days": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "typeName",
+            "dataset",
+            "days"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [

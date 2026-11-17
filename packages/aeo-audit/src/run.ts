@@ -69,9 +69,9 @@ async function sha256(s: string): Promise<string> {
     .slice(0, 16);
 }
 
-/** PT (America/Los_Angeles) date key — the snapshot's canonical date. Override
- *  the timezone via `opts.timezone` (e.g. `pack.content.timezone`). */
-export function dateKey(d: Date = new Date(), timezone = 'America/Los_Angeles'): string {
+/** The snapshot's canonical date key in `timezone`. Pass `pack.content.timezone`;
+ *  defaults to UTC (the engine assumes no locale). */
+export function dateKey(d: Date = new Date(), timezone = 'UTC'): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
     year: 'numeric',
