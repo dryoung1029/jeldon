@@ -432,6 +432,43 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(@types/node@22.20.0)(vite@8.3.6(@types/node@22.20.0)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
+  packages/google:
+    devDependencies:
+      tsup:
+        specifier: ^9.0.0
+        version: 9.0.0(jiti@2.7.0)(postcss@8.5.32)(typescript@5.9.3)(yaml@2.9.1)
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vite:
+        specifier: ^8.3.6
+        version: 8.3.6(@types/node@22.20.0)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@types/node@22.20.0)(vite@8.3.6(@types/node@22.20.0)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/leads:
+    dependencies:
+      '@jeldon/config':
+        specifier: workspace:*
+        version: link:../config
+      '@jeldon/crawler-analytics':
+        specifier: workspace:*
+        version: link:../crawler-analytics
+    devDependencies:
+      tsup:
+        specifier: ^9.0.0
+        version: 9.0.0(jiti@2.7.0)(postcss@8.5.32)(typescript@5.9.3)(yaml@2.9.1)
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vite:
+        specifier: ^8.3.6
+        version: 8.3.6(@types/node@22.20.0)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1)
+      vitest:
+        specifier: ^5.1.0
+        version: 5.1.0(@types/node@22.20.0)(vite@8.3.6(@types/node@22.20.0)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
+
   packages/media:
     dependencies:
       '@jeldon/config':

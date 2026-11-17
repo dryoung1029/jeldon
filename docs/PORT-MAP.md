@@ -106,13 +106,13 @@ Also found: `entity-presence/consistency.ts:32` uses `host.includes()`, the same
 
 | Item | Status | Target | Effort | New pack fields |
 |---|---|---|---|---|
-| First-touch attribution | partial (referer classifier only) | new `@jeldon/leads` + template snippet | S | — |
-| Conversion map (greyed < 3 leads) | missing | leads | M | `capabilities.leads` |
-| Lead trends (date basis, maturing flag) | missing | leads | M | uses business timezone |
-| Booking import with client-side hashing, generic column automap (Jane = one preset) | missing | leads | M | `leads.bookingImport { presets, headerPatterns }` |
-| WebCrypto service-account JWT; header flattening | missing | new `@jeldon/google` | S | — |
-| Mailbox response tracking | missing | **compliance pack only** | L | `compliance.mailbox` |
-| RequestSheet / StickyActions / EndCap / OpenNow | missing | template components + pack data | M | `conversion.requestContexts` |
+| First-touch attribution | done (`@jeldon/leads`) | new `@jeldon/leads` + template snippet | S | — |
+| Conversion map (greyed < 3 leads) | done (`@jeldon/leads`) | leads | M | `capabilities.leads` |
+| Lead trends (date basis, maturing flag) | done (`@jeldon/leads`) | leads | M | uses business timezone |
+| Booking import with client-side hashing, generic column automap (Jane = one preset) | done (`@jeldon/leads`) | leads | M | `leads.bookingImport { presets, headerPatterns }` |
+| WebCrypto service-account JWT; header flattening | done (`@jeldon/google`) | new `@jeldon/google` | S | — |
+| Mailbox response tracking | done (`@jeldon/leads/compliance`) | **compliance pack only** | L | `compliance.mailbox` |
+| RequestSheet / StickyActions / EndCap / OpenNow | partial: pack data + `requestContextFor` done (`@jeldon/leads`); template components not built | template components + pack data | M | `conversion.requestContexts` |
 
 ## 11. Template and site ops
 

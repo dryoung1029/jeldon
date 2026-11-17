@@ -9,6 +9,7 @@ import type {
   SeoConfig,
   StrategyConfig,
 } from './types.js';
+import type { ConversionConfig, LeadsConfig, MailboxOutcomeRules } from './types.js';
 
 /**
  * Canonical scoring defaults, ported verbatim from the source system
@@ -739,4 +740,159 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
   },
   windowDays: 30,
   maxDailySnapshots: 365,
+};
+
+// ---------------------------------------------------------------------------
+// Leads + conversion (@jeldon/leads)
+// ---------------------------------------------------------------------------
+
+/** Lead defaults. Generic: the storage prefix is neutral, and the booking
+ *  presets are column-header patterns only. The `jane` preset is the header
+ *  set Body of Health matched against a Jane App "Patient List" CSV export;
+ *  it is data, and no code path knows about Jane. */
+export const defaultLeadsConfig: LeadsConfig = {
+  attribution: {
+    storagePrefix: 'jeldon:',
+    utmKeys: ['utm_source', 'utm_medium', 'utm_campaign'],
+    maxLandingChars: 200,
+    maxReferrerChars: 120,
+    maxUtmChars: 60,
+    capturePhoneTaps: true,
+  },
+  unknownChannelLabel: 'Unknown',
+  requestVia: ['page', 'sheet', 'sticky', 'endcap', 'header', 'notice'],
+  bookingImport: {
+    presets: [
+      {
+        id: 'generic',
+        label: 'Generic CSV',
+        columns: {
+          email: ['^e-?mail$', '^e-?mail address$', 'e-?mail'],
+          phone: ['mobile|cell', 'phone|tel'],
+          date: [
+            'first.*(visit|appt|appointment)',
+            '(first|initial).*date',
+            '(visit|appointment|booking|booked).*date',
+            '^date$',
+          ],
+        },
+      },
+      {
+        id: 'jane',
+        label: 'Jane App patient list',
+        columns: {
+          email: ['^e-?mail$', 'e-?mail'],
+          phone: ['mobile|cell', 'phone'],
+          date: ['first.*(visit|appt|appointment)', '(first|initial).*date', '(visit|appointment).*date'],
+        },
+      },
+    ],
+    defaultPreset: 'generic',
+    phoneDigits: 10,
+    maxRows: 5000,
+  },
+  trends: { defaultBucket: 'month' },
+};
+
+/** Conversion defaults. No request copy ships: a site's CTA wording is its
+ *  own (and in regulated verticals it is reviewed copy). */
+export const defaultConversionConfig: ConversionConfig = {
+  minLeads: 3,
+};
+
+const mrule = (id: string, pattern: string) => ({ id, pattern });
+
+/** Default mailbox outcome rules (COMPLIANCE-PACK MATERIAL: only used by
+ *  `@jeldon/leads/compliance`, which refuses to run without a pack). Generic
+ *  English phrasing, ported from BoH `lead-outcomes.ts` with the vertical
+ *  noun ("chiropractor") generalised. Override per pack. */
+export const defaultMailboxOutcomeRules: MailboxOutcomeRules = {
+  phoneFromUs: [
+    mrule('us.will-call', `i(?:'| a)?ll (?:give you a |just )?(?:call|ring|phone)(?: you)?`),
+    mrule('us.we-will-call', `we(?:'| wi)?ll (?:call|ring|phone|reach out by phone)`),
+    mrule('us.front-desk', `(?:our |the )?(?:front desk|office|staff|receptionist|team)(?: will| can)? (?:call|reach out|phone|be in touch)`),
+    mrule('us.give-us-a-call', `(?:give us a call|call (?:us|the office|our office)|call back)`),
+    mrule('us.easier-by-phone', `(?:easier|quickest|fastest|best) (?:to (?:do this |sort this )?)?(?:by |over the )?phone`),
+    mrule('us.reach-you', `(?:reach|ring) you (?:by phone|at)`),
+  ],
+  phoneFromThem: [
+    mrule('them.call-me', `(?:please |could you |can you |would you )?(?:give me a call|call me|phone me|ring me)`),
+    mrule('them.my-number', `(?:my (?:cell|phone|number) is|reach me at|best number)`),
+    mrule('them.prefer-phone', `(?:prefer|easier|rather) (?:to )?(?:talk|speak|chat)? ?(?:by |on the )?phone`),
+  ],
+  decline: [
+    mrule('decline.no-longer-need', `no longer (?:need|require|looking|interested)`),
+    mrule('decline.found-someone', `(?:found|going with|went with|seeing) (?:someone|another|a different|somebody)`),
+    mrule('decline.not-interested', `(?:not|no longer) interested`),
+    mrule('decline.will-pass', `(?:i(?:'| wi)?ll pass|gonna pass|going to pass)`),
+    mrule('decline.decided-against', `decided (?:not to|against)`),
+    mrule('decline.hold-off', `(?:hold(?:ing)? off|put (?:this|it) on hold|wait (?:until|till))`),
+    mrule('decline.not-at-this-time', `not (?:at this time|right now|for now)`),
+    mrule('decline.wont-be', `(?:won(?:'|)t be (?:able to )?(?:coming|booking|making)|can(?:'|no)t make it work)`),
+    mrule('decline.cancel', `(?:cancel|withdraw) (?:my|the|that) (?:appointment|request|booking)`),
+    mrule('decline.no-thanks', `no,? thank you`),
+  ],
+  declineReasons: [
+    {
+      reason: 'insurance',
+      label: 'Insurance / out of network',
+      rules: [
+        mrule('why.out-of-network', `out[- ]of[- ]network|not in[- ]network|don(?:'|)t take (?:my|our) insurance`),
+        mrule('why.not-covered', `(?:not|isn(?:'|)t) covered|doesn(?:'|)t (?:take|accept) (?:my |our )?insurance`),
+        mrule('why.plan', `(?:my|our) (?:insurance|plan|carrier)|deductible|copay|co-pay`),
+      ],
+    },
+    {
+      reason: 'cost',
+      label: 'Cost',
+      rules: [
+        mrule('why.expensive', `too (?:expensive|much|pricey|costly)`),
+        mrule('why.afford', `can(?:'|no)t afford|out of (?:my |our )?(?:price range|budget)`),
+        mrule('why.cash', `cash (?:price|pay|rate)|out[- ]of[- ]pocket`),
+      ],
+    },
+    {
+      reason: 'availability',
+      label: "Times didn't work",
+      rules: [
+        mrule('why.times', `(?:times?|hours?|slots?) (?:don(?:'|)t|do not|won(?:'|)t) work`),
+        mrule('why.schedule', `(?:schedul|availab)\\w*\\s+(?:conflict|issue|problem)|conflicts? with (?:my|our|work)`),
+        mrule('why.booked-out', `booked (?:out|up)|no (?:openings|availability)|wait ?list|too far out`),
+        mrule('why.work-hours', `(?:work|working) (?:hours|during)|only (?:evenings|weekends)`),
+      ],
+    },
+    {
+      reason: 'distance',
+      label: 'Too far away',
+      rules: [
+        mrule('why.too-far', `too far|(?:the )?drive is|long (?:drive|commute)`),
+        mrule('why.moving', `(?:moved|moving|relocat\\w+) (?:away|out of)`),
+        mrule('why.closer', `(?:somewhere|someone|clinic|office) closer`),
+      ],
+    },
+    {
+      reason: 'resolved',
+      label: 'Resolved on its own',
+      rules: [
+        mrule('why.better', `(?:feeling|feel|much) better|cleared up|went away|resolved (?:itself|on its own)`),
+        mrule('why.no-pain', `(?:pain|symptoms?|problem|issue) (?:is|are|has|have) gone`),
+      ],
+    },
+    {
+      reason: 'elsewhere',
+      label: 'Went somewhere else',
+      rules: [
+        mrule('why.another-provider', `another (?:provider|practitioner|clinic|office|doctor|firm|advisor|company)`),
+        mrule('why.already-seeing', `already (?:seeing|established with|a (?:patient|client|customer))`),
+        mrule('why.referred', `(?:my|our) (?:doctor|pcp|physician|advisor|lawyer) (?:referred|sent)`),
+      ],
+    },
+  ],
+  unspecifiedLabel: 'Declined, no reason given',
+  bookedInThread: [
+    mrule('booked.see-you', `see you (?:on|at|then|tomorrow|monday|tuesday|wednesday|thursday|friday)`),
+    mrule('booked.confirmed', `(?:appointment|visit|meeting|consultation) (?:is )?(?:confirmed|booked|scheduled|set)`),
+    mrule('booked.got-you-in', `(?:got|have) you (?:in|scheduled|booked|down) (?:for|on|at)`),
+    mrule('booked.looking-forward', `look(?:ing)? forward to (?:seeing|meeting) you`),
+  ],
 };

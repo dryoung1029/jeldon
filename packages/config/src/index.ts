@@ -67,3 +67,15 @@ export {
   singleToolRequest,
 } from './llm.js';
 export { hostOf, hostIs, termRegex, mentionsTerm } from './match.js';
+export type {
+  LeadsConfig,
+  LeadAttributionConfig,
+  BookingImportConfig,
+  BookingImportPreset,
+  ConversionConfig,
+  RequestContext,
+  MailboxComplianceConfig,
+  MailboxOutcomeRules,
+  MailboxRule,
+} from './types.js';
+export { defaultLeadsConfig, defaultConversionConfig, defaultMailboxOutcomeRules } from './defaults.js';

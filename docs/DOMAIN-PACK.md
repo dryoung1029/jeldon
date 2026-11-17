@@ -82,6 +82,22 @@ counts toward these, so leave headroom), `draftFloor`, `wordCountTarget`.
 `brand.siteUrl` is added automatically by `analyticsConfigFromPack`.
 `botUaPattern` tokens must be bot-specific (`pinterestbot`, not `pinterest`).
 
+### `leads` (optional)
+`attribution` (`storagePrefix` for the sessionStorage keys, `utmKeys` kept,
+length caps for landing path / referrer host / UTM values, `capturePhoneTaps`),
+`unknownChannelLabel` (a lead with no attribution is "no data", not direct),
+`requestVia` (allowed form-opening controls), `bookingImport` (`presets` of
+column-header regex sources per field, `defaultPreset`, `phoneDigits`,
+`maxRows`) and `trends.defaultBucket`. The booking presets are DATA: a `jane`
+preset ships as one example; add your booking system's headers as another.
+Trends bucket in `content.timezone` (the business timezone).
+
+### `conversion` (optional)
+`minLeads` (default 3: cells under it are flagged `lowSample`, shown dimmed,
+never hidden or zeroed) and `requestContexts` (`default` + `byCluster`: the
+request-sheet / end-cap copy per topic cluster). No request copy ships in the
+defaults; an unconfigured pack gets `configured: false`.
+
 ### `competitors` (optional)
 `roster`, `targetKeywords`, our `ourPlaceId`/`ourName`/`localPackLocation`,
 `highValuePatterns`/`skipPatterns`, `templateVendors` fingerprints.
@@ -97,9 +113,20 @@ counts toward these, so leave headroom), `draftFloor`, `wordCountTarget`.
 `reviewResponseRules`, `requireHumanReviewTags`. **HIPAA-class behavior is opt-in
 here, never in the engine.**
 
+`compliance.mailbox` (optional) — **compliance-pack material.** Mailbox
+response tracking (`@jeldon/leads/compliance`) reads message text, so
+`createMailboxTracker` refuses to run unless `pack` is not `none` AND
+`mailbox.enabled` is `true`. Fields: `address` (the mailbox the system sends its
+notifications from), `notificationWindowMinutes` (10), `autoReplyUnderMinutes`
+(2), and optional `rules` (keyword rules → codes; defaults to
+`defaultMailboxOutcomeRules`). Text is reduced to rule codes inside the
+function and never returned; do not persist what you fetch. Run it only where
+the mailbox provider is covered by whatever agreement your pack requires.
+
 ### `capabilities`
 Booleans gating growth surfaces: `drafting`, `amplify`, `audio`, `heroImages`,
-`competitiveIntel`, `engagementAnalytics`, `entityPresence`. Turn on only what
+`competitiveIntel`, `engagementAnalytics`, `entityPresence`, `leads`,
+`conversionMap`. Turn on only what
 you use; disabled surfaces are absent from the build.
 
 ### `services`
