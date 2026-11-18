@@ -21,8 +21,7 @@ export async function getStaticPaths() {
 }
 
 const { cluster, members } = Astro.props;
-const cfg = pack.content.topicClusters!;
-const path = clusterPath(cluster.id, cfg);
+const path = clusterPath(cluster.id);
 
 const jsonLd = [
   collectionPageGraph({

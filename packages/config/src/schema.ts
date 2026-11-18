@@ -677,7 +677,6 @@ export const domainPackSchema = z
       heroImagePathPrefixes: z.array(z.string().min(1)).optional(),
       topicClusters: z
         .object({
-          pathPrefix: z.string().optional(),
           minLiveArticles: z.number().int().positive().optional(),
           clusters: z
             .array(

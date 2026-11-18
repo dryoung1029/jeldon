@@ -265,3 +265,12 @@ describe('fetchWebVitals diagnostics', () => {
     expect(r).toMatchObject({ status: 'unattestable', reason: 'no-account' });
   });
 });
+
+describe('homepage beacon (Codex review on jeldon#3)', () => {
+  it('accepts the root path and still rejects excluded paths', async () => {
+    const { parseEngagementBeacon } = await import('../src/index.js');
+    expect(parseEngagementBeacon(JSON.stringify({ t: 'view', path: '/' }))?.slug).toBe('/');
+    expect(parseEngagementBeacon(JSON.stringify({ t: 'cta', path: '/', kind: 'call' }))?.kind).toBe('call');
+    expect(parseEngagementBeacon(JSON.stringify({ t: 'view', path: '/api/' }))).toBeNull();
+  });
+});

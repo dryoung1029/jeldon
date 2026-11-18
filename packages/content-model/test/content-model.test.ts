@@ -298,6 +298,6 @@ describe('topic clusters', () => {
     expect(clusterPages(arts, { clusters }).map((p) => p.cluster.id)).toEqual(['hip']);
     expect([...liveClusterIds(arts, { clusters })]).toEqual(['hip']);
     expect([...liveClusterIds(arts, { clusters, minLiveArticles: 1 })].sort()).toEqual(['hip', 'va']);
-    expect(clusterPath('hip', {})).toBe('/articles/topic/hip/');
+    expect(clusterPath('hip')).toBe('/articles/topic/hip/');
   });
 });

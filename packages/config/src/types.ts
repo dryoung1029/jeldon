@@ -370,8 +370,6 @@ export interface TopicCluster {
 }
 
 export interface TopicClustersConfig {
-  /** Route prefix for cluster pages. Default "/articles/topic/". */
-  pathPrefix?: string;
   /** A cluster page only exists with at least this many live members (a
    *  one-article cluster is thin content). Default 2. */
   minLiveArticles?: number;

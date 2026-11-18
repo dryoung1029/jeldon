@@ -382,9 +382,6 @@
         "topicClusters": {
           "type": "object",
           "properties": {
-            "pathPrefix": {
-              "type": "string"
-            },
             "minLiveArticles": {
               "type": "integer",
               "exclusiveMinimum": 0,

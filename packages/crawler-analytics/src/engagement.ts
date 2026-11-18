@@ -16,8 +16,9 @@ import { defaultAnalyticsConfig, type AnalyticsConfig } from '@jeldon/config';
 import { normalizeSitePath } from './site-path.js';
 
 const SLUG_RE = /^[a-z0-9-]{1,120}$/i;
-/** A normalized page path as the beacon stores it: leading and trailing `/`. */
-const PATH_RE = /^\/[a-z0-9/_-]{0,160}\/$/;
+/** A normalized page path as the beacon stores it: leading and trailing `/`.
+ *  The homepage is `/` on its own. */
+const PATH_RE = /^\/(?:[a-z0-9/_-]{0,160}\/)?$/;
 const TYPES = new Set(['view', 'click', 'dwell', 'cta', 'play', 'signup']);
 
 /** A validated engagement event, ready to persist. Columns mirror the BoH D1

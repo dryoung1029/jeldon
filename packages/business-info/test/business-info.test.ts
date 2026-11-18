@@ -192,3 +192,33 @@ describe('isOpenNow', () => {
     expect(zonedDate(TZ, new Date('2026-11-18T03:00:00Z'))).toBe('2026-11-17');
   });
 });
+
+describe('overnight periods (Codex review on jeldon#3)', () => {
+  it('splits a period that closes the next day across both days', () => {
+    // Google day indexes: 0 = Sunday, 1 = Monday.
+    const hours = buildRegularHours([{ open: { day: 1, time: '2200' }, close: { day: 2, time: '0200' } }]);
+    expect(hours).toEqual([
+      { day: 'Monday', intervals: [{ opens: '22:00', closes: '23:59' }] },
+      { day: 'Tuesday', intervals: [{ opens: '00:00', closes: '02:00' }] },
+    ]);
+  });
+
+  it('wraps Saturday into Sunday and does not add an empty interval at midnight', () => {
+    expect(buildRegularHours([{ open: { day: 6, time: '2000' }, close: { day: 0, time: '0100' } }])).toEqual([
+      { day: 'Sunday', intervals: [{ opens: '00:00', closes: '01:00' }] },
+      { day: 'Saturday', intervals: [{ opens: '20:00', closes: '23:59' }] },
+    ]);
+    expect(buildRegularHours([{ open: { day: 1, time: '1800' }, close: { day: 2, time: '0000' } }])).toEqual([
+      { day: 'Monday', intervals: [{ opens: '18:00', closes: '23:59' }] },
+    ]);
+  });
+
+  it('reports open during both halves of an overnight shift', async () => {
+    const { isOpenNow } = await import('../src/index.js');
+    const regularHours = buildRegularHours([{ open: { day: 1, time: '2200' }, close: { day: 2, time: '0200' } }]);
+    // 2026-11-16 is a Monday; UTC keeps the wall clock simple.
+    expect(isOpenNow({ regularHours }, new Date('2026-11-16T23:00:00Z'), 'UTC').state).toBe('open');
+    expect(isOpenNow({ regularHours }, new Date('2026-11-17T01:30:00Z'), 'UTC').state).toBe('open');
+    expect(isOpenNow({ regularHours }, new Date('2026-11-17T03:00:00Z'), 'UTC').state).toBe('closed');
+  });
+});

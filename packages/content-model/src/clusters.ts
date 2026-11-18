@@ -56,8 +56,12 @@ export function clusterPages<T extends ClusterMemberInput>(
     .filter((p) => p.members.length >= min);
 }
 
-/** Path of a cluster page, e.g. `/articles/topic/low-back-spine/`. */
-export function clusterPath(clusterId: string, cfg: Pick<TopicClustersConfig, 'pathPrefix'>): string {
-  const prefix = (cfg.pathPrefix ?? '/articles/topic/').replace(/^\/?/, '/').replace(/\/?$/, '/');
-  return `${prefix}${clusterId}/`;
+/** Path of a cluster page, e.g. `/articles/topic/low-back-spine/`. The prefix
+ *  is where the host's cluster route lives (the template's is
+ *  `src/pages/articles/topic/[cluster].astro`), so it is a route concern, not
+ *  pack config: a configurable prefix without a matching route made links to
+ *  pages that were never generated. */
+export function clusterPath(clusterId: string, prefix = '/articles/topic/'): string {
+  const p = prefix.replace(/^\/?/, '/').replace(/\/?$/, '/');
+  return `${p}${clusterId}/`;
 }

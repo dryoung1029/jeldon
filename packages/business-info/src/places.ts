@@ -38,6 +38,7 @@ function hhmm(s: unknown): string {
   return `${padded.slice(0, 2)}:${padded.slice(2, 4)}`;
 }
 
+/** One period as a same-day interval (used for date-keyed special hours). */
 const interval = (p: GPeriod): HoursInterval => ({
   opens: hhmm(p.open?.time),
   // No close = open 24 h; represented conservatively as until 23:59.
@@ -45,14 +46,34 @@ const interval = (p: GPeriod): HoursInterval => ({
 });
 
 /** Google weekly periods → per-day intervals (split shifts kept, sorted).
- *  Days with no period are omitted (= closed). */
+ *  Days with no period are omitted (= closed). A period that closes on a
+ *  later day is split across the days it covers. */
 export function buildRegularHours(periods: GPeriod[]): DayHours[] {
   const map = new Map<DayName, HoursInterval[]>(DAY_NAMES.map((d) => [d, []]));
   for (const p of periods) {
     if (!p?.open) continue;
     const idx = Number(p.open.day);
     if (!Number.isInteger(idx) || idx < 0 || idx > 6) continue;
-    map.get(DAY_NAMES[idx]!)!.push(interval(p));
+    const opens = hhmm(p.open.time);
+    // No close = open 24 h; represented conservatively as until 23:59.
+    if (!p.close?.time) {
+      map.get(DAY_NAMES[idx]!)!.push({ opens, closes: '23:59' });
+      continue;
+    }
+    const closes = hhmm(p.close.time);
+    const closeIdx = Number(p.close.day);
+    // Days from open to close. A period that closes on a later day (e.g. Mon
+    // 22:00 → Tue 02:00) is split across the days it covers, so each day's
+    // interval satisfies opens < closes and `isOpenNow` sees the shift.
+    let span = Number.isInteger(closeIdx) && closeIdx >= 0 && closeIdx <= 6 ? (closeIdx - idx + 7) % 7 : 0;
+    if (span === 0 && closes <= opens) span = 1; // close day missing/equal but time wraps past midnight
+    if (span === 0) {
+      map.get(DAY_NAMES[idx]!)!.push({ opens, closes });
+      continue;
+    }
+    map.get(DAY_NAMES[idx]!)!.push({ opens, closes: '23:59' });
+    for (let d = 1; d < span; d++) map.get(DAY_NAMES[(idx + d) % 7]!)!.push({ opens: '00:00', closes: '23:59' });
+    if (closes !== '00:00') map.get(DAY_NAMES[(idx + span) % 7]!)!.push({ opens: '00:00', closes });
   }
   return DAY_NAMES.filter((d) => map.get(d)!.length > 0).map((d) => ({
     day: d,

@@ -82,7 +82,7 @@ if (!isStub && clusterCfg) {
     .filter((id) => built.has(id))
     .map((id) => ({
       label: clusterCfg.clusters.find((c) => c.id === id)!.label,
-      href: clusterPath(id, clusterCfg),
+      href: clusterPath(id),
     }));
 }
 
