@@ -8,6 +8,7 @@ export type {
   CfWindow,
   CrawlerActivity,
   StrategyInput,
+  SearchConsoleSignals,
   BuiltinRuleId,
   RuleToggle,
   RuleSet,

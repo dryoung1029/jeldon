@@ -1,0 +1,36 @@
+{
+  "name": "@jeldon/leads",
+  "version": "0.1.0",
+  "description": "Domain-agnostic lead pipeline maths: first-touch attribution (path-only landing, hostname-only referrer), lead channels via the shared referer classifier, lead trends with a date basis and a maturing flag, a views → leads → booked conversion map with low-sample flags, and a booking import that hashes identifiers the same way in browser and server. Mailbox response tracking lives in the opt-in `@jeldon/leads/compliance` subpath.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/index.js",
+      "import": "./dist/index.js"
+    },
+    "./compliance": {
+      "types": "./dist/compliance.d.ts",
+      "import": "./dist/compliance.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts src/compliance.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*",
+    "@jeldon/crawler-analytics": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^9.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

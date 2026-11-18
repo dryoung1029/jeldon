@@ -29,3 +29,25 @@ for a package before porting it.
 4. Add a Vitest that proves the same input + a *different* pack changes behavior
    without touching engine code (see `core-scoring`'s portability test).
 5. Add a changeset.
+
+## Not ported yet: the talking-head video editor (BoH 2026-10/11)
+
+BoH edits talking-head video by its transcript, all in the browser except
+transcription (`admin/studio/video/edit.astro`, ~2,500 lines, plus
+`api/admin/video/{transcribe,social-cut,suggest-overlays}.ts`). It is deferred
+(PORT-MAP §9). If it is ported, the pure parts (token/filler model, cut and
+segment maps, filter graph and caption builders, split-plan math) belong in a
+`@jeldon/video` package; the page stays a template island; the persona comes
+from `pack.voice`. These lessons cost real time and apply to any port:
+
+- **Never chain `afade` on a joined stream.** Fade each segment, then
+  concatenate. The chained version shipped muted audio.
+- **Scoped styles never match runtime-built DOM.** Use `is:global` with
+  prefixed selectors for anything the script creates.
+- **iOS only delivers a file from a real tap.** A programmatic download after
+  an async step is dropped; re-arm a button for the user to press.
+- **Mount the input with WORKERFS** instead of copying it into the wasm heap.
+- **Split audio into 2-minute parts** to stay under the edge's ~100 s
+  connection ceiling, and stream NDJSON with a keepalive line while waiting.
+- **Leave a fixed total gap at each cut,** split across both sides, not a fixed
+  amount per side.

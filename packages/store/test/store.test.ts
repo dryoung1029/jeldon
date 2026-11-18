@@ -178,3 +178,33 @@ describe('GitHubStore — SHA conflict merge with a mock fetch', () => {
     expect(calls.some((c) => c.startsWith('GET'))).toBe(true);
   });
 });
+
+describe('getArticlesBulk', () => {
+  it('bounds concurrency, retries only transient errors and returns partial results', async () => {
+    const { getArticlesBulk } = await import('../src/index.js');
+    let inFlight = 0;
+    let peak = 0;
+    const calls = new Map<string, number>();
+    const store = {
+      async getArticle(slug: string) {
+        calls.set(slug, (calls.get(slug) ?? 0) + 1);
+        inFlight++;
+        peak = Math.max(peak, inFlight);
+        await new Promise((r) => setTimeout(r, 1));
+        inFlight--;
+        if (slug === 'flaky' && calls.get(slug)! < 2) throw new Error('GitHub get failed: 504 gateway timeout');
+        if (slug === 'missing') throw new Error('GitHub get failed: 404 {"message":"Not Found","status":"500"}');
+        if (slug === 'down') throw new Error('GitHub get failed: 503 unavailable');
+        return { slug, path: `${slug}.md`, sha: 's', content: slug };
+      },
+    };
+    const slugs = ['a', 'b', 'flaky', 'missing', 'down', ...Array.from({ length: 20 }, (_, i) => `x${i}`)];
+    const r = await getArticlesBulk(store, slugs, { sleep: async () => {} });
+    expect(peak).toBeLessThanOrEqual(6);
+    expect(r.files.map((f) => f.slug)).toEqual(slugs.filter((s) => s !== 'missing' && s !== 'down'));
+    expect(r.failures.map((f) => f.slug).sort()).toEqual(['down', 'missing']);
+    expect(calls.get('missing')).toBe(1); // 404 is not retried, despite "500" in the body
+    expect(calls.get('down')).toBe(3);
+    expect(calls.get('flaky')).toBe(2);
+  });
+});

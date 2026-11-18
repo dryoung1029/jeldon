@@ -6,7 +6,7 @@ import type { DomainPack } from '@jeldon/config';
  * Per docs/DECOUPLING-NOTES.md "Voice block duplicated ×4": BoH inlined the same
  * voice paragraph into `amplify/[slug].ts`, `carousel/[slug].ts`, and
  * `newsletter-content.ts` (and `auto-newsletter.mjs` mirrored it again). Here it
- * is built once from `pack.voice` and prepended to whatever channel/carousel/
+ * is built once from `pack.voice` and prepended to whatever channel/
  * newsletter craft prompt the caller assembles. Change the voice in the pack and
  * all three surfaces move together — no hand-copied paragraph to drift.
  */

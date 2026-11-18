@@ -1,4 +1,4 @@
-import type { AeoConfig, DomainPack } from '@jeldon/config';
+import { defaultDraftingConfig, resolveModelId, type AeoConfig, type DomainPack, type DraftingConfig } from '@jeldon/config';
 import { buildEngines, type EngineKeys } from './engines.js';
 import type { BrandMatch, Engine } from './types.js';
 
@@ -13,6 +13,7 @@ export function brandMatchFromPack(pack: Pick<DomainPack, 'brand' | 'aeo'>): Bra
   return {
     url: hostOf(pack.brand.siteUrl),
     mentions: pack.aeo.brandMentions,
+    ...(pack.aeo.brandMentionExclusions ? { mentionExclusions: pack.aeo.brandMentionExclusions } : {}),
   };
 }
 
@@ -28,9 +29,18 @@ function hostOf(siteUrl: string): string {
   }
 }
 
-/** Build the active engine registry for a pack + the keys present in env. */
-export function enginesFromPack(aeo: AeoConfig, keys: EngineKeys): Engine[] {
-  return buildEngines(aeo.engines, keys, aeo.localSearchLocation);
+/**
+ * Build the active engine registry for a pack + the keys present in env.
+ * The Anthropic engine's model is `aeo.model` (an alias or raw id) resolved
+ * through `drafting.models`, so the IDs have one source of truth.
+ */
+export function enginesFromPack(
+  aeo: AeoConfig,
+  keys: EngineKeys,
+  drafting: Pick<DraftingConfig, 'models' | 'defaultModel'> = defaultDraftingConfig,
+): Engine[] {
+  const model = resolveModelId(drafting.models, drafting.defaultModel, aeo.model);
+  return buildEngines(aeo.engines, keys, aeo.localSearchLocation, model);
 }
 
 /** Read engine API keys from a process-env-like record (no direct process

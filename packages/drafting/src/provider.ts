@@ -11,6 +11,7 @@
  * Tests inject a fake provider; a non-Anthropic host writes its own.
  */
 
+import { TOOL_CHOICE_AUTO, resolveModelId, useToolInstruction } from '@jeldon/config';
 import type {
   LlmProvider,
   LlmRequest,
@@ -49,14 +50,19 @@ export class AnthropicProvider implements LlmProvider {
   }
 
   private body(req: LlmRequest, stream: boolean): string {
+    // 5.5 rules (see @jeldon/config llm.ts): no forced tool_choice, explicit
+    // effort, never `thinking: disabled` / `budget_tokens`.
     const payload: Record<string, unknown> = {
       model: req.model,
       max_tokens: req.maxTokens,
-      system: req.system,
+      system: req.toolName ? `${req.system}${useToolInstruction(req.toolName)}` : req.system,
       messages: req.messages,
+      output_config: { effort: req.effort ?? 'medium' },
     };
-    if (req.tools) payload.tools = req.tools;
-    if (req.toolChoice) payload.tool_choice = req.toolChoice;
+    if (req.tools) {
+      payload.tools = req.tools;
+      if (req.toolName) payload.tool_choice = TOOL_CHOICE_AUTO;
+    }
     if (stream) payload.stream = true;
     return JSON.stringify(payload);
   }
@@ -142,6 +148,15 @@ export class AnthropicProvider implements LlmProvider {
             blocks.set(j.index, { type: 'text', text: '', jsonAcc: '' });
           } else if (cb?.type === 'tool_use') {
             blocks.set(j.index, { type: 'tool_use', id: cb.id, name: cb.name, text: '', jsonAcc: '' });
+          } else if (cb?.type === 'thinking') {
+            blocks.set(j.index, {
+              type: 'thinking',
+              text: cb.thinking ?? '',
+              signature: cb.signature ?? '',
+              jsonAcc: '',
+            });
+          } else if (cb?.type === 'redacted_thinking') {
+            blocks.set(j.index, { type: 'redacted_thinking', text: '', data: cb.data ?? '', jsonAcc: '' });
           }
         } else if (j.type === 'content_block_delta') {
           const block = blocks.get(j.index);
@@ -150,6 +165,10 @@ export class AnthropicProvider implements LlmProvider {
             block.text += j.delta.text ?? '';
           } else if (j.delta?.type === 'input_json_delta' && block.type === 'tool_use') {
             block.jsonAcc += j.delta.partial_json ?? '';
+          } else if (j.delta?.type === 'thinking_delta' && block.type === 'thinking') {
+            block.text += j.delta.thinking ?? '';
+          } else if (j.delta?.type === 'signature_delta' && block.type === 'thinking') {
+            block.signature = (block.signature ?? '') + (j.delta.signature ?? '');
           }
         } else if (j.type === 'message_delta') {
           if (j.delta?.stop_reason) stopReason = j.delta.stop_reason;
@@ -184,8 +203,5 @@ export function resolveModel(
   defaultAlias: string,
   requested?: string,
 ): string {
-  if (requested && models[requested]) return models[requested];
-  // A caller may pass a raw provider id directly.
-  if (requested && requested.includes('-')) return requested;
-  return models[defaultAlias] ?? requested ?? defaultAlias;
+  return resolveModelId(models, defaultAlias, requested);
 }

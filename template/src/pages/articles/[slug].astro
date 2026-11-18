@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { articleGraph, breadcrumbList, extractFaqs, faqPage } from '@jeldon/schema-graph';
+import { articleGraph, breadcrumbList, extractFaqs, faqPage, videoObjectGraph } from '@jeldon/schema-graph';
+import { articleClusterIds, clusterPath, liveClusterIds, parseYouTubeUrl } from '@jeldon/content-model';
+import LazyYouTube from '../../components/LazyYouTube.astro';
 import { pack, authorEntries, categoryLabel } from '../../lib/pack';
 import { getPublishedArticles, getStubArticles, formatPublishDate, estimateReadTime } from '../../lib/articles';
 
@@ -64,6 +66,39 @@ if (!isStub) {
   const faqs = extractFaqs(article.body);
   if (faqs.length >= 2) jsonLd.push(faqPage(faqs));
 }
+
+// "More on" links to the article's topic clusters. Only clusters that have a
+// page in this build (same threshold as the cluster route) are linked; these
+// internal links are what make a cluster page rank.
+const clusterCfg = pack.content.topicClusters;
+let topics: Array<{ label: string; href: string }> = [];
+if (!isStub && clusterCfg) {
+  const live = await getPublishedArticles();
+  const built = liveClusterIds(
+    live.map((a) => ({ slug: a.slug, tags: a.data.tags, series: a.data.series })),
+    clusterCfg,
+  );
+  topics = articleClusterIds({ slug: article.slug, tags: data.tags, series: data.series }, clusterCfg.clusters)
+    .filter((id) => built.has(id))
+    .map((id) => ({
+      label: clusterCfg.clusters.find((c) => c.id === id)!.label,
+      href: clusterPath(id),
+    }));
+}
+
+// Attached video: the facade always renders; VideoObject only with an upload date.
+const video = !isStub && data.videoUrl ? parseYouTubeUrl(data.videoUrl) : null;
+if (video) {
+  const node = videoObjectGraph({
+    videoId: video.videoId,
+    watchUrl: video.watchUrl,
+    name: data.videoTitle ?? data.title,
+    description: data.excerpt,
+    uploadDate: data.videoUploadDate,
+    siteUrl: pack.brand.siteUrl,
+  });
+  if (node) jsonLd.push(node);
+}
 ---
 
 <BaseLayout
@@ -91,7 +126,20 @@ if (!isStub) {
         By {data.author} · {categoryLabel(data.category)} ·{' '}
         {formatPublishDate(data.publishDate)} · {data.readTime ?? estimateReadTime(article.body)}
       </small>
+      {video && (
+        <LazyYouTube
+          videoId={video.videoId}
+          title={data.videoTitle ?? data.title}
+          startSeconds={video.startSeconds}
+          vertical={video.isShort}
+        />
+      )}
       <Content />
+      {topics.length > 0 && (
+        <nav aria-label="Topics">
+          More on: {topics.map((t, i) => <>{i > 0 && ' · '}<a href={t.href}>{t.label}</a></>)}
+        </nav>
+      )}
     </article>
   )}
 </BaseLayout>

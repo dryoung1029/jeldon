@@ -1,14 +1,24 @@
 import type {
+  AeoCitationConfig,
   AmplifyConfig,
   AnalyticsConfig,
   DraftingConfig,
   EntityPresenceConfig,
   GeoConfig,
   MediaConfig,
+  OpsConfig,
   ScoringConfig,
+  SearchConsoleConfig,
+  SecurityConfig,
   SeoConfig,
+  SiteAlertConfig,
   StrategyConfig,
+  AutonomousDraftingConfig,
+  BacklinksConfig,
+  IdeationConfig,
+  RedditListeningConfig,
 } from './types.js';
+import type { ConversionConfig, LeadsConfig, MailboxOutcomeRules } from './types.js';
 
 /**
  * Canonical scoring defaults, ported verbatim from the source system
@@ -142,14 +152,15 @@ export const defaultStrategyConfig: StrategyConfig = {
   ],
   articlePathPattern: '^/articles/([^/]+)$',
   refererGroups: {
-    social: ['facebook', 'instagram', 'x /', 'twitter', 'linkedin', 'youtube'],
-    search: ['google search', 'google'],
+    social: ['Facebook', 'Instagram', 'X / Twitter', 'LinkedIn', 'YouTube', 'Reddit', 'Pinterest', 'Nextdoor'],
+    search: ['Google Search', 'Bing', 'DuckDuckGo'],
   },
   liveCrawlPurpose: 'live',
   deepLinks: {
     brokenLinks: { link: '/admin/links', linkLabel: 'Broken links' },
     editArticle: { link: '/admin/{slug}', linkLabel: 'Edit' },
     amplify: { link: '/admin', linkLabel: 'Pick an article → Amplify' },
+    snippetLab: { link: '/admin/snippets', linkLabel: 'Snippet lab' },
     priorityKeywords: { link: '/admin/competitors/priority-keywords', linkLabel: 'Priority keywords' },
   },
   copy: {
@@ -183,6 +194,16 @@ export const defaultStrategyConfig: StrategyConfig = {
       evidence:
         'Search is already a top referrer, and you sit at #{rank} for "{keyword}" — the page-2-to-1 range where small gains convert. Strengthen the matching page.',
     },
+    'sc-striking-distance': {
+      title: 'Push "{query}" onto page 1 (position {position})',
+      evidence:
+        'Search Console: "{query}" averages position {position} on {impressions} impressions. One focused edit (the query\'s literal words in the title/H1, the answer in the first sentences) is often enough to move it up.',
+    },
+    'sc-low-ctr': {
+      title: 'Rewrite the snippet for {page}',
+      evidence:
+        'Search Console: {page} ranks {position} but earns {ctr}% CTR, under {ratio}% of what that position usually gets ({expected}%). Rewrite the title and description and log the change so the result can be compared.',
+    },
     'aeo-live-crawl': {
       title: 'Answer engines are fetching you live — verify citations',
       evidence:
@@ -200,23 +221,36 @@ export const defaultStrategyConfig: StrategyConfig = {
  */
 export const defaultDraftingConfig: DraftingConfig = {
   models: {
-    sonnet: 'claude-sonnet-4-6',
-    opus: 'claude-opus-4-7',
-    haiku: 'claude-haiku-4-5',
+    sonnet: 'claude-sonnet-5-5',
+    opus: 'claude-opus-5-5',
+    haiku: 'claude-haiku-5-5',
   },
   defaultModel: 'sonnet',
+  modelLabels: {
+    sonnet: 'Sonnet 5.5',
+    opus: 'Opus 5.5',
+    haiku: 'Haiku 5.5',
+  },
+  // Thinking counts toward max_tokens, so short structured calls need headroom
+  // and an explicit effort. BoH 2026-10-27: low for mechanical extraction,
+  // medium everywhere else.
+  effort: {
+    default: 'medium',
+    extractClaims: 'low',
+    heroConcept: 'low',
+  },
   utilityModel: 'haiku',
   draftFloor: { seo: 70, geo: 70 },
   wordCountTarget: [800, 1500],
   bodyCharCeiling: 10000,
   maxTokens: {
-    brainstorm: 1500,
+    brainstorm: 4000,
     draft: 16000,
     outline: 4000,
     'draft-series': 64000,
     'draft-series-article': 12000,
     fixPass: 16000,
-    extractClaims: 1500,
+    extractClaims: 4000,
     chat: 32000,
   },
 };
@@ -224,8 +258,9 @@ export const defaultDraftingConfig: DraftingConfig = {
 /**
  * Amplification defaults, ported verbatim from Body of Health
  * `src/pages/api/admin/amplify/[slug].ts` (channels, UTM map, tool-field
- * descriptions) + `carousel/[slug].ts` (COLOR_SCHEMES + the carousel craft
- * prompt) + `newsletter-content.ts` (the newsletter shape).
+ * descriptions, the reel-script channel) + `newsletter-content.ts` (the
+ * newsletter shape). The in-page carousel builder was retired (BoH 2026-10-16)
+ * in favor of the external studio hand-off (`carouselStudio`).
  *
  * Per docs/DECOUPLING-NOTES.md "Voice block duplicated ×4": the voice rules are
  * NOT here — they live once in `pack.voice` and `buildKitSystem()` injects them.
@@ -292,38 +327,16 @@ export const defaultAmplifyConfig: AmplifyConfig = {
         'PODCAST HOOK\n- A 2-3 sentence pitch for a podcast episode that builds on this article angle. Suggest a guest, a specific opening question, or a related-but-deeper angle worth a 30-minute conversation. Not the article rehashed — a logical next.',
       fieldDescription: '2-3 sentence pitch for a podcast episode that builds on this article.',
     },
+    {
+      id: 'reelScript',
+      label: 'Reel / short video script',
+      noUrl: true,
+      guidance:
+        'REEL / SHORT VIDEO SCRIPT\n- WORDING ONLY: no camera directions, no shot list, no timed beats like [0-3s], no on-screen-text cues. Just what the author says to camera, straight through.\n- LENGTH: about 2 minutes spoken, roughly 260-320 words at a conversational pace.\n- FORMAT: three numbered HOOK OPTIONS first (alternate opening lines, each 12 words or fewer, each strong enough to stop a scroll), then the full SCRIPT as continuous spoken prose using hook #1. No section labels.\n- HOOK CRAFT: open mid-thought with the article\'s most counterintuitive or specific claim. Never open with "Did you know", a greeting, a self-introduction, or the title read aloud.\n- SOURCES: name a real study or source only when it is in the article. Never invent a study, statistic or finding.\n- RETENTION: one idea per video, short sentences, and pay off the hook by the two-thirds mark.\n- VOICE: the same voice as every other channel, spoken instead of written.\n- Never invent a specific customer or patient story.',
+      fieldDescription:
+        '~2-minute (260-320 word) spoken-only script: 3 numbered hook options, then the full script as continuous prose. No camera directions. Educational CTA only.',
+    },
   ],
-  carouselSchemes: [
-    { id: 'cream-burgundy', label: 'Cream + Burgundy', bg: '#f5f0e6', fg: '#a03038', accent: '#000000' },
-    { id: 'white-black', label: 'White + Black', bg: '#ffffff', fg: '#000000', accent: '#a03038' },
-    { id: 'black-cream', label: 'Black + Cream', bg: '#000000', fg: '#f5f0e6', accent: '#d65560' },
-    { id: 'burgundy-cream', label: 'Burgundy + Cream', bg: '#a03038', fg: '#f5f0e6', accent: '#ffffff' },
-    { id: 'tan-black', label: 'Tan + Black', bg: '#c8b8a0', fg: '#000000', accent: '#a03038' },
-    { id: 'coral-white', label: 'Coral + White', bg: '#d65560', fg: '#ffffff', accent: '#000000' },
-    { id: 'blush-burgundy', label: 'Blush + Burgundy', bg: '#fef0f1', fg: '#a03038', accent: '#000000' },
-    { id: 'black-white', label: 'Black + White', bg: '#000000', fg: '#ffffff', accent: '#c8b8a0' },
-  ],
-  carouselGuidance: `You design Instagram text carousels. Carousels live or die on slide 1. Engineer a sequence that REWARDS the swipe at every step — readers should feel something is missing if they stop on any slide before the end.
-
-SLIDE 1 — THE HOOK
-Must be hard to scroll past. Use one of: a pattern interrupt (a claim that contradicts assumption), specificity + authority (a real number from experience), a named myth, a curiosity gap (a question the next slide answers), or pattern + counter (set an expectation, then break it).
-NEVER: declarative statements that could appear in any generic blog, "Did you know…" prefixes, vague "5 things…" intros, emoji.
-
-SLIDES 2 through N-1 — PROGRESSIVE REVEAL
-Each slide must end on an OPEN LOOP — something the reader needs the next slide to resolve. setup → tension → resolution → next setup. ONE idea per slide. 4-14 word body MAX — headline energy, not paragraphs.
-
-LAST TEXT SLIDE (N) — THE PAYOFF
-The reveal that ties it together. NOT a CTA — the hero slide handles that. Must feel earned.
-
-SLIDE-LEVEL RULES
-- BODY: 4-14 words, treat as a headline.
-- KICKER (optional small label above body): use SPARINGLY for slot labels like "1/6", "THE MYTH", "BOTTOM LINE".
-- FOOTER (optional small label below body): rarely used.
-- No emoji or hashtags in slides (those belong in the caption).
-- Vary slide structure — not every slide should have a kicker.
-
-REFINEMENT MODE
-If a <current_carousel> block is present, PRESERVE every slide and field exactly EXCEPT what the refinement explicitly asks to change. Positional vocabulary: "top"/"above" → kicker; "middle"/"headline" → body; "bottom"/"below"/"footer" → footer; "slide N" → that index.`,
   newsletterGuidance: `You are writing the newsletter email that goes to subscribers about a just-published article.
 
 Newsletter shape:
@@ -331,7 +344,25 @@ Newsletter shape:
 - Body: 80-130 words. Frame what prompted the article and what readers get from it. Treat it as a personal note from the author, not a press release. Do NOT include "Read it here:" or any URL — the email template handles the CTA. End with a sentence that lands; the template adds the button.
 
 The subscriber already opted in. You don't need to sell them on existing — sell them on this specific piece.`,
-  carouselStateDir: 'src/data/carousel-state',
+  // Education-only CTA for spoken short-form video (BoH 2026-10). A domain
+  // that sells directly from video can drop or rewrite this.
+  ctaPolicy: {
+    channels: ['reelScript'],
+    allowed: [
+      'follow for more breakdowns like this',
+      'save this for later',
+      'share it with someone who needs it',
+      'ask a question in the comments',
+      'full breakdown — link in bio',
+    ],
+    banned: [
+      'book an appointment',
+      'call us',
+      'visit us / come in',
+      'buy now or any sales pitch',
+      'any customer-acquisition ask',
+    ],
+  },
 };
 
 /**
@@ -631,9 +662,12 @@ export const defaultEntityPresenceConfig: EntityPresenceConfig = {
  * - `refererChannelMap` consolidates the THREE referer/source classifiers
  *   (`fetch-cf-analytics.mjs::classifyReferer`, `traffic-sources.ts::classifySource`,
  *   the editor CTA logic). Rules are evaluated in order; first match wins. `drop`
- *   rules (internal nav, the CF Access auth redirect) suppress the source. The
- *   own-domain `yourbodyofhealth.com` needle is the one truly brand-specific
- *   value — a new domain re-points it.
+ *   rules (the CF Access auth redirect) suppress the source. Rules match the
+ *   hostname exactly or as a parent domain, never as a substring. Own-domain
+ *   navigation is dropped via `ownHosts` (filled from `brand.siteUrl`).
+ * - `botUaPattern` tokens are anchored to bot UAs (`pinterestbot`,
+ *   `duckduckbot|duckassist`): bare `pinterest` / `duckduck` matched the
+ *   Pinterest in-app browser and the DuckDuckGo browser, i.e. real people.
  * - The CF zone/account ids that were env-literals in BoH (`CF_ZONE_ID` /
  *   `CF_ACCOUNT_ID`) are config here; the secret token stays in env.
  *
@@ -664,31 +698,49 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
     { match: 'CCBot', bot: 'CCBot', engine: 'commoncrawl', purpose: 'train' },
     { match: 'cohere-ai', bot: 'cohere-ai', engine: 'cohere', purpose: 'train' },
   ],
+  // Hostname-anchored (BoH 2026-09-06: substring `t.co` reported reddit,
+  // chatgpt and pinterest traffic as X). UTM tokens match exactly and are
+  // checked first. Own-domain drops come from `ownHosts` / `brand.siteUrl`,
+  // not from this list.
   refererChannelMap: [
-    { needles: ['yourbodyofhealth.com'], drop: true }, // internal nav
-    { needles: ['cloudflareaccess.com'], drop: true }, // admin auth redirect
-    { label: 'Newsletter', needles: ['sendib', 'sendinblue', 'brevo', 'newsletter', 'email'] },
-    { label: 'Google Search', needles: ['google.'] },
-    { label: 'Google Business', needles: ['gbp', 'gmb', 'google-business'] },
-    { label: 'Bing', needles: ['bing.'] },
-    { label: 'DuckDuckGo', needles: ['duckduckgo'] },
-    { label: 'Facebook', needles: ['facebook.', 'l.facebook', 'fb.com', 'fb.me', 'fb'] },
-    { label: 'Instagram', needles: ['instagram', 'ig'] },
-    { label: 'X / Twitter', needles: ['t.co', 'twitter', 'x.com'] },
-    { label: 'LinkedIn', needles: ['linkedin', 'lnkd.in'] },
-    { label: 'YouTube', needles: ['youtube', 'youtu.be'] },
-    { label: 'Reddit', needles: ['reddit'] },
-    { label: 'Perplexity', needles: ['perplexity'] },
-    { label: 'ChatGPT', needles: ['chatgpt', 'openai'] },
-    { label: 'Yelp', needles: ['yelp'] },
-    { label: 'Healthgrades', needles: ['healthgrades'] },
+    { hosts: ['cloudflareaccess.com'], drop: true }, // admin auth redirect
+    {
+      label: 'Newsletter',
+      utmSources: ['newsletter', 'email', 'brevo', 'sendinblue'],
+      hosts: ['brevo.com', 'sendinblue.com'],
+      hostContains: ['sendib'],
+    },
+    { label: 'Google Business', utmSources: ['gbp', 'gmb', 'google-business'] },
+    { label: 'Google Search', hostPatterns: ['(^|\\.)google\\.'] },
+    { label: 'Bing', hostPatterns: ['(^|\\.)bing\\.'] },
+    { label: 'DuckDuckGo', hosts: ['duckduckgo.com'] },
+    {
+      label: 'Facebook',
+      utmSources: ['facebook', 'fb'],
+      hosts: ['fb.com', 'fb.me'],
+      hostPatterns: ['(^|\\.)facebook\\.'],
+    },
+    { label: 'Instagram', utmSources: ['instagram', 'ig'], hosts: ['instagram.com'] },
+    { label: 'ChatGPT', hosts: ['chatgpt.com', 'openai.com'] },
+    { label: 'Perplexity', hosts: ['perplexity.ai'] },
+    { label: 'Claude', hosts: ['claude.ai'] },
+    { label: 'Copilot', hosts: ['copilot.microsoft.com'] },
+    { label: 'Reddit', hosts: ['reddit.com', 'redd.it'] },
+    { label: 'X / Twitter', utmSources: ['twitter', 'x'], hosts: ['t.co', 'twitter.com', 'x.com'] },
+    { label: 'LinkedIn', utmSources: ['linkedin'], hosts: ['linkedin.com', 'lnkd.in'] },
+    { label: 'YouTube', hosts: ['youtube.com', 'youtu.be'] },
+    { label: 'Pinterest', hosts: ['pinterest.com'] },
+    { label: 'Nextdoor', hosts: ['nextdoor.com'] },
+    { label: 'Yelp', hosts: ['yelp.com'] },
+    { label: 'Healthgrades', hosts: ['healthgrades.com'] },
   ],
+  ownHosts: [],
   directLabel: 'Direct / none',
   articlePathPattern: '^/articles/([a-z0-9-]+)/?$',
   assetPathPattern:
     '^/(_astro|_image|images|img|audio|favicon|cdn-cgi|wp-cron|wp-admin|wp-login|xmlrpc|wp-content|wp-includes|.*\\.(?:css|js|png|jpe?g|webp|avif|svg|ico|mp3|xml|txt|php|woff2?))',
   botUaPattern:
-    'bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterest|whatsapp|telegram|slack|discord|headless|monitor|uptime|python-requests|curl|wget|go-http|libwww|okhttp|axios|node-fetch|java\\/|scrapy|ahrefs|semrush|mj12|dotbot|petalbot|dataforseo|bytespider|gptbot|claudebot|ccbot|perplexity|yandex|baidu|sogou|applebot|googlebot|bingbot|duckduck',
+    'bot|crawl|spider|slurp|bingpreview|facebookexternalhit|embedly|quora|pinterestbot|whatsapp|telegram|slack|discord|headless|monitor|uptime|python-requests|curl|wget|go-http|libwww|okhttp|axios|node-fetch|java\\/|scrapy|ahrefs|semrush|mj12|dotbot|petalbot|dataforseo|bytespider|gptbot|claudebot|ccbot|perplexity|yandex|baidu|sogou|applebot|googlebot|bingbot|duckduckbot|duckassist',
   // Mirrors BoH `fetch-cf-analytics.mjs::SITE_ROUTE_404` (and strategy.ts). A
   // 404 on one of these survives the top-25 truncation.
   siteRoute404Patterns: [
@@ -698,11 +750,332 @@ export const defaultAnalyticsConfig: AnalyticsConfig = {
     '^/team/[a-z0-9-]+/?$',
     '^/locations/[a-z0-9-]+/?$',
   ],
+  // Zone and account ids are per-project: set them in `pack.analytics.cloudflare`.
   cloudflare: {
-    zoneId: '3729601f65f74d2f9d88d61d165fa1ac',
-    accountId: '371ac4bfa6c0f9aa3b0de0228fb0952d',
     endpoint: 'https://api.cloudflare.com/client/v4/graphql',
   },
   windowDays: 30,
   maxDailySnapshots: 365,
+  sitePath: {
+    excludePrefixes: ['admin', 'api', '_astro', '_image', '_server-islands', 'cdn-cgi'],
+    maxLength: 200,
+  },
+  webVitals: {
+    typeName: 'AccountRumWebVitalsEventsAdaptiveGroups',
+    dataset: 'rumWebVitalsEventsAdaptiveGroups',
+    days: 7,
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Ops observability (@jeldon/ops)
+// ---------------------------------------------------------------------------
+
+/**
+ * Generic ops defaults. Grading multipliers (ok ≤ 1.5× cadence, late ≤ 3×,
+ * else stale), the 14-day article cadence, the 2-day stuck-newsletter window
+ * and the dispatch poll/timeout/slack values are the source system's tuned
+ * numbers. No pipelines and no dispatchable workflows by default — a project
+ * lists its own crons. No newsletter cadence by default (not every project
+ * has a newsletter); set `cadence.newsletterDays` to turn that alert on.
+ */
+export const defaultOpsConfig: OpsConfig = {
+  pipelines: [],
+  grading: { lateMultiplier: 1.5, staleMultiplier: 3 },
+  cadence: { articleDays: 14, newsletterStuckDays: 2 },
+};
+
+/** Dispatch defaults used when `ops.dispatch` is set without the timing keys. */
+export const defaultOpsDispatchTiming = {
+  pollSeconds: 8,
+  timeoutMinutes: 20,
+  createdAtSlackSeconds: 90,
+} as const;
+
+/**
+ * Search Console defaults, ported from Body of Health
+ * `scripts/fetch-search-console.mjs` (28-day window ending 3 days back, 500
+ * rows per dimension) and `api/admin/command/search.ts` (striking distance
+ * 5–15 with >= 10 impressions; low CTR on page 1 with >= 30 impressions and
+ * CTR < 0.6 x the expected curve). The env names are generic; the curve is a
+ * rough blended desktop+mobile organic CTR-by-position table.
+ */
+export const defaultSearchConsoleConfig: SearchConsoleConfig = {
+  propertyEnv: 'GSC_PROPERTY',
+  saKeyEnv: 'GOOGLE_SEARCH_CONSOLE_SA_KEY',
+  rangeDays: 28,
+  lagDays: 3,
+  rowLimit: 500,
+  snapshotPath: 'src/data/search-console.json',
+  strikingDistance: { minPosition: 5, maxPosition: 15, minImpressions: 10, limit: 15 },
+  lowCtr: {
+    maxPosition: 10,
+    minImpressions: 30,
+    ratio: 0.6,
+    expectedCtrCurve: [0.28, 0.15, 0.1, 0.07, 0.05, 0.04, 0.033, 0.027, 0.022, 0.018],
+    limit: 15,
+  },
+  snippetLab: { logPath: 'src/data/snippet-lab.json', maxEntries: 200 },
+};
+
+// ---------------------------------------------------------------------------
+// Leads + conversion (@jeldon/leads)
+// ---------------------------------------------------------------------------
+
+/** Lead defaults. Generic: the storage prefix is neutral, and the booking
+ *  presets are column-header patterns only. The `jane` preset is the header
+ *  set Body of Health matched against a Jane App "Patient List" CSV export;
+ *  it is data, and no code path knows about Jane. */
+export const defaultLeadsConfig: LeadsConfig = {
+  attribution: {
+    storagePrefix: 'jeldon:',
+    utmKeys: ['utm_source', 'utm_medium', 'utm_campaign'],
+    maxLandingChars: 200,
+    maxReferrerChars: 120,
+    maxUtmChars: 60,
+    capturePhoneTaps: true,
+  },
+  unknownChannelLabel: 'Unknown',
+  requestVia: ['page', 'sheet', 'sticky', 'endcap', 'header', 'notice'],
+  bookingImport: {
+    presets: [
+      {
+        id: 'generic',
+        label: 'Generic CSV',
+        columns: {
+          email: ['^e-?mail$', '^e-?mail address$', 'e-?mail'],
+          phone: ['mobile|cell', 'phone|tel'],
+          date: [
+            'first.*(visit|appt|appointment)',
+            '(first|initial).*date',
+            '(visit|appointment|booking|booked).*date',
+            '^date$',
+          ],
+        },
+      },
+      {
+        id: 'jane',
+        label: 'Jane App patient list',
+        columns: {
+          email: ['^e-?mail$', 'e-?mail'],
+          phone: ['mobile|cell', 'phone'],
+          date: ['first.*(visit|appt|appointment)', '(first|initial).*date', '(visit|appointment).*date'],
+        },
+      },
+    ],
+    defaultPreset: 'generic',
+    phoneDigits: 10,
+    maxRows: 5000,
+  },
+  trends: { defaultBucket: 'month' },
+};
+
+/** Conversion defaults. No request copy ships: a site's CTA wording is its
+ *  own (and in regulated verticals it is reviewed copy). */
+export const defaultConversionConfig: ConversionConfig = {
+  minLeads: 3,
+};
+
+const mrule = (id: string, pattern: string) => ({ id, pattern });
+
+/** Default mailbox outcome rules (COMPLIANCE-PACK MATERIAL: only used by
+ *  `@jeldon/leads/compliance`, which refuses to run without a pack). Generic
+ *  English phrasing, ported from BoH `lead-outcomes.ts` with the vertical
+ *  noun ("chiropractor") generalised. Override per pack. */
+export const defaultMailboxOutcomeRules: MailboxOutcomeRules = {
+  phoneFromUs: [
+    mrule('us.will-call', `i(?:'| a)?ll (?:give you a |just )?(?:call|ring|phone)(?: you)?`),
+    mrule('us.we-will-call', `we(?:'| wi)?ll (?:call|ring|phone|reach out by phone)`),
+    mrule('us.front-desk', `(?:our |the )?(?:front desk|office|staff|receptionist|team)(?: will| can)? (?:call|reach out|phone|be in touch)`),
+    mrule('us.give-us-a-call', `(?:give us a call|call (?:us|the office|our office)|call back)`),
+    mrule('us.easier-by-phone', `(?:easier|quickest|fastest|best) (?:to (?:do this |sort this )?)?(?:by |over the )?phone`),
+    mrule('us.reach-you', `(?:reach|ring) you (?:by phone|at)`),
+  ],
+  phoneFromThem: [
+    mrule('them.call-me', `(?:please |could you |can you |would you )?(?:give me a call|call me|phone me|ring me)`),
+    mrule('them.my-number', `(?:my (?:cell|phone|number) is|reach me at|best number)`),
+    mrule('them.prefer-phone', `(?:prefer|easier|rather) (?:to )?(?:talk|speak|chat)? ?(?:by |on the )?phone`),
+  ],
+  decline: [
+    mrule('decline.no-longer-need', `no longer (?:need|require|looking|interested)`),
+    mrule('decline.found-someone', `(?:found|going with|went with|seeing) (?:someone|another|a different|somebody)`),
+    mrule('decline.not-interested', `(?:not|no longer) interested`),
+    mrule('decline.will-pass', `(?:i(?:'| wi)?ll pass|gonna pass|going to pass)`),
+    mrule('decline.decided-against', `decided (?:not to|against)`),
+    mrule('decline.hold-off', `(?:hold(?:ing)? off|put (?:this|it) on hold|wait (?:until|till))`),
+    mrule('decline.not-at-this-time', `not (?:at this time|right now|for now)`),
+    mrule('decline.wont-be', `(?:won(?:'|)t be (?:able to )?(?:coming|booking|making)|can(?:'|no)t make it work)`),
+    mrule('decline.cancel', `(?:cancel|withdraw) (?:my|the|that) (?:appointment|request|booking)`),
+    mrule('decline.no-thanks', `no,? thank you`),
+  ],
+  declineReasons: [
+    {
+      reason: 'insurance',
+      label: 'Insurance / out of network',
+      rules: [
+        mrule('why.out-of-network', `out[- ]of[- ]network|not in[- ]network|don(?:'|)t take (?:my|our) insurance`),
+        mrule('why.not-covered', `(?:not|isn(?:'|)t) covered|doesn(?:'|)t (?:take|accept) (?:my |our )?insurance`),
+        mrule('why.plan', `(?:my|our) (?:insurance|plan|carrier)|deductible|copay|co-pay`),
+      ],
+    },
+    {
+      reason: 'cost',
+      label: 'Cost',
+      rules: [
+        mrule('why.expensive', `too (?:expensive|much|pricey|costly)`),
+        mrule('why.afford', `can(?:'|no)t afford|out of (?:my |our )?(?:price range|budget)`),
+        mrule('why.cash', `cash (?:price|pay|rate)|out[- ]of[- ]pocket`),
+      ],
+    },
+    {
+      reason: 'availability',
+      label: "Times didn't work",
+      rules: [
+        mrule('why.times', `(?:times?|hours?|slots?) (?:don(?:'|)t|do not|won(?:'|)t) work`),
+        mrule('why.schedule', `(?:schedul|availab)\\w*\\s+(?:conflict|issue|problem)|conflicts? with (?:my|our|work)`),
+        mrule('why.booked-out', `booked (?:out|up)|no (?:openings|availability)|wait ?list|too far out`),
+        mrule('why.work-hours', `(?:work|working) (?:hours|during)|only (?:evenings|weekends)`),
+      ],
+    },
+    {
+      reason: 'distance',
+      label: 'Too far away',
+      rules: [
+        mrule('why.too-far', `too far|(?:the )?drive is|long (?:drive|commute)`),
+        mrule('why.moving', `(?:moved|moving|relocat\\w+) (?:away|out of)`),
+        mrule('why.closer', `(?:somewhere|someone|clinic|office) closer`),
+      ],
+    },
+    {
+      reason: 'resolved',
+      label: 'Resolved on its own',
+      rules: [
+        mrule('why.better', `(?:feeling|feel|much) better|cleared up|went away|resolved (?:itself|on its own)`),
+        mrule('why.no-pain', `(?:pain|symptoms?|problem|issue) (?:is|are|has|have) gone`),
+      ],
+    },
+    {
+      reason: 'elsewhere',
+      label: 'Went somewhere else',
+      rules: [
+        mrule('why.another-provider', `another (?:provider|practitioner|clinic|office|doctor|firm|advisor|company)`),
+        mrule('why.already-seeing', `already (?:seeing|established with|a (?:patient|client|customer))`),
+        mrule('why.referred', `(?:my|our) (?:doctor|pcp|physician|advisor|lawyer) (?:referred|sent)`),
+      ],
+    },
+  ],
+  unspecifiedLabel: 'Declined, no reason given',
+  bookedInThread: [
+    mrule('booked.see-you', `see you (?:on|at|then|tomorrow|monday|tuesday|wednesday|thursday|friday)`),
+    mrule('booked.confirmed', `(?:appointment|visit|meeting|consultation) (?:is )?(?:confirmed|booked|scheduled|set)`),
+    mrule('booked.got-you-in', `(?:got|have) you (?:in|scheduled|booked|down) (?:for|on|at)`),
+    mrule('booked.looking-forward', `look(?:ing)? forward to (?:seeing|meeting) you`),
+  ],
+};
+
+/**
+ * Citation classification defaults for the AEO audit (BoH e09c9a7). Directory
+ * hosts are general-purpose review and listing sites; a vertical adds its own
+ * (e.g. a health pack adds healthgrades.com, zocdoc.com). The list pattern
+ * flags "best"/"top" path segments and numbered-list slugs, excluding "best
+ * practices".
+ */
+export const defaultAeoCitationConfig: AeoCitationConfig = {
+  topN: 10,
+  directoryHosts: [
+    'yelp.com', 'yellowpages.com', 'bbb.org', 'mapquest.com', 'nextdoor.com', 'facebook.com',
+    'expertise.com', 'threebestrated.com', 'birdeye.com', 'superpages.com', 'manta.com', 'angi.com',
+    'google.com', 'maps.google.com', 'apple.com', 'linkedin.com', 'instagram.com', 'trustpilot.com',
+  ],
+  listUrlPattern:
+    '(^|[\\/_-])(best|top)(?![-_]?practices?\\b)([\\/_-]|\\d|$)|(^|[\\/_-])\\d{1,2}[_-](best|top|ways|reasons|signs|tips|things|myths|questions|mistakes)\\b',
+};
+
+// ---------------------------------------------------------------------------
+// Site ops: site alert, admin access (@jeldon/site-alert, @jeldon/access)
+// ---------------------------------------------------------------------------
+
+/** Generic site-alert defaults. Limits match the proven source (label 40,
+ *  title 90, message 500, 90-day window); the 8-minute poll covers a typical
+ *  ~2 minute static rebuild with room for a queued one. No presets: their
+ *  wording is domain copy and belongs in the pack. */
+export const defaultSiteAlertConfig: SiteAlertConfig = {
+  limits: { label: 40, title: 90, message: 500, maxDays: 90 },
+  presets: {},
+  pollTimeoutMinutes: 8,
+  pollIntervalSeconds: 15,
+  dataFile: 'src/data/site-alert.json',
+  storageKeyPrefix: 'jeldon:alert',
+  labels: { message: 'Send us a message', email: 'Email us', dismiss: 'Got it', close: 'Close' },
+};
+
+/** Generic admin protection. `access` is deliberately absent: until the pack
+ *  names the Access application, every protected route fails closed. */
+export const defaultSecurityConfig: SecurityConfig = {
+  adminPrefixes: ['/admin', '/api/admin'],
+};
+
+// ---------------------------------------------------------------------------
+// Ideation, listening, autonomous drafting, backlinks. Mechanics only: every
+// list a domain fills (subreddits, brand terms, topics) defaults to empty.
+// ---------------------------------------------------------------------------
+
+/** Transcript miner + backlog defaults (BoH `topics/episode.ts`, `topics/backlog.ts`). */
+export const defaultIdeationConfig: IdeationConfig = {
+  transcriptMiner: {
+    maxChars: 200_000,
+    minChars: 400,
+    publishedSourceNoun: 'episode',
+    listenCalloutLabel: 'Listen to the full conversation',
+    maxProposals: { published: 8, private: 6 },
+    anchorEverySeconds: 60,
+    maxTokens: 8000,
+  },
+  backlog: { path: 'src/data/topic-backlog.json' },
+};
+
+/** Reddit radar mechanics (BoH `fetch-reddit-radar.mjs`, `command/reddit.ts`). */
+export const defaultRedditListeningConfig: RedditListeningConfig = {
+  geoSubreddits: [],
+  conditionSubreddits: [],
+  brandTerms: [],
+  serviceKeywords: [],
+  targetSearches: [],
+  retentionDays: 120,
+  maxItems: 500,
+  archivedAfterDays: 175,
+  staleAfterDays: 365,
+  stalePenalty: 35,
+  recency: [
+    { maxDays: 2, bonus: 45, label: 'posted in the last 48h — answer today' },
+    { maxDays: 14, bonus: 35, label: 'posted this fortnight' },
+    { maxDays: 90, bonus: 22, label: 'under 3 months old' },
+    { maxDays: 365, bonus: 10, label: 'under a year old' },
+  ],
+  competitorMinNameLength: 6,
+  maxTargets: 20,
+  userAgent: 'jeldon-listening/0.1 (read-only site-owner listening tool for {siteUrl})',
+  requestDelayMs: 2000,
+  rssRetryMs: 30_000,
+  retryBudgetMs: 8 * 60_000,
+  maxRssRetries: 3,
+  maxTokens: 8000,
+};
+
+/** Autonomous drafting defaults (BoH `fetch-cite8-digest.mjs`). Source `none`
+ *  and no topics: a pack must opt in. */
+export const defaultAutonomousDraftingConfig: AutonomousDraftingConfig = {
+  source: 'none',
+  maxDraftsPerRun: 2,
+  digestDays: 7,
+  relevance: { topics: [], requireTopic: true, requirePriorityKeyword: true },
+  coverageTitleChars: 40,
+};
+
+/** Backlink finder defaults (BoH `backlinks/[slug].ts`). */
+export const defaultBacklinksConfig: BacklinksConfig = {
+  chunkSize: 8,
+  internalPathPrefix: '/articles/',
+  maxTokens: 8000,
+  minAnchorChars: 2,
 };

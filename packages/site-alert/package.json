@@ -1,0 +1,32 @@
+{
+  "name": "@jeldon/site-alert",
+  "version": "0.1.0",
+  "description": "One admin-editable site-wide alert. Pure and isomorphic: wall-clock scheduling in the pack's timezone (checked in the browser, so schedules need no rebuild), plain-text message to safe HTML, per-revision dismissal, validation from pack limits, and a poll-until-live helper for the deploy race.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/index.js",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^9.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

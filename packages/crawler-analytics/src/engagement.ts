@@ -12,13 +12,20 @@
  * slug + event + link target + engaged time + scroll depth + source attribution.
  */
 
+import { defaultAnalyticsConfig, type AnalyticsConfig } from '@jeldon/config';
+import { normalizeSitePath } from './site-path.js';
+
 const SLUG_RE = /^[a-z0-9-]{1,120}$/i;
+/** A normalized page path as the beacon stores it: leading and trailing `/`.
+ *  The homepage is `/` on its own. */
+const PATH_RE = /^\/(?:[a-z0-9/_-]{0,160}\/)?$/;
 const TYPES = new Set(['view', 'click', 'dwell', 'cta', 'play', 'signup']);
 
 /** A validated engagement event, ready to persist. Columns mirror the BoH D1
  *  `article_events` table. */
 export interface EngagementEvent {
   ts: number;
+  /** An article slug, or a normalized page path. A leading `/` marks a page. */
   slug: string;
   type: string;
   kind: string | null;
@@ -103,7 +110,11 @@ const clip = (v: unknown, n = 120): string | null =>
  * fails any guard (unknown type, bad slug, oversized payload). This is the body
  * of the BoH POST handler, host-agnostic: pass the already-read request text.
  */
-export function parseEngagementBeacon(raw: string | null | undefined, now = Date.now()): EngagementEvent | null {
+export function parseEngagementBeacon(
+  raw: string | null | undefined,
+  now = Date.now(),
+  cfg: Pick<AnalyticsConfig, 'sitePath'> = defaultAnalyticsConfig,
+): EngagementEvent | null {
   if (!raw || raw.length > 2000) return null;
   let body: any;
   try {
@@ -112,9 +123,21 @@ export function parseEngagementBeacon(raw: string | null | undefined, now = Date
     return null;
   }
 
-  const slug = String(body.slug || '');
   const type = String(body.t || body.type || '');
-  if (!SLUG_RE.test(slug) || !TYPES.has(type)) return null;
+  if (!TYPES.has(type)) return null;
+  // Articles beacon a slug; other public pages beacon their path, which is
+  // stored in the same column with its leading "/" and keyed exactly like
+  // per-route traffic (normalizeSitePath), so the conversion map can join them.
+  let slug = String(body.slug || '');
+  if (slug) {
+    if (!SLUG_RE.test(slug)) return null;
+  } else if (typeof body.path === 'string') {
+    const p = normalizeSitePath(body.path, cfg);
+    if (!p || !PATH_RE.test(p)) return null;
+    slug = p;
+  } else {
+    return null;
+  }
 
   let kind: string | null = null;
   let href: string | null = null;
@@ -153,9 +176,10 @@ export async function collectBeacon(
   store: EventStore,
   rawBody: string | null | undefined,
   now = Date.now(),
+  cfg: Pick<AnalyticsConfig, 'sitePath'> = defaultAnalyticsConfig,
 ): Promise<boolean> {
   try {
-    const event = parseEngagementBeacon(rawBody, now);
+    const event = parseEngagementBeacon(rawBody, now, cfg);
     if (!event) return false;
     await store.recordEvent(event);
     return true;

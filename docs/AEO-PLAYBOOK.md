@@ -30,6 +30,30 @@ These are domain-general; the engine implements them, the pack tunes them.
 8. **Citation-presence measurement.** Auditing whether answer engines actually
    cite you (`@jeldon/aeo-audit`) — measures *outcome*, not proxy. Fully portable.
 
+## When the score is maxed and you still aren't cited: extraction beats evidence
+
+Body of Health, 2026-10-04: four target queries had zero citations across
+three engines for six straight snapshots, while every target article already
+scored GEO 85-100 with attributed quotes and real references. Adding more
+evidence did nothing. The articles failed on extraction:
+
+1. **Is the answer in sentences 1–3?** Their first sentences were narrative and
+   the verdict sat under an H2. Put the direct answer first.
+2. **Does the title or H1 contain the query's literal nouns?** "Back pain",
+   "while pregnant", "how many visits" were missing. Change the title, keep the
+   slug.
+3. **Is there a structured block an engine can lift?** A decision table, a
+   numbered list or a short definition, built only from facts already in the
+   body.
+
+The fixes were surgical and added no claims. Two caveats: a non-local query
+competes with national authority sites and the Reddit threads engines cite, so
+a local page may never win it; and fixing the lede can nudge SEO down a point or
+two on the body-length check, which is not a ranking signal.
+
+The AEO audit's "win the query" action items and the drafting prompts carry
+this checklist.
+
 ## Vertical-specific → belongs in the Domain Pack, not the engine
 
 - Citation **sources** (PubMed vs RFC vs SEC filings vs case law).

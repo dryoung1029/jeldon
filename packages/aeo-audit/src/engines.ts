@@ -1,3 +1,4 @@
+import { defaultDraftingConfig, WEB_SEARCH_TOOL_TYPE } from '@jeldon/config';
 import type { Engine, EngineFn, EngineName, EngineRaw } from './types.js';
 
 /**
@@ -52,11 +53,21 @@ interface AnthropicBlock {
   citations?: Array<{ url?: string }>;
 }
 
-export async function queryAnthropic(apiKey: string, query: string): Promise<EngineRaw> {
+/** Default model for the Anthropic engine: the pack-default alias's id. */
+const DEFAULT_ANTHROPIC_MODEL =
+  defaultDraftingConfig.models[defaultDraftingConfig.defaultModel] ?? defaultDraftingConfig.defaultModel;
+
+export async function queryAnthropic(
+  apiKey: string,
+  query: string,
+  model: string = DEFAULT_ANTHROPIC_MODEL,
+): Promise<EngineRaw> {
   const reqBody = JSON.stringify({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2048,
-    tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
+    model,
+    // Thinking counts toward max_tokens on the 5.5 models (BoH: 2048 -> 4000).
+    max_tokens: 4000,
+    output_config: { effort: 'medium' },
+    tools: [{ type: WEB_SEARCH_TOOL_TYPE, name: 'web_search', max_uses: 5 }],
     messages: [{ role: 'user', content: query }],
   });
   // Retry transient overload / rate-limit (529/429/503) with backoff so one
@@ -194,13 +205,13 @@ export interface EngineKeys {
 }
 
 /** One builder closes over a key + location to produce an `EngineFn`. */
-type EngineBuilder = (keys: EngineKeys, location?: string) => EngineFn | null;
+type EngineBuilder = (keys: EngineKeys, location?: string, anthropicModel?: string) => EngineFn | null;
 
 const ENGINE_BUILDERS: Record<EngineName, EngineBuilder> = {
   perplexity: (keys) =>
     keys.perplexity ? (q) => queryPerplexity(keys.perplexity as string, q) : null,
-  anthropic: (keys) =>
-    keys.anthropic ? (q) => queryAnthropic(keys.anthropic as string, q) : null,
+  anthropic: (keys, _location, model) =>
+    keys.anthropic ? (q) => queryAnthropic(keys.anthropic as string, q, model) : null,
   'google-aio': (keys, location) =>
     keys.serpapi ? (q) => queryGoogleAio(keys.serpapi as string, q, location) : null,
   // TODO(port:openai): hit gpt-4o-search-preview, pull citation URLs + text,
@@ -217,12 +228,14 @@ export function buildEngines(
   requested: ReadonlyArray<EngineName | string>,
   keys: EngineKeys,
   location?: string,
+  /** Resolved model id for the Anthropic engine. Default: the pack-default model. */
+  anthropicModel?: string,
 ): Engine[] {
   const engines: Engine[] = [];
   for (const name of requested) {
     const builder = ENGINE_BUILDERS[name as EngineName];
     if (!builder) continue;
-    const fn = builder(keys, location);
+    const fn = builder(keys, location, anthropicModel);
     if (fn) engines.push({ name, fn });
   }
   return engines;

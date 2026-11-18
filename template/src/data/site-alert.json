@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "label": "",
+  "title": "",
+  "message": "",
+  "startsAt": "",
+  "endsAt": "",
+  "messageButton": true,
+  "emailButton": true,
+  "phonesDown": false,
+  "revision": "",
+  "updatedAt": null
+}

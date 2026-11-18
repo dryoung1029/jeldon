@@ -1,6 +1,7 @@
 import { defaultAnalyticsConfig, type AnalyticsConfig } from '@jeldon/config';
 import { detectAiCrawler, looksLikeBot } from './crawlers.js';
 import { aggregateReferrers } from './referer.js';
+import { normalizeSitePath } from './site-path.js';
 
 // ── Result shapes ──────────────────────────────────────────────────────────
 // These match the JSON the BoH Command Center already reads
@@ -45,11 +46,57 @@ export interface DayDetail {
   crawlerSnapshot: CrawlerSnapshot;
   /** slug → { human, bot } successful article loads on `day`. */
   articleHits: Record<string, { human: number; bot: number }>;
+  /** normalized site path → { human, bot } successful route loads on `day`
+   *  (every page, not just articles). Keyed by `normalizeSitePath`. */
+  pageHits: Record<string, { human: number; bot: number }>;
 }
 
 export interface ReferrerSummary {
   referrers: Array<{ source: string; requests: number }>;
   referrersDays: number;
+}
+
+export type WebVitalKey = 'LCP' | 'INP' | 'FID' | 'CLS' | 'FCP' | 'TTFB';
+
+/**
+ * Core Web Vitals from Cloudflare Web Analytics (RUM). `ok` carries metrics;
+ * `no-rows` means the query worked but nothing was recorded in the window
+ * (usually RUM is not enabled on the zone); `unattestable` means we could not
+ * measure at all, with the reason and what the schema actually exposes, so
+ * the next run can be fixed from the log alone. Never an empty "ok".
+ */
+export type WebVitalsResult =
+  | {
+      status: 'ok';
+      days: number;
+      sampleSize: number;
+      container: 'quantiles' | 'avg';
+      metrics: Partial<Record<WebVitalKey, { value: number; pct: number | null }>>;
+    }
+  | { status: 'no-rows'; days: number; container: 'quantiles' | 'avg'; hint: string }
+  | {
+      status: 'unattestable';
+      reason: 'no-account' | 'type-not-found' | 'no-container' | 'no-metric-fields' | 'query-failed';
+      detail: string;
+      /** RUM-looking type names the schema exposes (type-not-found). */
+      rumTypesPresent?: string[];
+      /** Container → subfield names discovered (no-container / no-metric-fields). */
+      schema?: Record<string, string[]>;
+    };
+
+/** Map a CF RUM field name to a vital + percentile. Exported for testing. */
+export function mapVitalField(name: string): { key: WebVitalKey; pct: number | null } | null {
+  const f = name.toLowerCase();
+  const pm = /p(\d{2})$/.exec(f);
+  const pct = pm ? Number(pm[1]) : null;
+  let key: WebVitalKey | null = null;
+  if (f.includes('largestcontentfulpaint')) key = 'LCP';
+  else if (f.includes('interactiontonextpaint')) key = 'INP';
+  else if (f.includes('firstinputdelay')) key = 'FID';
+  else if (f.includes('cumulativelayoutshift')) key = 'CLS';
+  else if (f.includes('firstcontentfulpaint')) key = 'FCP';
+  else if (f.includes('timetofirstbyte') || f.includes('ttfb')) key = 'TTFB';
+  return key ? { key, pct } : null;
 }
 
 /**
@@ -87,6 +134,7 @@ export class NullAnalytics implements AnalyticsProvider {
       top404Paths: [],
       crawlerSnapshot: { date: new Date().toISOString().slice(0, 10), totalHits: 0, bots: [] },
       articleHits: {},
+      pageHits: {},
     };
   }
   async fetchReferrers(): Promise<ReferrerSummary> {
@@ -122,11 +170,9 @@ function dateDaysAgo(n: number): string {
  * domain literal (zone/account id, bot list, referer map, asset/article regexes,
  * window sizes) read from `AnalyticsConfig` instead of hardcoded.
  *
- * Web Vitals introspection (`fetch-cf-analytics.mjs::fetchWebVitals`) is a
- * separate self-discovering query that returns a free-form `metrics` blob; it's
- * deliberately left out of the typed provider surface for now.
- * TODO(port): add `fetchWebVitals()` mirroring fetch-cf-analytics.mjs:127-192
- * once the metric shape is stable enough to type.
+ * `fetchWebVitals()` is a separate self-discovering query (CF metric field
+ * names differ across schemas); it is Cloudflare-specific, so it lives on this
+ * adapter rather than the provider interface.
  */
 export class CloudflareAnalytics implements AnalyticsProvider {
   private readonly token: string;
@@ -220,6 +266,7 @@ export class CloudflareAnalytics implements AnalyticsProvider {
       top404Paths: [],
       crawlerSnapshot: { date: dateDaysAgo(1), totalHits: 0, bots: [] },
       articleHits: {},
+      pageHits: {},
     };
     if (!this.zoneId) return empty;
     const day = dateDaysAgo(1);
@@ -269,6 +316,8 @@ export class CloudflareAnalytics implements AnalyticsProvider {
           rows.map((r: any) => ({ host: r.dimensions.refererHost, count: r.count || 0 })),
           this.cfg.refererChannelMap,
           this.cfg.directLabel,
+          15,
+          this.cfg.ownHosts ?? [],
         );
         return { referrers, referrersDays: days };
       } catch {
@@ -276,6 +325,83 @@ export class CloudflareAnalytics implements AnalyticsProvider {
       }
     }
     return { referrers: [], referrersDays: 0 };
+  }
+
+  /**
+   * Core Web Vitals over the last `webVitals.days`. Ported from
+   * `fetch-cf-analytics.mjs::fetchWebVitals`: introspect the dataset, query the
+   * numeric fields that exist (quantiles preferred, p75 preferred), map them
+   * to LCP/INP/CLS/FCP/TTFB. When the guessed type is missing, it lists the
+   * RUM types the schema does expose.
+   */
+  async fetchWebVitals(): Promise<WebVitalsResult> {
+    const wv = this.cfg.webVitals ?? defaultAnalyticsConfig.webVitals!;
+    if (!this.accountId) {
+      return { status: 'unattestable', reason: 'no-account', detail: 'No Cloudflare account id configured; Web Analytics is account-scoped.' };
+    }
+    try {
+      const intro = await this.gql<any>(
+        `query { t: __type(name:"${wv.typeName}"){ fields { name type { name kind fields { name } ofType { name kind fields { name } } } } } }`,
+        {},
+      );
+      const type = intro?.t;
+      if (!type) {
+        const names = await this.gql<any>(`query { __schema { types { name } } }`, {}).catch(() => null);
+        const rum: string[] = (names?.__schema?.types ?? []).map((t: any) => String(t.name)).filter((n: string) => /rum/i.test(n));
+        return {
+          status: 'unattestable',
+          reason: 'type-not-found',
+          detail: rum.length
+            ? `Type ${wv.typeName} not found. Set analytics.webVitals.typeName to one of the RUM types present.`
+            : `Type ${wv.typeName} not found and the schema exposes no RUM types; the token may lack Account Analytics:Read.`,
+          rumTypesPresent: rum,
+        };
+      }
+      const schema: Record<string, string[]> = {};
+      for (const fld of type.fields ?? []) {
+        const sub = fld.type?.fields ?? fld.type?.ofType?.fields;
+        if (sub?.length) schema[fld.name] = sub.map((x: any) => String(x.name));
+      }
+      const container = schema.quantiles ? 'quantiles' : schema.avg ? 'avg' : null;
+      if (!container) {
+        return { status: 'unattestable', reason: 'no-container', detail: `${wv.typeName} has no quantiles or avg container.`, schema };
+      }
+      const fields = (schema[container] ?? []).filter((n) => mapVitalField(n));
+      if (!fields.length) {
+        return { status: 'unattestable', reason: 'no-metric-fields', detail: `No recognizable Web Vitals fields in ${container}.`, schema };
+      }
+      const data = await this.gql<any>(
+        `query($at:String!,$s:Time!,$u:Time!){
+          viewer { accounts(filter:{accountTag:$at}){
+            ${wv.dataset}(limit:1, filter:{datetime_geq:$s, datetime_leq:$u}){
+              count
+              ${container} { ${fields.join(' ')} }
+            }
+          }}
+        }`,
+        { at: this.accountId, s: `${dateDaysAgo(wv.days)}T00:00:00Z`, u: `${dateDaysAgo(0)}T23:59:59Z` },
+      );
+      const row = data?.viewer?.accounts?.[0]?.[wv.dataset]?.[0];
+      if (!row) {
+        return {
+          status: 'no-rows',
+          days: wv.days,
+          container,
+          hint: `Query succeeded but returned no rows in the last ${wv.days} days. Is Web Analytics (RUM) enabled on the zone?`,
+        };
+      }
+      const metrics: Partial<Record<WebVitalKey, { value: number; pct: number | null }>> = {};
+      for (const fname of fields) {
+        const m = mapVitalField(fname)!;
+        const val = row[container]?.[fname];
+        if (val == null) continue;
+        const prev = metrics[m.key];
+        if (!prev || (m.pct === 75 && prev.pct !== 75)) metrics[m.key] = { value: Number(val), pct: m.pct };
+      }
+      return { status: 'ok', days: wv.days, sampleSize: row.count || 0, container, metrics };
+    } catch (e) {
+      return { status: 'unattestable', reason: 'query-failed', detail: (e as Error).message };
+    }
   }
 }
 
@@ -307,6 +433,7 @@ export function aggregateDayDetail(
   const path404: Record<string, number> = {};
   const byBot: Record<string, BotSnapshot> = {};
   const articleHits: Record<string, { human: number; bot: number }> = {};
+  const pageHits: Record<string, { human: number; bot: number }> = {};
 
   for (const r of rows) {
     const path = r.path || '/';
@@ -317,8 +444,16 @@ export function aggregateDayDetail(
     if (!assetRe.test(path)) pathCounts[path] = (pathCounts[path] || 0) + n;
     if (status === 404) path404[path] = (path404[path] || 0) + n;
 
+    const ok = status === 200 || status === 304;
+    const sitePath = ok && !assetRe.test(path) ? normalizeSitePath(path, cfg) : null;
+    if (sitePath) {
+      const h = (pageHits[sitePath] ??= { human: 0, bot: 0 });
+      if (looksLikeBot(ua, cfg.aiBotList, cfg.botUaPattern)) h.bot += n;
+      else h.human += n;
+    }
+
     const am = articleRe.exec(path);
-    if (am && (status === 200 || status === 304)) {
+    if (am && ok) {
       const slug = (am[1] ?? '').toLowerCase();
       if (slug) {
         const a = (articleHits[slug] ??= { human: 0, bot: 0 });
@@ -373,5 +508,5 @@ export function aggregateDayDetail(
     .slice(0, 25);
   const top404Paths = [...top25, ...siteRouteExtra].map(([path, requests]) => ({ path, requests }));
 
-  return { day, topPaths, top404Paths, crawlerSnapshot: { date: day, totalHits, bots }, articleHits };
+  return { day, topPaths, top404Paths, crawlerSnapshot: { date: day, totalHits, bots }, articleHits, pageHits };
 }

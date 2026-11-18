@@ -1,4 +1,5 @@
 import type { AeoQuery } from '@jeldon/config';
+import type { CitedInstead, ClassifiedCitation } from './citations.js';
 
 export type { AeoQuery };
 
@@ -26,12 +27,21 @@ export interface Engine {
   fn: EngineFn;
 }
 
-/** What the brand-match contract feeds `parseCitations`. `url` is matched
- *  (case-insensitively, as a substring) against each citation URL; `mentions`
- *  are prose strings that count as a brand reference even without a link. */
+/** What the brand-match contract feeds `parseCitations`. `url` is our host;
+ *  a citation counts when its hostname is that host or a subdomain of it.
+ *  `mentions` are prose terms that count as a brand reference even without a
+ *  link, matched as whole terms; `mentionExclusions` (term → regex sources)
+ *  strips generic phrasings first ("a growing body of health research"). */
 export interface BrandMatch {
   url: string;
   mentions: string[];
+  mentionExclusions?: Record<string, string[]>;
+}
+
+/** One cited link on a tracked host, with its 1-based rank in the answer. */
+export interface RankedCitation {
+  url: string;
+  rank: number;
 }
 
 /** Per-engine result for one query after citation parsing. */
@@ -42,6 +52,12 @@ export interface EngineResult {
   brandMentioned?: boolean;
   responseHash?: string;
   urlsCount?: number;
+  /** reddit.com threads this engine cited for the query. Absent when none. */
+  redditCitations?: RankedCitation[];
+  /** The answer's top cited links, classified (who was cited instead of us).
+   *  Absent on snapshots recorded before this field existed: read that as
+   *  "not recorded", never as "cited nobody". */
+  citations?: ClassifiedCitation[];
   noAiOverview?: boolean;
   error?: string;
 }
@@ -104,6 +120,9 @@ export interface ActionItem {
   priority: 'high' | 'medium' | 'low';
   action: string;
   why: string;
+  /** For "win the query" items: who the engines cited instead (or
+   *  'not-recorded' on snapshots without citation data). */
+  citedInstead?: CitedInstead[] | 'not-recorded';
 }
 
 export interface AggregateResult {

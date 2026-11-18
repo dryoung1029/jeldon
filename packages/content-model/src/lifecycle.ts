@@ -14,9 +14,13 @@
  *   true  | (any)       | (any) | true      | scheduled
  *   false | (any)       | (any) | (any)     | live
  *
- * `docReviewed` is the editorial-handoff state. Whether it's surfaced at all is
- * a per-domain choice (`pack.content.lifecycle.docReviewed`) — a project with no
- * separate review role collapses it back into plain `draft`.
+ * `docReviewed` is deprecated: BoH retired it on 2026-07-10. It is still
+ * honored when a domain opts in (`pack.content.lifecycle.docReviewed`), and is
+ * plain `draft` otherwise.
+ *
+ * `autonomous` is provenance, not lifecycle: an unattended pipeline wrote the
+ * draft. It does not change the status; `isAutonomousDraft` finds the drafts
+ * no human has looked at yet.
  */
 
 export type LifecycleStatus = 'draft' | 'docReviewed' | 'ready' | 'scheduled' | 'live';
@@ -24,6 +28,7 @@ export type LifecycleStatus = 'draft' | 'docReviewed' | 'ready' | 'scheduled' | 
 /** The four lifecycle booleans an article carries in frontmatter. */
 export interface LifecycleFlags {
   draft?: boolean;
+  /** @deprecated retired in BoH 2026-07-10; honored only with `docReviewedEnabled`. */
   docReviewed?: boolean;
   ready?: boolean;
   scheduled?: boolean;
@@ -88,4 +93,14 @@ export function selectPublished<T extends LifecycleFlags>(
 /** Filter a list to stub articles (see `isStub`). Mirrors `getStubArticles`. */
 export function selectStubs<T extends LifecycleFlags>(articles: T[]): T[] {
   return articles.filter((a) => isStub(a));
+}
+
+/** A draft written by an unattended pipeline that is not live yet. */
+export function isAutonomousDraft(flags: LifecycleFlags & { autonomous?: boolean }): boolean {
+  return Boolean(flags.draft && flags.autonomous);
+}
+
+/** Filter a list to unreviewed autonomous drafts (see `isAutonomousDraft`). */
+export function selectAutonomousDrafts<T extends LifecycleFlags & { autonomous?: boolean }>(articles: T[]): T[] {
+  return articles.filter((a) => isAutonomousDraft(a));
 }

@@ -1,0 +1,30 @@
+{
+  "name": "@jeldon/ops",
+  "version": "0.1.0",
+  "description": "Ops observability: pipeline freshness grading (ok/late/stale/never/unattestable, change-gated files graded on their own checkedAt), one severity-ranked needs-attention feed with cadence alerts, a GitHub Actions dispatch client with an allowlist and previous-run guard, and a ::warning helper for crons that skip on missing secrets.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@jeldon/config": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^9.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

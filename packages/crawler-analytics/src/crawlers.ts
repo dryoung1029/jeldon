@@ -53,9 +53,10 @@ export function looksLikeBot(
  * Timezone-local YYYY-MM-DD. The partition key for daily aggregates so
  * "Wednesday's crawler count" matches the project's local day, not the UTC
  * day. Ported from `ai-crawlers.ts::ptDateKey`; the hardcoded
- * `America/Los_Angeles` is now a parameter (defaults to it for parity).
+ * `America/Los_Angeles` is now a parameter: pass `pack.content.timezone`
+ * (defaults to UTC).
  */
-export function localDateKey(d: Date = new Date(), timeZone = 'America/Los_Angeles'): string {
+export function localDateKey(d: Date = new Date(), timeZone = 'UTC'): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone,
     year: 'numeric',

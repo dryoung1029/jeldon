@@ -1,0 +1,27 @@
+{
+  "name": "@jeldon/google",
+  "version": "0.1.0",
+  "description": "Google service-account auth and Gmail MIME building for edge runtimes. WebCrypto RS256 JWT-bearer grant (domain-wide delegation via `sub`) with a token cache and an injected fetch; a raw-email builder that flattens every header value, RFC 2047-encodes non-ASCII and always separates headers from body with a blank line.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "tsup": "^9.0.0",
+    "typescript": "^5.6.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

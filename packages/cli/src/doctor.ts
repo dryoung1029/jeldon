@@ -1,9 +1,16 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadDomainPack } from '@jeldon/config';
+import { checkOpsConfig } from '@jeldon/ops';
+import type { FetchLike, SearchConsoleDiagnosis } from '@jeldon/search-console';
+import { searchConsoleChecks } from './search-console.js';
 
 export type CheckStatus = 'ok' | 'warn' | 'error';
 export interface DoctorCheck {
   status: CheckStatus;
   message: string;
+  /** Structured diagnosis for an `--online` Search Console failure. */
+  diagnosis?: SearchConsoleDiagnosis;
 }
 export interface DoctorReport {
   checks: DoctorCheck[];
@@ -16,8 +23,12 @@ export interface DoctorReport {
  * The deterministic "am I wired correctly?" gate. Run before AND after agent
  * work; the same checks back the `doctor.yml` CI gate so local-green and
  * CI-green agree. `pre: true` skips checks that require a fully-filled config.
+ * `online: true` adds checks that call third-party APIs (Search Console token
+ * exchange + 1-row query); never on by default.
  */
-export async function runDoctor(opts: { cwd?: string; pre?: boolean } = {}): Promise<DoctorReport> {
+export async function runDoctor(
+  opts: { cwd?: string; pre?: boolean; online?: boolean; env?: Record<string, string | undefined>; fetch?: FetchLike } = {},
+): Promise<DoctorReport> {
   const cwd = opts.cwd ?? process.cwd();
   const checks: DoctorCheck[] = [];
   const add = (status: CheckStatus, message: string) => checks.push({ status, message });
@@ -62,6 +73,44 @@ export async function runDoctor(opts: { cwd?: string; pre?: boolean } = {}): Pro
   // Capability ↔ env sanity.
   if (pack.capabilities.drafting && !pack.services.requiredEnv.some((v) => /ANTHROPIC|OPENAI|API_KEY/.test(v))) {
     add('warn', 'capabilities.drafting is on but no LLM API key is listed in services.requiredEnv');
+  }
+
+  // Topic-cluster titles/descriptions render on dynamic routes the static-page
+  // meta-length gate cannot see, so check them against the same bands here.
+  for (const c of pack.content.topicClusters?.clusters ?? []) {
+    const seo = pack.scoring.seo;
+    const t = c.title.length;
+    const d = c.description.length;
+    if (t < 1 || t > seo.title.mehMax) add('error', `topic cluster "${c.id}" title is ${t} chars (ceiling ${seo.title.mehMax})`);
+    else if (t < seo.title.good[0] || t > seo.title.good[1]) add('warn', `topic cluster "${c.id}" title is ${t} chars (target ${seo.title.good[0]}-${seo.title.good[1]})`);
+    if (d < seo.excerpt.meh[0] || d > seo.excerpt.meh[1]) add('error', `topic cluster "${c.id}" description is ${d} chars (allowed ${seo.excerpt.meh[0]}-${seo.excerpt.meh[1]})`);
+    else if (d < seo.excerpt.good[0] || d > seo.excerpt.good[1]) add('warn', `topic cluster "${c.id}" description is ${d} chars (target ${seo.excerpt.good[0]}-${seo.excerpt.good[1]})`);
+  }
+
+  // Ops (@jeldon/ops): pipeline/allowlist consistency, allowlisted workflow
+  // files exist, and the Actions permission the dispatch token needs.
+  if (pack.capabilities.ops) {
+    for (const c of checkOpsConfig(pack.ops, {
+      workflowExists: (wf) => existsSync(join(cwd, '.github', 'workflows', wf)),
+    })) add(c.status, c.message);
+  }
+
+  // Search Console (offline; --online adds a live probe).
+  checks.push(...(await searchConsoleChecks(pack, { env: opts.env ?? process.env, pre: opts.pre, online: opts.online, fetch: opts.fetch })));
+
+  // Site ops: admin access, site alert, business hours.
+  if (pack.security) {
+    if (pack.security.access?.teamDomain && pack.security.access.aud) {
+      add('ok', `admin access policy set for ${pack.security.adminPrefixes.join(', ') || '(no prefixes)'}`);
+    } else {
+      add('warn', 'security.access is not set — protected routes will answer 500 (fail closed) until teamDomain + aud are configured');
+    }
+  }
+  if (pack.capabilities.siteAlert && !pack.brand.contact?.email) {
+    add('warn', 'capabilities.siteAlert is on but brand.contact.email is not set — the alert email button stays hidden');
+  }
+  if (pack.capabilities.businessHours && !pack.brand.hours && !pack.services.places) {
+    add('warn', 'capabilities.businessHours is on but neither brand.hours nor services.places is set — open-now will read "unknown"');
   }
 
   return finalize(checks);

@@ -5,7 +5,7 @@ import cloudflare from '@astrojs/cloudflare';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { loadDomainPack } from '@jeldon/config';
+import { loadDomainPack, defaultSecurityConfig } from '@jeldon/config';
 import { parse, isStub } from '@jeldon/content-model';
 import { sitemapExcludedArticleUrls, sitemapFilter } from '@jeldon/schema-graph';
 
@@ -41,10 +41,18 @@ const excluded = sitemapExcludedArticleUrls(articleStubs(), pack.brand.siteUrl);
 export default defineConfig({
   site: pack.brand.siteUrl,
   output: 'static',
-  // Astro's official adapter is the Cloudflare Workers adapter (Pages support
-  // was dropped). The template bakes it in so every consumer inherits a current
-  // config; `imageService: 'compile'` keeps the Workers bundle lean.
+  // Deploy target is Cloudflare WORKERS (wrangler.toml `main` + `[assets]`),
+  // not Pages: @astrojs/cloudflare v13+ dropped Pages, so targeting Workers on
+  // v12 keeps the Astro 6 upgrade a version bump (docs/MIGRATION.md).
+  // `imageService: 'compile'` keeps the Workers bundle lean.
   adapter: cloudflare({ imageService: 'compile' }),
+  vite: {
+    // src/middleware.ts runs in the worker, where the pack cannot be read from
+    // disk; bake the security block in at build time instead.
+    define: {
+      __JELDON_SECURITY__: JSON.stringify(pack.security ?? defaultSecurityConfig),
+    },
+  },
   integrations: [
     sitemap({
       filter: sitemapFilter(excluded),

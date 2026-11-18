@@ -1,0 +1,159 @@
+---
+/**
+ * The site alert pop-up (@jeldon/site-alert). Rendered on every public page by
+ * BaseLayout from src/data/site-alert.json (written by your admin save path).
+ *
+ * - The card sits in a <template>, so its text is never indexable page content
+ *   (an alert would outlive itself in search snippets).
+ * - The start/end check runs in the BROWSER against the wall clock in
+ *   `pack.content.timezone`, so a scheduled alert appears and expires on time
+ *   with no rebuild. Turning one on/off or editing it rides the next deploy.
+ * - Dismissal is remembered per revision: an edited alert is shown again.
+ * - `preview` renders the same card inline (for an admin page).
+ */
+import {
+  type SiteAlert as Alert,
+  ALERT_TEMPLATE_ID,
+  alertState,
+  displayLabel,
+  messageHtml,
+  parseStoredAlert,
+  wallClockIn,
+} from '@jeldon/site-alert';
+import { defaultSiteAlertConfig } from '@jeldon/config';
+import stored from '../data/site-alert.json';
+import { pack } from '../lib/pack';
+
+export interface Props {
+  preview?: boolean;
+  alert?: Alert;
+}
+const { preview = false } = Astro.props;
+const cfg = { ...defaultSiteAlertConfig, ...pack.siteAlert };
+const labels = { ...defaultSiteAlertConfig.labels, ...cfg.labels };
+const tz = pack.content.timezone;
+const email = pack.brand.contact?.email;
+const alert = Astro.props.alert ?? parseStoredAlert(JSON.stringify(stored), cfg.limits);
+const showMessage = alert.messageButton && Boolean(cfg.messageHref);
+const showEmail = alert.emailButton && Boolean(email);
+// At build time an alert that is off or already over renders nothing at all.
+const state = alertState(alert, wallClockIn(tz));
+const render = preview || state === 'scheduled' || state === 'live';
+---
+{preview ? (
+  <div class="sa sa--preview">
+    <div class="sa__inner">
+      <div class="sa__eyebrow">{displayLabel(alert)}</div>
+      <h2 class="sa__title">{alert.title}</h2>
+      <div class="sa__body" set:html={messageHtml(alert.message)} />
+      <div class="sa__actions">
+        {showMessage && <span class="sa__btn sa__btn--primary">{labels.message}</span>}
+        {showEmail && <span class="sa__btn">{labels.email}</span>}
+      </div>
+    </div>
+  </div>
+) : render && (
+  <template
+    id={ALERT_TEMPLATE_ID}
+    data-start={alert.startsAt}
+    data-end={alert.endsAt}
+    data-rev={alert.revision}
+    data-tz={tz}
+    data-key-prefix={cfg.storageKeyPrefix}
+    data-phones-down={alert.phonesDown ? '1' : ''}
+  >
+    <dialog class="sa" aria-labelledby="sa-title">
+      <div class="sa__inner">
+        <button type="button" class="sa__close" aria-label={labels.close} data-sa-close>✕</button>
+        <div class="sa__eyebrow">{displayLabel(alert)}</div>
+        <h2 id="sa-title" class="sa__title">{alert.title}</h2>
+        {alert.message && <div class="sa__body" set:html={messageHtml(alert.message)} />}
+        {(showMessage || showEmail) && (
+          <div class="sa__actions">
+            {showMessage && <a href={cfg.messageHref} class="sa__btn sa__btn--primary" data-sa-close>{labels.message}</a>}
+            {showEmail && <a href={`mailto:${email}`} class="sa__btn">{labels.email}</a>}
+          </div>
+        )}
+        <p class="sa__skip"><button type="button" class="sa__skip-btn" data-sa-close>{labels.dismiss}</button></p>
+      </div>
+    </dialog>
+  </template>
+)}
+
+{!preview && render && (
+  <script>
+    import { alertState, dismissalKey, wallClockIn, ALERT_TEMPLATE_ID } from '@jeldon/site-alert';
+
+    function init() {
+      const tpl = document.getElementById(ALERT_TEMPLATE_ID) as HTMLTemplateElement | null;
+      if (!tpl) return;
+      const startsAt = tpl.dataset.start ?? '';
+      const endsAt = tpl.dataset.end ?? '';
+      let now = '';
+      try {
+        now = wallClockIn(tpl.dataset.tz ?? 'UTC');
+      } catch {
+        return; // unreadable zone: do not show an alert we cannot place in time
+      }
+      if (alertState({ enabled: true, startsAt, endsAt }, now) !== 'live') return;
+
+      // Phones down: let the site stop advertising the phone while this is live.
+      if (tpl.dataset.phonesDown) {
+        document.documentElement.dataset.phonesDown = '1';
+        document.dispatchEvent(new CustomEvent('site-alert:phones-down'));
+      }
+
+      const key = dismissalKey(tpl.dataset.rev ?? '', tpl.dataset.keyPrefix || undefined);
+      try {
+        if (localStorage.getItem(key)) return;
+      } catch {
+        /* private mode: show it */
+      }
+      const dlg = tpl.content.firstElementChild?.cloneNode(true) as HTMLDialogElement | undefined;
+      if (!dlg || typeof dlg.showModal !== 'function') return;
+      document.body.appendChild(dlg);
+      // Recorded synchronously on every way out: the 'close' event is queued,
+      // so a visitor who closes and immediately clicks a link could beat it.
+      const dismiss = () => {
+        try {
+          localStorage.setItem(key, '1');
+        } catch {
+          /* noop */
+        }
+      };
+      dlg.addEventListener('cancel', dismiss);
+      dlg.addEventListener('close', dismiss);
+      dlg.addEventListener('click', (ev) => {
+        const t = ev.target as Element | null;
+        if (t === dlg || t?.closest?.('[data-sa-close]')) {
+          dismiss();
+          dlg.close();
+        }
+      });
+      setTimeout(() => dlg.showModal(), 400);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  </script>
+)}
+
+<style is:global>
+  .sa { margin: auto; padding: 0; border: 1px solid #d0d4d9; border-radius: 12px; background: #fff; color: #111; width: min(480px, calc(100vw - 32px)); box-shadow: 0 24px 64px rgba(15, 20, 25, 0.28); }
+  .sa::backdrop { background: rgba(15, 20, 25, 0.5); }
+  .sa--preview { margin: 0; width: 100%; max-width: 480px; }
+  .sa__inner { position: relative; padding: 24px 24px 16px; }
+  .sa__close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #d0d4d9; background: transparent; cursor: pointer; }
+  .sa__eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; margin: 0 40px 8px 0; }
+  .sa__title { font-size: 22px; line-height: 1.2; margin: 0 36px 10px 0; }
+  .sa__body { font-size: 15px; line-height: 1.55; margin: 0 0 16px; }
+  .sa__body a { overflow-wrap: anywhere; }
+  .sa__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .sa__btn { display: inline-block; padding: 10px 16px; border: 1px solid currentColor; border-radius: 8px; text-decoration: none; color: inherit; }
+  .sa__btn--primary { background: #111; color: #fff; border-color: #111; }
+  .sa__skip { text-align: center; margin: 12px 0 0; }
+  .sa__skip-btn { background: transparent; border: 0; font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; }
+  @media (max-width: 760px) {
+    .sa:not(.sa--preview) { width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 16px 16px 0 0; }
+    .sa__actions { flex-direction: column; }
+  }
+</style>

@@ -1,8 +1,10 @@
+import type { LlmEffort } from '@jeldon/config';
+
 /**
  * @jeldon/amplify types.
  *
  * The article shape the kit reads is intentionally narrow — slug + the
- * frontmatter/body fields the BoH amplify/carousel/newsletter endpoints
+ * frontmatter/body fields the BoH amplify/newsletter endpoints
  * actually used. A host adapts its own article record to this.
  */
 
@@ -42,27 +44,6 @@ export interface RegenerateChannelResult {
   usage?: LlmUsage;
 }
 
-/** One carousel text slide as the model returns it. */
-export interface CarouselSlide {
-  kicker?: string;
-  body: string;
-  footer?: string;
-}
-
-export interface GenerateCarouselResult {
-  schemeId: string;
-  scheme: { id: string; label: string; bg: string; fg: string; accent: string };
-  schemes: Array<{ id: string; label: string; bg: string; fg: string; accent: string }>;
-  slides: CarouselSlide[];
-  heroImage: string | null;
-  heroImageAlt: string | null;
-  title: string;
-  slug: string;
-  articleUrl: string;
-  model: string;
-  usage?: LlmUsage;
-}
-
 export interface NewsletterContent {
   subject: string;
   body: string;
@@ -87,10 +68,12 @@ export interface LlmToolRequest {
   userMessage: string;
   maxTokens: number;
   tool: LlmTool;
+  /** Reasoning effort (`output_config.effort`). Default `medium`. */
+  effort?: LlmEffort;
 }
 
 export interface LlmToolResponse {
-  /** The forced tool's `input` object, or null when the model produced none. */
+  /** The requested tool's `input` object, or null when the model produced none. */
   input: Record<string, unknown> | null;
   stopReason: string;
   usage?: LlmUsage;
@@ -102,6 +85,6 @@ export interface LlmToolResponse {
  * keeps every fetch behind an `EngineFn` so the logic is host-free.
  */
 export interface LlmClient {
-  /** Run a single forced-tool-use call and return the tool input. */
+  /** Run a single structured tool call and return the tool input (null if the model skipped it). */
   callTool(req: LlmToolRequest): Promise<LlmToolResponse>;
 }

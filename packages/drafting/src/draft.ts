@@ -12,7 +12,7 @@
  * unified with author.ts's trailing-JSON payload.
  */
 
-import type { HeroImageConfig } from '@jeldon/config';
+import { effortFor, type HeroImageConfig } from '@jeldon/config';
 import type { ConceptProposer, ImageGen, ObjectStore } from '@jeldon/media';
 import type { ClaimVerifier, VerificationReport } from '@jeldon/verify';
 import { forcePublishDate } from './frontmatter.js';
@@ -70,7 +70,7 @@ export interface DraftHeroDeps {
 interface ModeConfig {
   baseSystem: string;
   tools?: ToolDef[];
-  toolChoice?: { type: 'tool'; name: string };
+  toolName?: string;
   maxTokens: number;
 }
 
@@ -81,21 +81,21 @@ function modeConfig(mode: DraftMode, prompts: PromptPack, pack: DraftingPack): M
       return {
         baseSystem: prompts.draftSingle,
         tools: TOOLS_SINGLE,
-        toolChoice: { type: 'tool', name: 'create_draft' },
+        toolName: 'create_draft',
         maxTokens: mt?.draft ?? 16000,
       };
     case 'outline':
       return {
         baseSystem: prompts.outline,
         tools: toolsOutline(pack),
-        toolChoice: { type: 'tool', name: 'propose_series' },
+        toolName: 'propose_series',
         maxTokens: mt?.outline ?? 4000,
       };
     case 'draft-series':
       return {
         baseSystem: prompts.draftSeries,
         tools: TOOLS_SERIES_DRAFT,
-        toolChoice: { type: 'tool', name: 'create_series' },
+        toolName: 'create_series',
         maxTokens: mt?.['draft-series'] ?? 64000,
       };
     case 'draft-series-article':
@@ -104,11 +104,11 @@ function modeConfig(mode: DraftMode, prompts: PromptPack, pack: DraftingPack): M
       return {
         baseSystem: prompts.draftSeriesArticle,
         tools: TOOLS_SINGLE,
-        toolChoice: { type: 'tool', name: 'create_draft' },
+        toolName: 'create_draft',
         maxTokens: mt?.['draft-series-article'] ?? 12000,
       };
     default:
-      return { baseSystem: prompts.brainstorm, maxTokens: mt?.brainstorm ?? 1500 };
+      return { baseSystem: prompts.brainstorm, maxTokens: mt?.brainstorm ?? 4000 };
   }
 }
 
@@ -127,7 +127,8 @@ async function runFixPass(
       maxTokens: deps.pack.drafting?.maxTokens.fixPass ?? 16000,
       system,
       tools: TOOLS_SINGLE,
-      toolChoice: { type: 'tool', name: 'create_draft' },
+      toolName: 'create_draft',
+      effort: effortFor(deps.pack.drafting, 'fixPass'),
       messages: [
         {
           role: 'user',
@@ -173,7 +174,8 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
       system,
       messages: ctx.messages,
       tools: cfg.tools,
-      toolChoice: cfg.toolChoice,
+      toolName: cfg.toolName,
+      effort: effortFor(pack.drafting, ctx.mode),
     });
 
     let reply = '';
@@ -382,6 +384,7 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
       scoresSeries: scoreSeries,
       fixPassFired,
       fixPassesSeries,
+      verification: cite8Report,
       model: res.model,
       stopReason: res.stopReason,
       usage: res.usage,

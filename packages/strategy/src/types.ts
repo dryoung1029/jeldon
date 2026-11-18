@@ -52,11 +52,22 @@ export interface CrawlerActivity {
   bots: Array<{ purpose: string; count: number }>;
 }
 
+/** Search Console signals, already filtered by `@jeldon/search-console`'s
+ *  `strikingDistance` / `lowCtr` (the host passes their output). `null` when
+ *  Search Console is not configured; the rules then produce nothing. */
+export interface SearchConsoleSignals {
+  strikingDistance: Array<{ query: string; position: number; impressions: number }>;
+  lowCtr: Array<{ page: string; position: number; impressions: number; ctr: number; expectedCtr: number }>;
+  /** The `lowCtr.ratio` the rows were filtered with, for the evidence line. */
+  lowCtrRatio?: number;
+}
+
 export interface StrategyInput {
   cf: CfWindow | null;
   crawlers: CrawlerActivity | null;
   articles: ArticleHealth[];
   keywords: Array<{ keyword: string; ourRank: number | null }>;
+  searchConsole?: SearchConsoleSignals | null;
 }
 
 /** Built-in rule identifiers. A RuleSet toggles these on/off and (optionally)
@@ -69,6 +80,8 @@ export type BuiltinRuleId =
   | 'audio-coverage'
   | 'dist-social'
   | 'seo-climb'
+  | 'sc-striking-distance'
+  | 'sc-low-ctr'
   | 'aeo-live-crawl';
 
 export interface RuleToggle {

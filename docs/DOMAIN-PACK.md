@@ -61,9 +61,62 @@ explicit per-domain choice that resolves the lint-vs-verifier contradiction),
 and `verifier` (`none` | `cite8` | `primary-source`).
 
 ### `aeo`
-`brandMentions` (prose-mention detection), optional `localSearchLocation` (omit
-for non-local verticals), `querySet` (the queries audited), `engines`
-(`perplexity` | `anthropic` | `google-aio` | `openai`), `highPriorityTags`.
+`brandMentions` (prose-mention detection, matched as whole terms), optional
+`brandMentionExclusions` (term → regex sources for generic phrasings that
+contain the term but aren't a mention, e.g. "a growing body of health research"),
+optional `localSearchLocation` (omit for non-local verticals), `querySet` (the
+queries audited), `engines` (`perplexity` | `anthropic` | `google-aio` |
+`openai`), `highPriorityTags`, optional `model` (alias into `drafting.models`).
+
+### `drafting` (optional)
+`models` (alias → model id; the one place IDs live), `modelLabels` (picker
+text), `defaultModel`, `utilityModel`, `effort` (per-purpose
+`low`/`medium`/`high`/`max`, with a `default`), `maxTokens` per mode (thinking
+counts toward these, so leave headroom), `draftFloor`, `wordCountTarget`.
+Optional `autonomous` (`source`, `maxDraftsPerRun`, `digestDays`,
+`relevance { topics, requireTopic, requirePriorityKeyword }`, `category`,
+`coverageTitleChars`, `promptTemplate`): absent means the autonomous runner
+reports `not_configured`. Optional `backlinks` (`chunkSize` default 8,
+`internalPathPrefix`, `maxTokens`, `minAnchorChars`).
+
+### `ideation` (optional)
+`transcriptMiner` (`maxChars` 200 000, `minChars` 400, `publishedSourceNoun`,
+`listenCalloutLabel`, `maxProposals`, `privateSourceGuidance`,
+`publishedSourceGuidance`, `anchorEverySeconds`, `maxTokens`, `model`) and
+`backlog.path`. Gated by `capabilities.ideation`.
+
+### `listening` (optional)
+`reddit`: `geoSubreddits`, `conditionSubreddits`, `brandTerms`,
+`genericPhraseExclusions` (falls back to `aeo.brandMentionExclusions`),
+`serviceKeywords`, `targetSearches`, `retentionDays`, `maxItems`,
+`archivedAfterDays` (175), `staleAfterDays`, `stalePenalty`, `recency` bands,
+`competitorMinNameLength`, `maxTargets`, `userAgent`, request pacing. Competitor
+names come from `competitors.roster`. Read-only: nothing in the engine posts.
+Gated by `capabilities.listening`.
+
+### `analytics` (optional)
+`refererChannelMap` rules match the referer **hostname**, never a substring:
+`hosts` (exact or parent domain), `hostPatterns` (anchored regex, e.g.
+`(^|\.)google\.`), `utmSources` (exact tokens, checked first), and
+`hostContains` as a last resort. `ownHosts` lists your own domains; the host of
+`brand.siteUrl` is added automatically by `analyticsConfigFromPack`.
+`botUaPattern` tokens must be bot-specific (`pinterestbot`, not `pinterest`).
+
+### `leads` (optional)
+`attribution` (`storagePrefix` for the sessionStorage keys, `utmKeys` kept,
+length caps for landing path / referrer host / UTM values, `capturePhoneTaps`),
+`unknownChannelLabel` (a lead with no attribution is "no data", not direct),
+`requestVia` (allowed form-opening controls), `bookingImport` (`presets` of
+column-header regex sources per field, `defaultPreset`, `phoneDigits`,
+`maxRows`) and `trends.defaultBucket`. The booking presets are DATA: a `jane`
+preset ships as one example; add your booking system's headers as another.
+Trends bucket in `content.timezone` (the business timezone).
+
+### `conversion` (optional)
+`minLeads` (default 3: cells under it are flagged `lowSample`, shown dimmed,
+never hidden or zeroed) and `requestContexts` (`default` + `byCluster`: the
+request-sheet / end-cap copy per topic cluster). No request copy ships in the
+defaults; an unconfigured pack gets `configured: false`.
 
 ### `competitors` (optional)
 `roster`, `targetKeywords`, our `ourPlaceId`/`ourName`/`localPackLocation`,
@@ -80,15 +133,60 @@ for non-local verticals), `querySet` (the queries audited), `engines`
 `reviewResponseRules`, `requireHumanReviewTags`. **HIPAA-class behavior is opt-in
 here, never in the engine.**
 
+`compliance.mailbox` (optional) — **compliance-pack material.** Mailbox
+response tracking (`@jeldon/leads/compliance`) reads message text, so
+`createMailboxTracker` refuses to run unless `pack` is not `none` AND
+`mailbox.enabled` is `true`. Fields: `address` (the mailbox the system sends its
+notifications from), `notificationWindowMinutes` (10), `autoReplyUnderMinutes`
+(2), and optional `rules` (keyword rules → codes; defaults to
+`defaultMailboxOutcomeRules`). Text is reduced to rule codes inside the
+function and never returned; do not persist what you fetch. Run it only where
+the mailbox provider is covered by whatever agreement your pack requires.
+
 ### `capabilities`
 Booleans gating growth surfaces: `drafting`, `amplify`, `audio`, `heroImages`,
-`competitiveIntel`, `engagementAnalytics`, `entityPresence`. Turn on only what
+`competitiveIntel`, `engagementAnalytics`, `entityPresence`, `ops`, `searchConsole`,
+`leads`, `conversionMap`, `siteAlert`, `businessHours`, `ideation`, `listening`. Turn on only what
 you use; disabled surfaces are absent from the build.
+
+### `ops` (optional, `capabilities.ops`)
+`pipelines[]` — one entry per cron-fed data file: `id`, `name`, `file`,
+`source`, `cadenceDays`, `timestampField` (dot path), optional `changeGated
+{ checkedAtField = 'checkedAt', checkCadenceDays }` for files rewritten only on
+change (the writer must stamp `checkedAt` in the same file on every successful
+run), optional `run` (`workflow` | `endpoint` | `page`). `grading
+{ lateMultiplier: 1.5, staleMultiplier: 3 }`. `cadence { articleDays,
+newsletterDays?, newsletterStuckDays? }`: the newsletter alert exists only when
+`newsletterDays` is set. `dispatch { allowlist, pollSeconds = 8,
+timeoutMinutes = 20, createdAtSlackSeconds = 90 }`: data-refresh workflows
+only; the token needs "Actions: Read and write". Every `run.workflow` must be
+in the allowlist (schema-enforced). `links` maps attention kinds to admin links.
 
 ### `services`
 `store` (`github` | `fs`), `analytics` (`cloudflare` | `none`), and
 `requiredEnv` — the list `jeldon doctor` verifies. Include every secret the
 enabled capabilities need.
+
+### Site ops (optional)
+- `brand.contact` — `{ email, phoneDisplay? }`, the public contact details
+  (site alert "Email us" button, `{email}` / `{phone}` in presets).
+- `brand.hours` — `{ regular: DayHours[], special?, dataFile? }`, the weekly
+  schedule seed; `scripts/fetch-hours.mjs` refreshes `dataFile` (default
+  `src/data/hours.json`) from Places. Interpreted in `content.timezone`.
+- `services.places` — `{ apiKeyEnv, placeIdEnv }`, env-var NAMES for the
+  Places key and place ID (values stay secrets).
+- `siteAlert` — `{ limits: { label, title, message, maxDays },
+  pollTimeoutMinutes, presets?, pollIntervalSeconds?, messageHref?, labels?,
+  storageKeyPrefix?, dataFile? }`. Preset copy is yours (defaults ship none).
+  Alert times are wall clock in `content.timezone`.
+- `security` — `{ adminPrefixes, access?: { teamDomain, aud } }`. Without
+  `access`, protected routes answer 500 (fail closed). The Access application
+  must also cover every preview hostname (see `docs/IMPLEMENTATION.md`).
+- `capabilities.siteAlert`, `capabilities.businessHours`.
+
+One timezone (`content.timezone`) drives publishing, alerts and hours. A
+separate business timezone is not modelled: add one only if a pack's
+editorial calendar and its physical location are in different zones.
 
 ## Validation invariants (enforced by the schema, surfaced by doctor)
 

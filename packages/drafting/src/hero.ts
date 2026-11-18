@@ -24,7 +24,7 @@ import {
   type ObjectStore,
   type proposeImageTool,
 } from '@jeldon/media';
-import type { HeroImageConfig } from '@jeldon/config';
+import type { HeroImageConfig, LlmEffort } from '@jeldon/config';
 import { fmScalar, splitFrontmatter, upsertScalar } from './fm-lite.js';
 import { resolveModel } from './provider.js';
 import type { LlmProvider, ToolDef } from './types.js';
@@ -44,12 +44,14 @@ export interface LlmConceptProposerOptions {
   model?: string;
   /** The pack's alias→id map (`pack.drafting.models`). Default: {}. */
   models?: Record<string, string>;
-  /** Output cap for the concept call — it's a small tool call. Default: 1024. */
+  /** Output cap for the concept call. Thinking counts toward it. Default: 4000. */
   maxTokens?: number;
+  /** Reasoning effort. Default: `low` (mechanical extraction). */
+  effort?: LlmEffort;
 }
 
 /**
- * A `ConceptProposer` backed by the drafting `LlmProvider`. Forces the
+ * A `ConceptProposer` backed by the drafting `LlmProvider`. Asks for the
  * `propose_image` tool and returns its fields. This is the one Anthropic
  * round-trip media deliberately left to the drafting layer.
  */
@@ -57,11 +59,13 @@ export class LlmConceptProposer implements ConceptProposer {
   private readonly provider: LlmProvider;
   private readonly model: string;
   private readonly maxTokens: number;
+  private readonly effort: LlmEffort;
 
   constructor(opts: LlmConceptProposerOptions) {
     this.provider = opts.provider;
     this.model = resolveModel(opts.models ?? {}, opts.model ?? 'sonnet', opts.model);
-    this.maxTokens = opts.maxTokens ?? 1024;
+    this.maxTokens = opts.maxTokens ?? 4000;
+    this.effort = opts.effort ?? 'low';
   }
 
   async propose(req: {
@@ -74,7 +78,8 @@ export class LlmConceptProposer implements ConceptProposer {
       maxTokens: this.maxTokens,
       system: req.system,
       tools: [req.tool as unknown as ToolDef],
-      toolChoice: { type: 'tool', name: req.tool.name },
+      toolName: req.tool.name,
+      effort: this.effort,
       messages: [{ role: 'user', content: req.userMessage }],
     });
     for (const block of res.blocks) {

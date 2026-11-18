@@ -206,3 +206,86 @@ describe('config-driven portability (no engine code changes)', () => {
     expect(healthOut.actionItems[0]?.priority).toBe('medium');
   });
 });
+
+describe('anchored brand matching (BoH 2026-09 regressions)', () => {
+  const brand = {
+    url: 'acmehealth.example',
+    mentions: ['acme health', 'dr. jane doe', 'dr doe'],
+    mentionExclusions: {
+      'acme health': ['\\b(?:growing|large)\\s+acme health\\b', '\\bacme health\\s+(?:research|literature)\\b'],
+    },
+  };
+
+  it('matches mentions as whole terms only', async () => {
+    const { parseCitations } = await import('../src/index.js');
+    expect(parseCitations([], 'Ask Dr. Doe about it', brand).brandMentioned).toBe(true);
+    expect(parseCitations([], 'Ask Dr Doe about it', brand).brandMentioned).toBe(true);
+    expect(parseCitations([], 'Dr. Doerr disagrees', brand).brandMentioned).toBe(false);
+  });
+
+  it('ignores generic phrasings listed in mentionExclusions', async () => {
+    const { parseCitations } = await import('../src/index.js');
+    expect(parseCitations([], 'A growing acme health research base says…', brand).brandMentioned).toBe(false);
+    expect(parseCitations([], 'Acme Health in Springfield offers this', brand).brandMentioned).toBe(true);
+    expect(
+      parseCitations([], 'A growing acme health literature, and Acme Health the clinic', brand).brandMentioned,
+    ).toBe(true);
+  });
+
+  it('matches citation URLs by hostname, not substring', async () => {
+    const { parseCitations } = await import('../src/index.js');
+    expect(parseCitations(['https://blog.acmehealth.example/x'], '', brand).citationRank).toBe(1);
+    expect(parseCitations(['https://notacmehealth.example/x'], '', brand).cited).toBe(false);
+    expect(parseCitations(['https://acmehealth.example.evil.net/'], '', brand).cited).toBe(false);
+  });
+
+  it('records reddit citations with rank', async () => {
+    const { citationsOnHost } = await import('../src/index.js');
+    expect(
+      citationsOnHost(
+        ['https://a.example', 'https://www.reddit.com/r/x/comments/1', 'https://notreddit.com/', 'https://old.reddit.com/r/y'],
+        'reddit.com',
+      ),
+    ).toEqual([
+      { url: 'https://www.reddit.com/r/x/comments/1', rank: 2 },
+      { url: 'https://old.reddit.com/r/y', rank: 4 },
+    ]);
+  });
+});
+
+describe('classified citations (BoH e09c9a7)', () => {
+  it('classifies us / competitor / directory / reddit / other and flags list URLs', async () => {
+    const { classifyCitations, competitorHostsFromRoster, citedInstead } = await import('../src/index.js');
+    const rivals = competitorHostsFromRoster([
+      { id: 'r', name: 'Rival Clinic', url: 'https://www.rival.example/' },
+      { id: 'r-doc', name: 'Dr Rival', url: 'https://rival.example/team/doc' },
+    ]);
+    const urls = [
+      'https://acme.example/articles/x',
+      'https://blog.rival.example/post',
+      'https://www.yelp.com/biz/acme',
+      'https://www.reddit.com/r/x/comments/1',
+      'https://national.example/health/best-ways-to-sleep',
+      'https://national.example/10-signs-of-x',
+      'https://national.example/best-practices-for-x',
+      'https://notrival.example/',
+      ...Array.from({ length: 5 }, (_, i) => `https://x${i}.example/`),
+    ];
+    const cs = classifyCitations(urls, 'acme.example', rivals);
+    expect(cs).toHaveLength(10);
+    expect(cs.map((c) => c.kind).slice(0, 4)).toEqual(['us', 'competitor', 'directory', 'reddit']);
+    expect(cs[1]!.who).toBe('Rival Clinic');
+    expect(cs[4]!.list).toBe(true);
+    expect(cs[5]!.list).toBe(true);
+    expect(cs[6]!.list).toBeUndefined(); // "best practices" is not a list page
+    expect(cs[7]!.kind).toBe('other'); // notrival.example is not rival.example
+
+    const merged = citedInstead({
+      perplexity: { citations: cs },
+      anthropic: { citations: classifyCitations(['https://www.yelp.com/biz/acme'], 'acme.example', rivals) },
+    });
+    expect(merged !== 'not-recorded' && merged[0]).toMatchObject({ host: 'yelp.com', engines: 2, bestRank: 1 });
+    expect(Array.isArray(merged) && merged.some((m) => m.kind === ('us' as never))).toBe(false);
+    expect(citedInstead({ perplexity: { cited: false } as never })).toBe('not-recorded');
+  });
+});

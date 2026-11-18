@@ -1,3 +1,5 @@
+import { defaultAeoCitationConfig, hostIs, hostOf, mentionsTerm, type AeoCitationConfig } from '@jeldon/config';
+import { classifyCitations } from './citations.js';
 import type {
   AeoQuery,
   BrandMatch,
@@ -22,23 +24,39 @@ export function parseCitations(
   brand: BrandMatch,
 ): Pick<EngineResult, 'cited' | 'citationRank' | 'totalCitations' | 'brandMentioned'> {
   const totalCitations = urls.length;
-  const needle = brand.url.toLowerCase();
+  const ours = hostOf(brand.url);
   let citationRank: number | null = null;
   for (let i = 0; i < urls.length; i++) {
     const u = urls[i];
-    if (u && needle && u.toLowerCase().includes(needle)) {
+    // Hostname match, not substring: `acme.com` must not match `notacme.com`
+    // or `acme.com.evil.net`.
+    if (u && ours && hostIs(hostOf(u), ours)) {
       citationRank = i + 1;
       break;
     }
   }
-  const lowerText = (responseText || '').toLowerCase();
-  const brandMentioned = brand.mentions.some((m) => m && lowerText.includes(m.toLowerCase()));
+  // Whole-term match: "dr young" must not match "Dr. Younger".
+  const text = responseText || '';
+  const brandMentioned = brand.mentions.some(
+    (m) => !!m && mentionsTerm(text, m, brand.mentionExclusions?.[m] ?? brand.mentionExclusions?.[m.toLowerCase()] ?? []),
+  );
   return {
     cited: citationRank !== null,
     citationRank,
     totalCitations,
     brandMentioned,
   };
+}
+
+/**
+ * The cited links on `domain` (exact or subdomain), with their 1-based rank.
+ * Reddit is the most-cited external domain in AI answers; a thread an engine
+ * already reads for one of our queries is a high-leverage listening target.
+ */
+export function citationsOnHost(urls: string[], domain: string): Array<{ url: string; rank: number }> {
+  return urls
+    .map((url, i) => ({ url, rank: i + 1 }))
+    .filter((c) => !!c.url && hostIs(hostOf(c.url), domain));
 }
 
 /** Truncated SHA-256 of the response text, for change detection without storing
@@ -52,9 +70,9 @@ async function sha256(s: string): Promise<string> {
     .slice(0, 16);
 }
 
-/** PT (America/Los_Angeles) date key — the snapshot's canonical date. Override
- *  the timezone via `opts.timezone` (e.g. `pack.content.timezone`). */
-export function dateKey(d: Date = new Date(), timezone = 'America/Los_Angeles'): string {
+/** The snapshot's canonical date key in `timezone`. Pass `pack.content.timezone`;
+ *  defaults to UTC (the engine assumes no locale). */
+export function dateKey(d: Date = new Date(), timezone = 'UTC'): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
     year: 'numeric',
@@ -64,7 +82,8 @@ export function dateKey(d: Date = new Date(), timezone = 'America/Los_Angeles'):
 }
 
 /** Run all engines (parallel) against one query and parse citations. */
-async function runQuery(query: AeoQuery, engines: Engine[], brand: BrandMatch): Promise<QueryResult> {
+async function runQuery(query: AeoQuery, engines: Engine[], opts: RunAuditOptions): Promise<QueryResult> {
+  const brand = opts.brand;
   const result: QueryResult = { queryId: query.id, engines: {} };
   await Promise.all(
     engines.map(async (eng) => {
@@ -76,11 +95,14 @@ async function runQuery(query: AeoQuery, engines: Engine[], brand: BrandMatch): 
         }
         const urls = raw.urls ?? [];
         const parsed = parseCitations(urls, raw.text ?? '', brand);
+        const redditCitations = citationsOnHost(urls, 'reddit.com');
         result.engines[eng.name] = {
           ...parsed,
           // Don't store the full response text — hash it for change detection.
           responseHash: await sha256(raw.text ?? ''),
           urlsCount: urls.length,
+          ...(redditCitations.length ? { redditCitations } : {}),
+          citations: classifyCitations(urls, brand.url, opts.competitorHosts ?? new Map(), opts.citations ?? defaultAeoCitationConfig),
           // Distinguishes "AIO present but didn't cite us" (cited:false,
           // noAiOverview:false) from "no AIO surfaced at all".
           ...(raw.noAiOverview ? { noAiOverview: true } : {}),
@@ -95,6 +117,11 @@ async function runQuery(query: AeoQuery, engines: Engine[], brand: BrandMatch): 
 
 export interface RunAuditOptions {
   brand: BrandMatch;
+  /** Competitor host → name, from `competitorHostsFromRoster(pack.competitors.roster)`.
+   *  Missing = no competitor tagging, not a failed audit. */
+  competitorHosts?: Map<string, string>;
+  /** Citation classification. Default `pack.aeo.citations ?? defaultAeoCitationConfig`. */
+  citations?: AeoCitationConfig;
   timezone?: string;
   /** Hook for progress logging; defaults to a no-op. */
   onProgress?: (queryId: string) => void;
@@ -115,7 +142,7 @@ export async function runAudit(
   const results: QueryResult[] = [];
   for (const q of querySet) {
     opts.onProgress?.(q.id);
-    results.push(await runQuery(q, engines, opts.brand));
+    results.push(await runQuery(q, engines, opts));
   }
   return {
     date: dateKey(opts.now, opts.timezone),

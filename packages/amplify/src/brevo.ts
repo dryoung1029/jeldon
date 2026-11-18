@@ -185,7 +185,7 @@ export class BrevoClient {
    */
   static nextSendSlot(
     now: Date,
-    timezone = 'America/Los_Angeles',
+    timezone = 'UTC',
     hour = 10,
     floorHours = 4,
   ): Date {

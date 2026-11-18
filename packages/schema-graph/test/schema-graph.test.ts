@@ -238,3 +238,33 @@ describe('emitLlmsTxt gating (uses a typed pack slice)', () => {
     expect(res.contents).toBe('');
   });
 });
+
+describe('videoObjectGraph', () => {
+  it('emits only when the upload date is known', async () => {
+    const { videoObjectGraph } = await import('../src/index.js');
+    const base = { videoId: 'dQw4w9WgXcQ', watchUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', name: 'N', description: 'D', siteUrl: 'https://acme.example/' };
+    expect(videoObjectGraph(base)).toBeNull();
+    expect(videoObjectGraph({ ...base, uploadDate: 'not a date' })).toBeNull();
+    const node = videoObjectGraph({ ...base, uploadDate: '2026-10-01' })!;
+    expect(node['@type']).toBe('VideoObject');
+    expect(node.uploadDate).toBe('2026-10-01');
+    expect(node.embedUrl).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+    expect(node.publisher).toEqual({ '@id': 'https://acme.example/#org' });
+  });
+});
+
+describe('collectionPageGraph', () => {
+  it('builds CollectionPage + ItemList from inputs', async () => {
+    const { collectionPageGraph } = await import('../src/index.js');
+    const n = collectionPageGraph({
+      name: 'Hip', description: 'D', path: '/articles/topic/hip/', siteUrl: 'https://acme.example',
+      partOf: { name: 'Articles', path: '/articles/' },
+      items: [{ name: 'A', path: '/articles/a/' }, { name: 'B', path: '/articles/b/' }],
+    }) as Record<string, any>;
+    expect(n['@type']).toBe('CollectionPage');
+    expect(n.url).toBe('https://acme.example/articles/topic/hip/');
+    expect(n.mainEntity.numberOfItems).toBe(2);
+    expect(n.mainEntity.itemListElement[1]).toMatchObject({ position: 2, url: 'https://acme.example/articles/b/' });
+    expect(n.isPartOf.url).toBe('https://acme.example/articles/');
+  });
+});

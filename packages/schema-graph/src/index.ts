@@ -21,6 +21,11 @@ export type { ArticleGraphOptions } from './article.js';
 
 export { breadcrumbList } from './breadcrumb.js';
 
+export { videoObjectGraph } from './video.js';
+export { collectionPageGraph } from './collection.js';
+export type { CollectionPageInput } from './collection.js';
+export type { VideoObjectInput } from './video.js';
+
 export { extractFaqs, faqPage } from './faqs.js';
 
 export { emitLlmsTxt, renderLlmsTxt, NullWriter, fsWriter } from './llms-txt.js';
@@ -32,3 +37,4 @@ export type { ArticleStub } from './sitemap.js';
 export { absUrl, orgId, websiteId } from './url.js';
 
 export type { JsonLd, Crumb, Faq, ArticleInput, AuthorEntry, Writer } from './types.js';
+export { openingHoursSpecification, specialOpeningHoursSpecification } from './opening-hours.js';

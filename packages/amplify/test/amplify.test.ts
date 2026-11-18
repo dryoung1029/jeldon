@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { AmplifyConfig, DomainPack } from '@jeldon/config';
 import { defaultAmplifyConfig } from '@jeldon/config';
-import type { DataFile, SaveResult, Store } from '@jeldon/store';
+import type { Store } from '@jeldon/store';
 import {
   BrevoClient,
-  CarouselSidecarStore,
   buildKitSystem,
   buildVoiceBlock,
-  generateCarousel,
   generateKit,
   generateNewsletter,
+  importToCarouselStudio,
+  scheduleArticleNewsletter,
   resolveBrevoConfig,
   type AmplifyArticle,
   type LlmClient,
@@ -121,23 +121,6 @@ describe('generateKit', () => {
   });
 });
 
-// --- carousel ---------------------------------------------------------------
-
-describe('generateCarousel', () => {
-  it('returns slides + the chosen scheme from pack.amplify.carouselSchemes', async () => {
-    const { client, calls } = stubLlm({
-      schemeName: 'black-cream',
-      slides: [{ body: 'Most back pain is not your spine' }, { body: 'It is how you load it' }],
-    });
-    const result = await generateCarousel(article, packWith(defaultAmplifyConfig), client);
-    expect(result.schemeId).toBe('black-cream');
-    expect(result.scheme.bg).toBe('#000000');
-    expect(result.slides).toHaveLength(2);
-    expect(result.articleUrl).toBe('https://yourbodyofhealth.com/articles/when-to-image-low-back-pain/');
-    expect(calls[0]!.system).toContain('THE HOOK');
-  });
-});
-
 // --- newsletter -------------------------------------------------------------
 
 describe('generateNewsletter', () => {
@@ -182,7 +165,7 @@ describe('resolveBrevoConfig', () => {
 describe('BrevoClient.nextSendSlot', () => {
   it('honors the 4-hour floor and lands on the configured hour', () => {
     // 6am PT publish → 10am PT same day (floor fits).
-    const slot = BrevoClient.nextSendSlot(new Date('2026-06-29T13:00:00Z')); // 6am PDT
+    const slot = BrevoClient.nextSendSlot(new Date('2026-06-29T13:00:00Z'), 'America/Los_Angeles'); // 6am PDT
     const hourPT = new Intl.DateTimeFormat('en-US', {
       timeZone: 'America/Los_Angeles',
       hour: '2-digit',
@@ -195,45 +178,148 @@ describe('BrevoClient.nextSendSlot', () => {
 
 // --- carousel sidecar persistence via @jeldon/store -------------------------
 
-/** In-memory Store — only the data-file methods are exercised here. */
-function memStore(): Store {
-  const files = new Map<string, string>();
+
+// --- reel channel + CTA policy ------------------------------------------------
+
+describe('reel script channel', () => {
+  it('ships in the defaults and the kit prompt carries the educational CTA rule', () => {
+    const reel = defaultAmplifyConfig.channels.find((c) => c.id === 'reelScript');
+    expect(reel?.guidance).toContain('260-320 words');
+    expect(reel?.guidance).toContain('three numbered HOOK OPTIONS');
+    const system = buildKitSystem(packWith(defaultAmplifyConfig));
+    expect(system).toContain('CTA RULE for Reel / short video script');
+    expect(system).toContain('book an appointment');
+  });
+
+  it('omits the CTA rule when no policy channel is in the kit', () => {
+    const system = buildKitSystem(
+      packWith({ ...defaultAmplifyConfig, channels: defaultAmplifyConfig.channels.filter((c) => c.id !== 'reelScript') }),
+    );
+    expect(system).not.toContain('CTA RULE');
+  });
+
+  it('keeps engine defaults free of any one brand', () => {
+    const json = JSON.stringify(defaultAmplifyConfig);
+    for (const literal of ['Body of Health', 'Dr. Young', 'PTCH', 'chiropract']) expect(json).not.toContain(literal);
+  });
+});
+
+// --- carousel studio hand-off ------------------------------------------------
+
+describe('importToCarouselStudio', () => {
+  const config = {
+    baseUrl: 'https://studio.example',
+    brandId: 'acme',
+    projectIdPrefix: 'acme',
+    clientIdEnv: 'STUDIO_ID',
+    clientSecretEnv: 'STUDIO_SECRET',
+  };
+  const env = { STUDIO_ID: 'id', STUDIO_SECRET: 'secret' };
+
+  it('posts the contract payload with the service token and returns the studio URL', async () => {
+    let sent: { url: string; headers: Record<string, string>; body: Record<string, unknown> } | undefined;
+    const fetchImpl = (async (url: string, init: { headers: Record<string, string>; body: string }) => {
+      sent = { url, headers: init.headers, body: JSON.parse(init.body) };
+      return new Response(JSON.stringify({ projectId: 'acme-x', studioUrl: 'https://studio.example/app/projects/acme-x' }));
+    }) as unknown as typeof fetch;
+    const r = await importToCarouselStudio(
+      { slug: 'x', title: 'T', body: 'B', heroImage: '/img/x/h.png' },
+      { config, env, siteUrl: 'https://acme.example/', fetchImpl },
+    );
+    expect(r).toEqual({ ok: true, projectId: 'acme-x', studioUrl: 'https://studio.example/app/projects/acme-x' });
+    expect(sent!.url).toBe('https://studio.example/api/import-article');
+    expect(sent!.headers['CF-Access-Client-Id']).toBe('id');
+    expect(sent!.body).toMatchObject({
+      projectId: 'acme-x',
+      brandId: 'acme',
+      heroImageUrl: 'https://acme.example/img/x/h.png',
+      sourceUrl: 'https://acme.example/articles/x',
+    });
+  });
+
+  it('refuses without secrets and treats an HTML auth page as a bad upstream', async () => {
+    const missing = await importToCarouselStudio({ slug: 'x', title: 'T', body: 'B' }, { config, env: {}, siteUrl: 'https://a.example' });
+    expect(missing).toMatchObject({ ok: false, code: 'NOT_CONFIGURED' });
+    const html = (async () => new Response('<html>login</html>', { status: 200 })) as unknown as typeof fetch;
+    const r = await importToCarouselStudio({ slug: 'x', title: 'T', body: 'B' }, { config, env, siteUrl: 'https://a.example', fetchImpl: html });
+    expect(r).toMatchObject({ ok: false, code: 'BAD_UPSTREAM' });
+  });
+});
+
+// --- Queue in Brevo ------------------------------------------------------------
+
+function articleStore(initial: string) {
+  let content = initial;
+  const saves: string[] = [];
   const notImpl = () => {
     throw new Error('not implemented in test');
   };
-  return {
+  const store: Store = {
     listArticles: notImpl as Store['listArticles'],
-    getArticle: notImpl as Store['getArticle'],
-    saveArticle: notImpl as Store['saveArticle'],
+    async getArticle(slug) {
+      return { slug, path: `src/content/articles/${slug}.md`, sha: 'sha1', content };
+    },
+    async saveArticle(_slug, next) {
+      content = next;
+      saves.push(next);
+      return { sha: 'sha2' };
+    },
     saveArticles: notImpl as Store['saveArticles'],
     deleteArticle: notImpl as Store['deleteArticle'],
     deleteArticles: notImpl as Store['deleteArticles'],
-    async getDataFile(path: string): Promise<DataFile | null> {
-      const content = files.get(path);
-      if (content === undefined) return null;
-      return { path, sha: `sha-${content.length}`, content };
-    },
-    async saveDataFile(path, content): Promise<SaveResult> {
-      files.set(path, content);
-      return { sha: `sha-${content.length}` };
-    },
+    getDataFile: notImpl as Store['getDataFile'],
+    saveDataFile: notImpl as Store['saveDataFile'],
   };
+  return { store, saves, current: () => content };
 }
 
-describe('CarouselSidecarStore', () => {
-  it('round-trips a sidecar through the Store and uses the pack state dir', async () => {
-    const store = memStore();
-    const sidecar = new CarouselSidecarStore(store, packWith(defaultAmplifyConfig));
+describe('scheduleArticleNewsletter', () => {
+  const pack = {
+    brand: { name: 'Acme', siteUrl: 'https://acme.example' },
+    content: { timezone: 'UTC' },
+    amplify: defaultAmplifyConfig,
+  } as unknown as Parameters<typeof scheduleArticleNewsletter>[2]['pack'];
+  const brevo = (fail = false) => {
+    const calls: Array<{ scheduledAt: Date; subject: string }> = [];
+    return {
+      calls,
+      client: {
+        async createScheduledCampaign(a: { scheduledAt: Date; subject: string }) {
+          calls.push(a);
+          return { campaignId: 42 };
+        },
+        async sendNow() {
+          if (fail) throw new Error('boom');
+        },
+      } as unknown as Pick<BrevoClient, 'createScheduledCampaign' | 'sendNow'>,
+    };
+  };
 
-    expect(await sidecar.get('x')).toEqual({ state: null, sha: null });
+  it('schedules at the cron slot and writes queued status to frontmatter', async () => {
+    const s = articleStore('---\ntitle: "Hello"\ndraft: false\n---\nbody');
+    const b = brevo();
+    const now = new Date('2026-11-17T12:00:00Z');
+    const r = await scheduleArticleNewsletter('hello', { subject: 'S', body: 'B' }, { store: s.store, brevo: b.client, pack, now });
+    expect(r).toMatchObject({ ok: true, campaignId: 42, status: 'queued' });
+    expect(b.calls[0]!.scheduledAt.toISOString()).toBe(BrevoClient.nextSendSlot(now, 'UTC', 10, 4).toISOString());
+    expect(s.current()).toContain('newsletterStatus: queued');
+    expect(s.current()).toContain('newsletterCampaignId:');
+  });
 
-    await sidecar.put('x', { slides: [{ bodySize: 82, showLogo: true }] });
-    const got = await sidecar.get('x');
-    expect(got.state?.slides).toHaveLength(1);
-    expect(got.state?.updatedAt).toBeTruthy();
+  it('refuses drafts and already-queued articles without creating a campaign', async () => {
+    const b = brevo();
+    const draft = articleStore('---\ntitle: "x"\ndraft: true\n---\nbody');
+    expect(await scheduleArticleNewsletter('x', { subject: 'S', body: 'B' }, { store: draft.store, brevo: b.client, pack })).toMatchObject({ ok: false, refused: 'draft' });
+    const queued = articleStore('---\ntitle: "x"\nnewsletterStatus: queued\n---\nbody');
+    expect(await scheduleArticleNewsletter('x', { subject: 'S', body: 'B' }, { store: queued.store, brevo: b.client, pack })).toMatchObject({ ok: false, refused: 'already-queued' });
+    expect(b.calls).toHaveLength(0);
+  });
 
-    // Lands at the configured carousel state dir.
-    const raw = await store.getDataFile('src/data/carousel-state/x.json');
-    expect(raw).not.toBeNull();
+  it('leaves a failed send-now queued with the error recorded', async () => {
+    const s = articleStore('---\ntitle: "x"\n---\nbody');
+    const r = await scheduleArticleNewsletter('x', { subject: 'S', body: 'B', sendNow: true }, { store: s.store, brevo: brevo(true).client, pack });
+    expect(r).toMatchObject({ ok: false, status: 'queued', error: 'boom' });
+    expect(s.current()).toContain('newsletterStatus: queued');
+    expect(s.current()).toContain('sendNow failed: boom');
   });
 });

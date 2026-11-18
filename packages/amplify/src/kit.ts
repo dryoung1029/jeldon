@@ -1,4 +1,4 @@
-import type { AmplifyChannel, AmplifyConfig, DomainPack } from '@jeldon/config';
+import type { AmplifyChannel, AmplifyConfig, DomainPack, LlmEffort } from '@jeldon/config';
 import { defaultAmplifyConfig } from '@jeldon/config';
 import { buildVoiceBlock } from './voice.js';
 import type {
@@ -28,7 +28,17 @@ export function buildKitSystem(pack: Pick<DomainPack, 'voice' | 'brand' | 'ampli
   const amplify = resolveAmplify(pack);
   const voiceBlock = buildVoiceBlock(pack);
   const channelGuidance = amplify.channels.map((c) => c.guidance).join('\n\n');
-  return `${amplify.systemPreamble}\n\n${voiceBlock}\n\nChannel-specific guidance:\n\n${channelGuidance}`;
+  return `${amplify.systemPreamble}\n\n${voiceBlock}\n\nChannel-specific guidance:\n\n${channelGuidance}${ctaPolicyBlock(amplify)}`;
+}
+
+/** The educational-CTA rule for the channels `ctaPolicy` names. Empty when
+ *  no policy is set or none of its channels are in the kit. */
+export function ctaPolicyBlock(amplify: AmplifyConfig): string {
+  const policy = amplify.ctaPolicy;
+  if (!policy) return '';
+  const labels = amplify.channels.filter((c) => policy.channels.includes(c.id)).map((c) => c.label);
+  if (!labels.length) return '';
+  return `\n\nCTA RULE for ${labels.join(', ')} (non-negotiable): this is education, not an ad. The call to action must be one of: ${policy.allowed.join('; ')}. It must never be: ${policy.banned.join('; ')}. If a draft ends with a banned CTA, rewrite it.`;
 }
 
 function buildFullKitTool(channels: AmplifyChannel[]): LlmTool {
@@ -90,7 +100,10 @@ function tagUrl(text: string, url: string, utm: string | undefined, slug: string
 
 export interface GenerateKitOptions {
   model?: string;
+  /** Output cap. Thinking counts toward it, so leave headroom. */
   maxTokens?: number;
+  /** Reasoning effort. Default `medium`. */
+  effort?: LlmEffort;
 }
 
 /**
@@ -112,7 +125,8 @@ export async function generateKit(
 
   const res = await llm.callTool({
     model: opts.model ?? 'sonnet',
-    maxTokens: opts.maxTokens ?? 4000,
+    maxTokens: opts.maxTokens ?? 10000,
+    effort: opts.effort,
     system: buildKitSystem(pack),
     tool,
     userMessage: `${articleBlock(article, url)}\n\nGenerate the full amplification kit. Use the URL above wherever a channel needs it (skip for channels whose rules say "link in bio").`,
@@ -170,7 +184,8 @@ export async function regenerateChannel(
 
   const res = await llm.callTool({
     model: opts.model ?? 'sonnet',
-    maxTokens: opts.maxTokens ?? 1500,
+    maxTokens: opts.maxTokens ?? 6000,
+    effort: opts.effort,
     system: buildKitSystem(pack),
     tool: SINGLE_TOOL,
     userMessage: `${articleBlock(article, url)}${previousBlock}${refinementBlock}\n\nProduce ONLY the ${channel.label}. Call regenerate_channel with the new text. Follow all the rules for this channel from the system prompt.`,

@@ -16,3 +16,4 @@ export { readGitHubEnv, resolveEnvBag } from './env.js';
 export { GitHubStore, type GitHubStoreOptions } from './github-store.js';
 export { FsStore, type FsStoreOptions } from './fs-store.js';
 export { createStore, type CreateStoreOptions } from './factory.js';
+export { getArticlesBulk, isTransientStoreError, type BulkReadResult, type BulkReadOptions } from './bulk.js';

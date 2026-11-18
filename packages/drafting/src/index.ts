@@ -88,6 +88,44 @@ export {
   EXTRACT_CLAIMS_TOOL,
 } from './tools.js';
 
+export {
+  runAutonomousDrafts,
+  scoreDigestRelevance,
+  markAutonomousDraft,
+  buildDigestPrompt,
+  type AutonomousDeps,
+  type AutonomousRunResult,
+  type AutonomousDraftOutcome,
+  type DigestRelevance,
+} from './autonomous.js';
+
+export {
+  proposeBacklinks,
+  applyBacklinks,
+  findAnchor,
+  normalizeTypography,
+  linksTo,
+  buildBacklinksSystem,
+  PROPOSE_BACKLINKS_TOOL,
+  type BacklinkArticle,
+  type BacklinkProposal,
+  type BacklinkRejection,
+  type BacklinkProposeResult,
+  type ProposeBacklinksDeps,
+  type ApplyBacklinksResult,
+  type AnchorMatch,
+} from './backlinks.js';
+
+// The digest contract lives in @jeldon/verify (next to the cite8 adapter);
+// re-exported so a drafting host needs one import.
+export {
+  Cite8DigestSource,
+  NullDigestSource,
+  type DigestDocument,
+  type DigestFetchResult,
+  type ResearchDigestSource,
+} from '@jeldon/verify';
+
 export type {
   // LLM provider
   LlmProvider,
