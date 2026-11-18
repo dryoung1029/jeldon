@@ -30,14 +30,14 @@ export interface ScannerConfig {
   genericMinSampledPages: number;
 }
 
-// Ported verbatim from BoH competitor-scanner.ts::HIGH_VALUE_PATTERNS. The
-// health-vertical service/condition terms are the part a non-clinic domain
-// overrides via pack.competitors.highValuePatterns.
+// Generic high-value paths: service/offering pages and the content hub. A
+// domain adds its own vertical terms (product names, conditions, practice
+// areas) via pack.competitors.highValuePatterns; `jeldon doctor` warns when
+// capabilities.competitiveIntel is on and that field is unset. The original
+// clinic-tuned list lives in fixtures/domain-packs/body-of-health.media.ts.
 const DEFAULT_HIGH_VALUE_PATTERNS = [
-  '/(services?|treatments?|conditions?|specialt(?:y|ies)|care|therapy|therapies)/',
-  '/(chiropractic|massage|acupuncture|adjust|spinal|spine|rehab|wellness|injury|pain)\\b',
-  '/(back-?pain|neck-?pain|headache|migraine|sciatica|whiplash|sports?-?injur|auto-?accident|pregnan|prenatal|webster|extremit|shoulder|knee|hip|tmj|carpal|plantar|posture)',
-  '/(blog|articles?|news|posts?|resources?|education)/',
+  '/(services?|solutions?|products?|offerings?|specialt(?:y|ies))/',
+  '/(blog|articles?|news|posts?|resources?|education|guides?)/',
 ];
 
 // Ported verbatim from BoH competitor-scanner.ts::SKIP_PATTERNS.
@@ -47,22 +47,11 @@ const DEFAULT_SKIP_PATTERNS = [
   '^https?://[^/]+/?$', // homepage itself
 ];
 
-// Ported from BoH competitor-scanner.ts::detectTemplateVendor's fingerprint
-// matchers. The original had bespoke per-vendor logic (raw-html vs lowercased
-// match); we normalize to "regex source against the raw homepage HTML", which
-// reproduces every original match (the lowercased ones are folded in with `i`).
-const DEFAULT_TEMPLATE_VENDORS = [
-  { name: 'chiromatrix', fingerprints: ['cdcssl\\.ibsrv\\.net', 'chiromatrix'] },
-  {
-    name: 'solutionreach',
-    fingerprints: [
-      '<meta[^>]+(?:name|property)=["\']generator["\'][^>]+(?:solutionreach|sr-pulse)',
-      'solutionreach\\.com',
-      'sr-cdn',
-    ],
-  },
-  { name: 'ihealth-spot', fingerprints: ['ihealthspot\\.com', 'ihealthspot-cdn'] },
-];
+// Named vendor fingerprints are vertical-specific (website builders that serve
+// one industry), so the default is empty and only the built-in generic-template
+// heuristic runs. A domain lists its vendors via pack.competitors.templateVendors;
+// see fixtures/domain-packs/body-of-health.media.ts for a filled list.
+const DEFAULT_TEMPLATE_VENDORS: Array<{ name: string; fingerprints: string[] }> = [];
 
 export function resolveScannerConfig(competitors?: CompetitorsConfig): ScannerConfig {
   return {

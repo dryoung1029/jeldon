@@ -13,7 +13,13 @@
  */
 
 import type { HeroImageConfig } from '@jeldon/config';
-import type { ConceptProposer, ImageGen, ObjectStore } from '@jeldon/media';
+import {
+  heroBrandFromPack,
+  type ConceptProposer,
+  type HeroBrandContext,
+  type ImageGen,
+  type ObjectStore,
+} from '@jeldon/media';
 import type { ClaimVerifier, VerificationReport } from '@jeldon/verify';
 import { forcePublishDate } from './frontmatter.js';
 import { generateHeroForDraft } from './hero.js';
@@ -63,6 +69,8 @@ export interface DraftHeroDeps {
   objectStore: ObjectStore;
   /** Hero style config. Default: media's `defaultMediaConfig.heroImage`. */
   heroImage?: HeroImageConfig;
+  /** Art-director `{BRAND}` / `{PERSONA}` context. Default: read from `pack`. */
+  brand?: HeroBrandContext;
   /** Capability gate — pass `pack.capabilities.heroImages`. Default `true`. */
   enabled?: boolean;
 }
@@ -284,6 +292,7 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
         yield { type: 'progress', pct: 88, label: 'Generating hero image…' };
         const heroRes = await generateHeroForDraft(draftOut.content, {
           ...deps.hero,
+          brand: deps.hero.brand ?? heroBrandFromPack(pack),
           slug: draftOut.slug,
         });
         if (heroRes.changed) {
@@ -331,7 +340,11 @@ export async function* draft(ctx: DraftContext, deps: DraftDeps): AsyncGenerator
 
         // Optional hero per sibling (after the fix-pass), then re-score.
         if (deps.hero && a.content) {
-          const heroRes = await generateHeroForDraft(a.content, { ...deps.hero, slug: a.slug });
+          const heroRes = await generateHeroForDraft(a.content, {
+            ...deps.hero,
+            brand: deps.hero.brand ?? heroBrandFromPack(pack),
+            slug: a.slug,
+          });
           if (heroRes.changed) {
             a.content = heroRes.content;
             scores = scoreContent(pack, codec, a);

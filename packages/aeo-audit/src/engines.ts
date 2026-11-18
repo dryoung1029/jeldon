@@ -139,7 +139,7 @@ function extractAioText(blocks: AioTextBlock[] | undefined): string {
 
 /**
  * Google AI Overviews via SerpApi. `location` is the localized-intent bias
- * (e.g. "Corvallis, Oregon, United States") — pass `pack.aeo.localSearchLocation`.
+ * (e.g. "Austin, Texas, United States") — pass `pack.aeo.localSearchLocation`.
  * Omit for non-local domains.
  */
 export async function queryGoogleAio(

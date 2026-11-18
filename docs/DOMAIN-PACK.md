@@ -67,7 +67,25 @@ for non-local verticals), `querySet` (the queries audited), `engines`
 
 ### `competitors` (optional)
 `roster`, `targetKeywords`, our `ourPlaceId`/`ourName`/`localPackLocation`,
-`highValuePatterns`/`skipPatterns`, `templateVendors` fingerprints.
+`highValuePatterns`/`skipPatterns`, `templateVendors` fingerprints. The default
+`highValuePatterns` match only generic service/blog paths and `templateVendors`
+is empty; add your vertical's terms and vendors. Required when
+`capabilities.competitiveIntel` is on (doctor errors without it).
+
+### `media` (optional)
+`narration` (TTS voice/model/settings, `outroText`, pronunciation and
+abbreviation tables), `heroImage` (`promptTemplate` house style, `proposalSystem`
+art-director prompt with `{BRAND}`/`{PERSONA}` slots filled from `brand.name` and
+`voice.persona`), and `podcast` (the RSS channel). The defaults carry no brand:
+with `capabilities.audio` on, doctor errors until `narration.voiceId` and
+`podcast.title`/`description`/`author`/`ownerEmail`/`category`/`coverImage` are
+set; a blank `outroText` means no outro. `fixtures/domain-packs/body-of-health.media.ts`
+is a fully-filled example.
+
+### `analytics` (optional)
+Put a drop rule for your own host first in `refererChannelMap`
+(`{ needles: ['example.com'], drop: true }`) so internal navigation isn't counted
+as a referral; doctor warns when `engagementAnalytics` is on without one.
 
 ### `schema`
 `orgType` (default `["Organization"]`; add `LocalBusiness` for local),

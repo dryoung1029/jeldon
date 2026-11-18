@@ -12,7 +12,7 @@
  * the typed `proposeHeroConcept` stub + its TODO(port).
  */
 
-import { defaultMediaConfig, type HeroImageConfig } from '@jeldon/config';
+import { defaultMediaConfig, type DomainPack, type HeroImageConfig } from '@jeldon/config';
 import { sha256Hex } from './hash.js';
 import type { HeroImageResult, ImageGen } from './types.js';
 import type { ObjectStore } from './types.js';
@@ -22,7 +22,7 @@ const DEFAULT_HERO = defaultMediaConfig.heroImage;
 export type HeroImageKind = 'hero' | 'carousel-slide' | 'carousel-hero' | 'carousel-backdrop';
 
 export interface GenerateHeroImageOptions {
-  /** Image config (model/size/quality/style). Default: pack's, else BoH. */
+  /** Image config (model/size/quality/style). Default: `defaultMediaConfig.heroImage`. */
   heroImage?: HeroImageConfig;
   /** Asset slug — the bytes live under `<slug>/...` in the store. */
   slug: string;
@@ -102,6 +102,29 @@ export function assembleHeroPrompt(
   return cfg.promptTemplate.replace('{TOPIC}', topic).replace('{CONCEPT}', concept);
 }
 
+/** Brand context the art-director prompt reads at call time. */
+export interface HeroBrandContext {
+  /** Fills `{BRAND}`. Default: "this publication". */
+  name?: string;
+  /** Fills `{PERSONA}`. Lines containing `{PERSONA}` are dropped when blank. */
+  persona?: string;
+}
+
+/** Read the hero brand context from a Domain Pack (`brand.name`, `voice.persona`). */
+export function heroBrandFromPack(pack: Pick<DomainPack, 'brand' | 'voice'>): HeroBrandContext {
+  return { name: pack.brand.name, persona: pack.voice.persona };
+}
+
+/** Fill the `{BRAND}` / `{PERSONA}` slots of an art-director system prompt. */
+export function fillProposalSystem(system: string, brand: HeroBrandContext = {}): string {
+  const name = brand.name?.trim() || 'this publication';
+  const persona = brand.persona?.trim() ?? '';
+  const lines = persona
+    ? system.split('\n')
+    : system.split('\n').filter((l) => !l.includes('{PERSONA}'));
+  return lines.join('\n').replaceAll('{BRAND}', name).replaceAll('{PERSONA}', persona);
+}
+
 /** A proposed hero concept (the model's tool output). */
 export interface HeroConceptProposal {
   topic: string;
@@ -126,8 +149,8 @@ export interface HeroConceptInput {
 /**
  * Propose a hero CONCEPT for an article via an LLM, then assemble the full
  * prompt. The art-director SYSTEM prompt + the `propose_image` tool schema are
- * config (`heroImage.proposalSystem`) + the locked template; only the topic +
- * concept are model-authored.
+ * config (`heroImage.proposalSystem`, with `{BRAND}` / `{PERSONA}` filled from
+ * `brand`) + the locked template; only the topic + concept are model-authored.
  *
  * The actual Anthropic tool-call orchestration (tool_choice forcing, tool-use
  * extraction) is prompt-heavy LLM plumbing that belongs with the drafting
@@ -139,6 +162,7 @@ export async function proposeHeroConcept(
   input: HeroConceptInput,
   proposer: ConceptProposer,
   cfg: HeroImageConfig = DEFAULT_HERO,
+  brand?: HeroBrandContext,
 ): Promise<HeroConceptProposal> {
   const refinementBlock = input.refinement?.trim()
     ? `\n\nUSER REFINEMENT: ${input.refinement.trim()}`
@@ -155,7 +179,7 @@ ${input.body}
 Decide the topic + visual concept for this article's hero illustration. The style is locked — focus on what to draw.`;
 
   const fields = await proposer.propose({
-    system: cfg.proposalSystem,
+    system: fillProposalSystem(cfg.proposalSystem, brand),
     tool: proposeImageTool,
     userMessage,
   });

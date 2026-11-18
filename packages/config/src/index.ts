@@ -51,6 +51,12 @@ export {
   defaultEntityPresenceConfig,
 } from './defaults.js';
 export {
+  capabilityReadiness,
+  missingPodcastFields,
+  REQUIRED_PODCAST_FIELDS,
+  type ReadinessIssue,
+} from './readiness.js';
+export {
   loadDomainPack,
   validateDomainPack,
   resolveConfigPath,

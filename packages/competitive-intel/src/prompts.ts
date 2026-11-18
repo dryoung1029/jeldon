@@ -19,8 +19,8 @@ function brandLine(pack: PromptBrand): string {
   const { name, geoFraming } = pack.brand;
   const persona = pack.voice.persona;
   const where = geoFraming ? ` serving ${geoFraming}` : '';
-  // e.g. "Body of Health — a direct, evidence-informed chiropractic practice
-  // serving Corvallis and Albany." The persona carries the vertical.
+  // e.g. "Northwatch serving platform teams. Blunt on-call SREs writing for
+  // other on-call SREs." The persona carries the vertical.
   return `${name}${where}. ${persona}`;
 }
 

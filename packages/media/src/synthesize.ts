@@ -34,7 +34,8 @@ export interface SynthesizeOptions {
   objectStore?: ObjectStore;
   /** Server-side pronunciation-dictionary locators (provider-specific). */
   pronunciationLocators?: Array<{ pronunciation_dictionary_id: string; version_id: string }>;
-  /** Append the configured outro. Default true. */
+  /** Append the configured outro. Default true; a blank `outroText` never
+   *  appends one. */
   includeOutro?: boolean;
   /** Echo-back char count from preview; a >200 drift rejects (the BoH 409). */
   previewCharCount?: number;
@@ -83,7 +84,7 @@ export async function synthesize(
     audioParts.push(buf);
   }
 
-  if (includeOutro) {
+  if (includeOutro && cfg.outroText.trim()) {
     const outro = await getOrGenerateOutro(tts, cfg, objectStore, opts.pronunciationLocators);
     audioParts.push(outro);
   }

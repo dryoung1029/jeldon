@@ -6,7 +6,7 @@
  * assembly, no I/O — the host wraps the returned XML in a Response.
  */
 
-import { defaultMediaConfig, type PodcastConfig } from '@jeldon/config';
+import { defaultMediaConfig, missingPodcastFields, type PodcastConfig } from '@jeldon/config';
 import type { FeedArticle } from './types.js';
 
 const DEFAULT_PODCAST = defaultMediaConfig.podcast;
@@ -14,7 +14,8 @@ const DEFAULT_PODCAST = defaultMediaConfig.podcast;
 export interface BuildFeedOptions {
   /** Canonical site origin, e.g. `https://example.com` (no trailing slash). */
   siteUrl: string;
-  /** Podcast channel config. Default: BoH. */
+  /** Podcast channel config (`pack.media.podcast`). The default has blank
+   *  identity fields, so the builder throws until the pack fills them. */
   podcast?: PodcastConfig;
   /** Override the feed self-URL. Default `${siteUrl}/podcast.xml`. */
   feedUrl?: string;
@@ -56,6 +57,12 @@ function formatDuration(sec: number): string {
  */
 export function buildPodcastFeed(articles: FeedArticle[], opts: BuildFeedOptions): string {
   const cfg = opts.podcast ?? DEFAULT_PODCAST;
+  const missing = missingPodcastFields(cfg);
+  if (missing.length) {
+    throw new Error(
+      `Podcast feed needs media.podcast.${missing.join(', media.podcast.')} set in jeldon.config.ts.`,
+    );
+  }
   const site = opts.siteUrl.replace(/\/$/, '');
   const feedUrl = opts.feedUrl ?? `${site}/podcast.xml`;
   const cover = abs(cfg.coverImage, site);

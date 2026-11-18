@@ -76,6 +76,20 @@ describe('proposeHero', () => {
     // assembleHeroPrompt filled the locked template's {CONCEPT} slot.
     expect(proposal.prompt).toContain(FIELDS.concept);
   });
+
+  it('sends a neutral art-director prompt carrying the pack brand + persona', async () => {
+    const captured: { req?: LlmRequest } = {};
+    const proposer = new LlmConceptProposer({ provider: fakeProvider(captured) });
+    await proposeHero(
+      { slug: 's', title: 'T', body: 'B' },
+      { proposer, brand: { name: 'Northwatch', persona: 'Blunt on-call SREs.' } },
+    );
+    const system = captured.req?.system ?? '';
+    expect(system).toContain('art director for Northwatch');
+    expect(system).toContain('Blunt on-call SREs.');
+    expect(system).not.toMatch(/\{BRAND\}|\{PERSONA\}/);
+    expect(system).not.toMatch(/yourbodyofhealth|Corvallis|Body of Health|Jason|PTCH|chiropract/i);
+  });
 });
 
 describe('heroInputFromMarkdown', () => {

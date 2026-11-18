@@ -17,6 +17,7 @@ import {
   generateHeroImage,
   proposeHeroConcept,
   type ConceptProposer,
+  type HeroBrandContext,
   type HeroConceptInput,
   type HeroConceptProposal,
   type HeroImageResult,
@@ -109,6 +110,9 @@ export interface ProposeHeroDeps {
   proposer: ConceptProposer;
   /** Hero style config. Default: media's `defaultMediaConfig.heroImage`. */
   heroImage?: HeroImageConfig;
+  /** Fills the art-director prompt's `{BRAND}` / `{PERSONA}` slots. Pass
+   *  `heroBrandFromPack(pack)`. */
+  brand?: HeroBrandContext;
 }
 
 /**
@@ -120,7 +124,7 @@ export function proposeHero(
   input: HeroConceptInput,
   deps: ProposeHeroDeps,
 ): Promise<HeroConceptProposal> {
-  return proposeHeroConcept(input, deps.proposer, deps.heroImage);
+  return proposeHeroConcept(input, deps.proposer, deps.heroImage, deps.brand);
 }
 
 /**
@@ -149,6 +153,9 @@ export interface GenerateHeroDeps {
   slug: string;
   /** Hero style config. Default: media's `defaultMediaConfig.heroImage`. */
   heroImage?: HeroImageConfig;
+  /** Fills the art-director prompt's `{BRAND}` / `{PERSONA}` slots. Pass
+   *  `heroBrandFromPack(pack)`. */
+  brand?: HeroBrandContext;
   /** Capability gate — pass `pack.capabilities.heroImages`. Default `true`. */
   enabled?: boolean;
 }
@@ -181,7 +188,7 @@ export async function generateHeroForDraft(
   }
 
   const input = heroInputFromMarkdown(content, deps.slug);
-  const proposal = await proposeHeroConcept(input, deps.proposer, deps.heroImage);
+  const proposal = await proposeHeroConcept(input, deps.proposer, deps.heroImage, deps.brand);
   const image = await generateHeroImage(proposal.prompt, deps.imageGen, deps.objectStore, {
     slug: deps.slug,
     heroImage: deps.heroImage,

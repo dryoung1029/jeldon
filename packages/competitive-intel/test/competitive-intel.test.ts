@@ -11,6 +11,8 @@ import {
   trackLocalRanks,
 } from '../src/index.js';
 import { buildGapReportSystem, buildPositioningSystem } from '../src/prompts.js';
+// The clinic-tuned scanner patterns, kept as a test fixture in fixtures/domain-packs/.
+import { bodyOfHealthCompetitorPatterns } from '../../../fixtures/domain-packs/body-of-health.media.ts';
 import type { CompetitorAudit, SampledPage } from '../src/index.js';
 
 const HEALTH_HOMEPAGE = `<html><head><title>Corvallis Spine Clinic</title></head><body>
@@ -73,8 +75,24 @@ describe('config-driven portability — a different pack changes behavior, no en
     });
     const acmeHtml = '<html><head><link href="https://acme-cdn.example/app.css"></head><body>hi</body></html>';
     expect(detectTemplateVendor(acmeHtml, [], null, acmeConfig)).toBe('acme-builder');
-    // The default health pack's fingerprints do NOT match acme markup.
+    // The default has no named vendors, so acme markup is not labeled.
     expect(detectTemplateVendor(acmeHtml, [], null, resolveScannerConfig())).toBeNull();
+  });
+
+  it('ships vertical-neutral defaults; a pack supplies its own terms and vendors', () => {
+    const def = resolveScannerConfig();
+    expect(JSON.stringify(def)).not.toMatch(/chiropract|massage|acupuncture|sciatica|chiromatrix/i);
+    expect(def.templateVendors).toEqual([]);
+    const hv = (cfg: ReturnType<typeof resolveScannerConfig>, u: string) =>
+      cfg.highValuePatterns.some((p) => new RegExp(p, 'i').test(u));
+    expect(hv(def, 'https://x.test/services/')).toBe(true);
+    expect(hv(def, 'https://x.test/blog/post')).toBe(true);
+    expect(hv(def, 'https://x.test/chiropractic-care')).toBe(false);
+
+    const clinic = resolveScannerConfig({ roster: [], targetKeywords: [], ...bodyOfHealthCompetitorPatterns });
+    expect(hv(clinic, 'https://x.test/chiropractic-care')).toBe(true);
+    const chiroHtml = '<html><head><script src="https://cdcssl.ibsrv.net/x.js"></script></head></html>';
+    expect(detectTemplateVendor(chiroHtml, [], null, clinic)).toBe('chiromatrix');
   });
 
   it('flags the built-in generic-template heuristic on a wordy homepage + thin pages', () => {

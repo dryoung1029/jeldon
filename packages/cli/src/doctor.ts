@@ -1,4 +1,4 @@
-import { loadDomainPack } from '@jeldon/config';
+import { capabilityReadiness, loadDomainPack } from '@jeldon/config';
 
 export type CheckStatus = 'ok' | 'warn' | 'error';
 export interface DoctorCheck {
@@ -63,6 +63,10 @@ export async function runDoctor(opts: { cwd?: string; pre?: boolean } = {}): Pro
   if (pack.capabilities.drafting && !pack.services.requiredEnv.some((v) => /ANTHROPIC|OPENAI|API_KEY/.test(v))) {
     add('warn', 'capabilities.drafting is on but no LLM API key is listed in services.requiredEnv');
   }
+
+  // Capability ↔ pack fields the engine has no default for (voice id, podcast
+  // identity, competitor roster).
+  for (const issue of capabilityReadiness(pack)) add(issue.level, issue.message);
 
   return finalize(checks);
 }

@@ -614,7 +614,7 @@ export interface DomainPack {
     name: string;
     siteUrl: string;
     tagline?: string;
-    /** Arbitrary geographic framing, e.g. "Corvallis and Albany". */
+    /** Arbitrary geographic framing, e.g. "Austin and Round Rock". */
     geoFraming?: string;
     nap?: {
       address?: string;

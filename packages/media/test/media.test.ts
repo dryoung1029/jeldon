@@ -3,12 +3,20 @@ import { defaultMediaConfig, type NarrationConfig, type PodcastConfig } from '@j
 import {
   buildPodcastFeed,
   chunkText,
+  fillProposalSystem,
+  heroBrandFromPack,
   markdownToNarration,
   prepareForTts,
+  proposeHeroConcept,
   synthesize,
+  type ConceptProposer,
   type FeedArticle,
   type Tts,
 } from '../src/index.js';
+// The filled Body of Health media block, kept as a test fixture in fixtures/domain-packs/.
+import { bodyOfHealthMedia } from '../../../fixtures/domain-packs/body-of-health.media.ts';
+
+const DOMAIN_LITERALS = /yourbodyofhealth|Corvallis|Body of Health|Jason|PTCH|chiropract/i;
 
 const body = `# Low back pain and imaging
 
@@ -23,7 +31,21 @@ Routine imaging does not improve outcomes [1]. Call 541-753-1287 to book.
 Chou et al, 2007. [PubMed](https://pubmed.ncbi.nlm.nih.gov/17909209/)
 `;
 
-describe('narration text prep (default health pack)', () => {
+describe('default media config is domain-neutral', () => {
+  it('carries no brand, persona, or vertical literals', () => {
+    expect(JSON.stringify(defaultMediaConfig)).not.toMatch(DOMAIN_LITERALS);
+    expect(defaultMediaConfig.narration.voiceId).toBe('');
+    expect(defaultMediaConfig.narration.outroText).toBe('');
+    expect(defaultMediaConfig.narration.pronunciationOverrides).toEqual([]);
+    expect(defaultMediaConfig.podcast.trailer).toBeUndefined();
+  });
+
+  it('applies no IPA overrides by default', () => {
+    expect(prepareForTts('We treat musculoskeletal pain in Corvallis.')).not.toMatch(/<phoneme/);
+  });
+});
+
+describe('narration text prep', () => {
   it('strips the references section, drops H2s, and spells the phone number', () => {
     const out = markdownToNarration(body, 'Imaging and low back pain');
     expect(out).not.toMatch(/References/i);
@@ -34,8 +56,8 @@ describe('narration text prep (default health pack)', () => {
     expect(out).not.toMatch(/\[1\]/);
   });
 
-  it('wraps default IPA override words in <phoneme> tags', () => {
-    const out = prepareForTts('We treat musculoskeletal pain in Corvallis.');
+  it('wraps a pack\'s IPA override words in <phoneme> tags (BoH example pack)', () => {
+    const out = prepareForTts('We treat musculoskeletal pain in Corvallis.', bodyOfHealthMedia.narration);
     expect(out).toMatch(/<phoneme alphabet="ipa" ph="[^"]+">musculoskeletal<\/phoneme>/);
     expect(out).toMatch(/<phoneme alphabet="ipa" ph="[^"]+">Corvallis<\/phoneme>/);
   });
@@ -81,12 +103,24 @@ describe('synthesize orchestration (fake TTS, null store)', () => {
       },
     };
     const text = markdownToNarration('Short body that fits in one chunk.', 'Title');
-    const result = await synthesize(text, fakeTts);
+    const result = await synthesize(text, fakeTts, { narration: bodyOfHealthMedia.narration });
     expect(result.chunkCount).toBe(1);
     // One body chunk + the outro = 2 TTS calls.
     expect(calls.length).toBe(2);
     expect(result.charCount).toBe(text.length);
     expect(result.audio.byteLength).toBeGreaterThan(0);
+  });
+
+  it('appends no outro when the pack leaves outroText blank (the default)', async () => {
+    let n = 0;
+    const fakeTts: Tts = {
+      async synthesize() {
+        n++;
+        return new ArrayBuffer(8);
+      },
+    };
+    await synthesize('Short body.', fakeTts);
+    expect(n).toBe(1);
   });
 
   it('rejects when the char count drifts from the preview', async () => {
@@ -125,12 +159,21 @@ describe('podcast feed (config-driven channel)', () => {
     },
   ];
 
+  it('refuses to build a feed from the blank default channel, naming the missing fields', () => {
+    expect(() => buildPodcastFeed(articles, { siteUrl: 'https://example.com' })).toThrow(
+      /media\.podcast\.title.*media\.podcast\.ownerEmail/,
+    );
+  });
+
   it('emits one item per audio article + the trailer, escaping XML', () => {
-    const xml = buildPodcastFeed(articles, { siteUrl: 'https://example.com' });
+    const xml = buildPodcastFeed(articles, {
+      siteUrl: 'https://example.com',
+      podcast: bodyOfHealthMedia.podcast,
+    });
     expect(xml).toContain('<itunes:author>Dr. Jason Young, DC</itunes:author>');
     expect(xml).toContain('Imaging &amp; low back pain'); // & escaped
     expect(xml).toContain('https://example.com/audio/imaging-low-back-pain/imaging-abc123.mp3');
-    expect(xml).toContain('episodeType>trailer'); // default pack has a trailer
+    expect(xml).toContain('episodeType>trailer'); // the BoH example has a trailer
     expect(xml).not.toContain('no-audio-article'); // skipped
   });
 
@@ -138,10 +181,11 @@ describe('podcast feed (config-driven channel)', () => {
     const devPodcast: PodcastConfig = {
       ...defaultMediaConfig.podcast,
       title: 'Northwatch Incident Review',
+      description: 'Postmortems, read aloud.',
       author: 'SRE on-call',
+      ownerEmail: 'podcast@northwatch.example',
       category: 'Technology',
-      subcategory: undefined,
-      trailer: undefined,
+      coverImage: '/images/northwatch-cover.png',
     };
     const xml = buildPodcastFeed(articles, {
       siteUrl: 'https://northwatch.example',
@@ -152,5 +196,46 @@ describe('podcast feed (config-driven channel)', () => {
     expect(xml).not.toContain('episodeType>trailer'); // no trailer in this pack
     // Single-level category (no subcategory).
     expect(xml).toMatch(/<itunes:category text="Technology" \/>/);
+  });
+});
+
+describe('hero art-director prompt reads brand + persona at call time', () => {
+  const pack = {
+    brand: { name: 'Northwatch', siteUrl: 'https://northwatch.example' },
+    voice: {
+      persona: 'Blunt on-call SREs writing for other on-call SREs.',
+      bannedTopics: [],
+      bannedPhrasings: [],
+      rules: [],
+      voiceAnchorUrls: [],
+      readingGradeBand: [9, 12] as [number, number],
+    },
+  };
+
+  it('fills {BRAND} and {PERSONA} from the pack', async () => {
+    let system = '';
+    const proposer: ConceptProposer = {
+      async propose(req) {
+        system = req.system;
+        return { topic: 't', concept: 'c', altText: 'a', filename: 'f.webp', rationale: 'r' };
+      },
+    };
+    await proposeHeroConcept(
+      { slug: 's', title: 'T', body: 'B' },
+      proposer,
+      defaultMediaConfig.heroImage,
+      heroBrandFromPack(pack),
+    );
+    expect(system).toContain('art director for Northwatch');
+    expect(system).toContain(pack.voice.persona);
+    expect(system).not.toMatch(/\{BRAND\}|\{PERSONA\}/);
+    expect(system).not.toMatch(DOMAIN_LITERALS);
+  });
+
+  it('falls back to a neutral name and drops the persona line when unset', () => {
+    const out = fillProposalSystem(defaultMediaConfig.heroImage.proposalSystem);
+    expect(out).toContain('art director for this publication');
+    expect(out).not.toContain("publication's voice");
+    expect(out).not.toMatch(/\{BRAND\}|\{PERSONA\}/);
   });
 });
