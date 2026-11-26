@@ -189,7 +189,10 @@ export class CloudflareAnalytics implements AnalyticsProvider {
     this.accountId = opts.accountId ?? cfg.cloudflare?.accountId;
     this.endpoint =
       opts.endpoint ?? cfg.cloudflare?.endpoint ?? 'https://api.cloudflare.com/client/v4/graphql';
-    this.fetchImpl = opts.fetchImpl ?? fetch;
+    // Never call fetch as a method: Workers throw "Illegal invocation" when
+    // fetch runs with a `this` other than globalThis (e.g. this.fetchImpl(...)).
+    const fetchFn = opts.fetchImpl ?? fetch;
+    this.fetchImpl = (input, init) => fetchFn(input, init);
   }
 
   private async gql<T = any>(query: string, variables: Record<string, unknown>): Promise<T> {

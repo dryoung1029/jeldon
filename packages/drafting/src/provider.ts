@@ -37,7 +37,10 @@ export class AnthropicProvider implements LlmProvider {
 
   constructor(opts: AnthropicProviderOptions) {
     this.apiKey = opts.apiKey;
-    this.fetchImpl = opts.fetchImpl ?? fetch;
+    // Never call fetch as a method: Workers throw "Illegal invocation" when
+    // fetch runs with a `this` other than globalThis (e.g. this.fetchImpl(...)).
+    const fetchFn = opts.fetchImpl ?? fetch;
+    this.fetchImpl = (input, init) => fetchFn(input, init);
     this.url = opts.baseUrl ?? ANTHROPIC_URL;
   }
 
