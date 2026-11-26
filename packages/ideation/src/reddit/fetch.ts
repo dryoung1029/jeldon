@@ -122,7 +122,10 @@ export class RedditReader {
   /** The only network call. GET, reddit.com only. */
   private async get(url: string): Promise<Response> {
     if (!hostIs(hostOf(url), 'reddit.com')) throw new Error(`refusing non-reddit host: ${hostOf(url)}`);
-    return this.opts.fetchImpl(url, { method: 'GET', headers: { 'User-Agent': this.opts.userAgent } });
+    // Called as a plain function, not opts.fetchImpl(...): a bare global fetch
+    // invoked as a method throws "Illegal invocation" on Cloudflare Workers.
+    const fetchFn = this.opts.fetchImpl;
+    return fetchFn(url, { method: 'GET', headers: { 'User-Agent': this.opts.userAgent } });
   }
 
   /** One logical source: JSON, then RSS. Null when every attempt failed. */

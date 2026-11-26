@@ -48,7 +48,10 @@ export class AnthropicLlmClient implements LlmClient {
     this.url = opts.baseUrl ?? ANTHROPIC_URL;
     this.version = opts.anthropicVersion ?? '2023-06-01';
     this.models = opts.models ?? defaultDraftingConfig.models;
-    this.fetchImpl = opts.fetchImpl ?? fetch;
+    // Never call fetch as a method: Workers throw "Illegal invocation" when
+    // fetch runs with a `this` other than globalThis (e.g. this.fetchImpl(...)).
+    const fetchFn = opts.fetchImpl ?? fetch;
+    this.fetchImpl = (input, init) => fetchFn(input, init);
   }
 
   async callTool(req: LlmToolRequest): Promise<LlmToolResponse> {

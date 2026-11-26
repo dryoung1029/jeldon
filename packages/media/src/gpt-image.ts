@@ -23,7 +23,10 @@ export class GptImageGen implements ImageGen {
   constructor(opts: GptImageGenOptions) {
     this.apiKey = opts.apiKey;
     this.baseUrl = opts.baseUrl ?? OPENAI_IMAGES;
-    this.fetchImpl = opts.fetchImpl ?? fetch;
+    // Never call fetch as a method: Workers throw "Illegal invocation" when
+    // fetch runs with a `this` other than globalThis (e.g. this.fetchImpl(...)).
+    const fetchFn = opts.fetchImpl ?? fetch;
+    this.fetchImpl = (input, init) => fetchFn(input, init);
   }
 
   async generate(req: ImageGenRequest): Promise<ArrayBuffer> {

@@ -27,7 +27,10 @@ export class ElevenLabsTts implements Tts {
   constructor(opts: ElevenLabsTtsOptions) {
     this.apiKey = opts.apiKey;
     this.baseUrl = (opts.baseUrl ?? ELEVENLABS_BASE).replace(/\/$/, '');
-    this.fetchImpl = opts.fetchImpl ?? fetch;
+    // Never call fetch as a method: Workers throw "Illegal invocation" when
+    // fetch runs with a `this` other than globalThis (e.g. this.fetchImpl(...)).
+    const fetchFn = opts.fetchImpl ?? fetch;
+    this.fetchImpl = (input, init) => fetchFn(input, init);
   }
 
   async synthesize(req: TtsRequest): Promise<ArrayBuffer> {
